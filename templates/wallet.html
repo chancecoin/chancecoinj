@@ -1,0 +1,208 @@
+<#import "template.html" as template>
+<@template.content>
+		<div class="pure-g-r section">
+			<div class="pure-u-1">
+				<h1>Wallet</h1>
+			</div>
+		</div>
+		<div class="pure-g-r section">
+				<div class="pure-u-1-3 segment one-third">
+						<h2>Balance</h2>
+						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
+						    <fieldset>
+						        <input type="hidden" name="form" value="balance">
+
+						        <input type="text" placeholder="address" name="address">
+						        <button type="submit" class="pure-button pure-button-primary">Get balance</button>
+						    </fieldset>
+						</form>
+						<#if balance??>
+						<p><p>Your balance is ${balance} CHA.</p>
+						</#if>
+						<p>See <a href="/balances">all balances</a>.</p>
+				</div>
+				<div class="pure-u-1-3 segment one-third">
+						<h2>Burn</h2>
+						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
+						    <fieldset>
+						        <input type="hidden" name="form" value="burn">
+
+						        <label>Source address</label>
+						        <input type="text" placeholder="source address" name="source">
+
+						        <label>Quantity</label>
+						        <input type="text" placeholder="quantity" name="quantity">
+
+						        <button type="submit" class="pure-button pure-button-primary">Burn</button>
+						    </fieldset>
+						</form>
+				</div>
+				<div class="pure-u-1-3 segment one-third">
+						<h2>Send</h2>
+						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
+						    <fieldset>
+						        <input type="hidden" name="form" value="send">
+
+						        <label>Source address</label>
+						        <input type="text" placeholder="source address" name="source">
+
+						        <label>Destination address</label>
+						        <input type="text" placeholder="destination address" name="destination">
+
+						        <label>Quantity</label>
+						        <input type="text" placeholder="quantity" name="quantity">
+
+						        <button type="submit" class="pure-button pure-button-primary">Send</button>
+						    </fieldset>
+						</form>
+				</div>
+		</div>
+		<div class="pure-g-r section">
+				<div class="pure-u-1-3 segment one-third">
+						<h2>Buy CHA</h2>
+						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
+						    <fieldset>
+						        <input type="hidden" name="form" value="buy">
+
+						        <label>Source address</label>
+						        <input type="text" placeholder="source address" name="source">
+
+						        <label>Quantity (CHA)</label>
+						        <input type="text" placeholder="quantity" name="quantity">
+
+						        <label>Price (CHA/BTC)</label>
+						        <input type="text" placeholder="price" name="price">
+
+						        <button type="submit" class="pure-button pure-button-primary">Buy CHA</button>
+						    </fieldset>
+						</form>
+				</div>
+				<div class="pure-u-1-3 segment one-third">
+						<h2>Order book</h2>
+						<table class="pure-table pure-table-bordered">
+						    <thead>
+						        <tr>
+						            <th>Buy quantity (CHA)</th>
+						            <th>Price (CHA/BTC)</th>
+						            <th>Sell quantity (CHA)</th>
+						        </tr>
+						    </thead>
+
+						    <tbody>
+										{% for order in orders_sell %}
+						        <tr>
+												<td></td>
+												<td>{{ order[1] }}</td>
+												<td>{{ order[0] }}</td>
+						        </tr>
+										{% end %}
+										{% for order in orders_buy %}
+										<tr>
+												<td>{{ order[0] }}</td>
+												<td>{{ order[1] }}</td>
+												<td></td>
+										</tr>
+										{% end %}
+						    </tbody>
+						</table>
+				</div>
+				<div class="pure-u-1-3 segment one-third">
+						<h2>Sell CHA</h2>
+						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
+						    <fieldset>
+						        <input type="hidden" name="form" value="sell">
+
+						        <label>Source address</label>
+						        <input type="text" placeholder="source address" name="source">
+
+						        <label>Quantity (CHA)</label>
+						        <input type="text" placeholder="quantity" name="quantity">
+
+						        <label>Price (CHA/BTC)</label>
+						        <input type="text" placeholder="price" name="price">
+
+						        <button type="submit" class="pure-button pure-button-primary">Sell CHA</button>
+						    </fieldset>
+						</form>
+				</div>
+		</div>
+		<div class="pure-g-r section">
+				<div class="pure-u-1-3 segment one-third">
+						<h2>Get my orders</h2>
+						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
+								<fieldset>
+										<input type="hidden" name="form" value="my_orders">
+
+										<input type="text" placeholder="address" name="address">
+										<button type="submit" class="pure-button pure-button-primary">Get my orders</button>
+								</fieldset>
+						</form>
+				</div>
+				<div class="pure-u-2-3 segment two-thirds">
+						{% if my_orders!=None %}
+						<h2>My orders</h2>
+						<table class="pure-table pure-table-bordered">
+								<thead>
+										<tr>
+												<th>Buy/sell CHA</th>
+												<th>Price (CHA/BTC)</th>
+												<th>Quantity (CHA)</th>
+												<th>Quantity (BTC)</th>
+												<th>Cancel</th>
+										</tr>
+								</thead>
+
+								<tbody>
+										{% for order in my_orders %}
+										<tr>
+												<td>{{ order[3] }}</td>
+												<td>{{ order[1] }}</td>
+												<td>{{ order[0] }}</td>
+												<td>{{ order[2] }}</td>
+												<td>
+														<form class="pure-form pure-form-stacked" action="/wallet" method="post">
+																<fieldset>
+																		<input type="hidden" name="form" value="cancel">
+																		<input type="hidden" name="tx_hash" value="{{ order[4] }}">
+																		<button type="submit" class="pure-button pure-button-primary">Cancel</button>
+																</fieldset>
+														</form>
+												</td>
+										</tr>
+										{% end %}
+								</tbody>
+						</table>
+						{% end %}
+						{% if my_order_matches!=None %}
+						<h2>My matched orders</h2>
+						<table class="pure-table pure-table-bordered">
+								<thead>
+										<tr>
+												<th>BTC owed</th>
+												<th>CHA in return</th>
+												<th>Pay BTC</th>
+										</tr>
+								</thead>
+
+								<tbody>
+										{% for order_match in my_order_matches %}
+										<tr>
+												<td>{{ order_match[0] }}</td>
+												<td>{{ order_match[1] }}</td>
+												<td>
+														<form class="pure-form pure-form-stacked" action="/wallet" method="post">
+																<fieldset>
+																		<input type="hidden" name="form" value="btcpay">
+																		<input type="hidden" name="order_match_id" value="{{ order_match[2] }}">
+																		<button type="submit" class="pure-button pure-button-primary">Pay BTC</button>
+																</fieldset>
+														</form>
+												</td>
+										</tr>
+										{% end %}
+								</tbody>
+						</table><br />
+						{% end %}
+				</div>
+		</div>
+</@template.content>

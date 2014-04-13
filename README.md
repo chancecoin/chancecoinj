@@ -1,0 +1,4 @@
+chancecoinj
+===========
+
+Decentralized dice betting

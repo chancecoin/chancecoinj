@@ -1,0 +1,95 @@
+<#macro content>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Chancecoin is a coin for betting on dice in a decentralized casino.">
+
+	<title>Chancecoin<#if title??> - ${title}</#if></title>
+	<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
+	<link rel="stylesheet" href="/css/style.css">
+  <link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
+	<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+</head>
+<body>
+	<div class="header">
+		<div class="pure-menu pure-menu-open pure-menu-fixed pure-menu-horizontal">
+			<a class="pure-menu-heading logo" href="/">Chancecoin</a>
+			<ul>
+				<li><a href="/casino">Casino</a></li>
+				<li><a href="/wallet">Wallet</a></li>
+				<li><a href="/participate">Participate</a></li>
+				<li><a href="/technical">Technical</a></li>
+				<li><a href="http://reddit.com/r/chancecoin">Subreddit</a></li>
+				<li><a href="https://github.com/chancecoin/chancecoinj">GitHub</a></li>
+				<li><a href="https://bitcointalk.org/index.php?topic=528023.0">Bitcointalk</a></li>
+			</ul>
+		</div>
+	</div>
+
+	<div class="content">
+
+		<div class="pure-g-r section">
+			<div class="pure-u-1">
+				<#if info??>
+				<p class="info">${info}</p>
+				</#if>
+				<#if error??>
+				<p class="error">${error}</p>
+				</#if>
+				<#if success??>
+				<p class="success">${success}</p>
+				</#if>
+				<#if warning??>
+				<p class="warning">${warning}</p>
+				</#if>
+			</div>
+		</div>
+
+		<#nested/>
+	</div>
+
+	<div class="footer">
+		Chancecoin &copy; 2014. Released under the <a href="http://opensource.org/licenses/mit-license.php">MIT License</a>.
+	</div>
+
+	<script src="http://yui.yahooapis.com/3.12.0/build/yui/yui.js"></script>
+	<script>
+	YUI().use('node-base', 'node-event-delegate', function (Y) {
+	Y.one('body').delegate('click', function (e) {
+	e.preventDefault();
+	}, 'a[href="#"]');
+	});
+	</script>
+
+	<script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+	  ga('create', 'UA-49712885-1', 'chancecoin.com');
+	  ga('send', 'pageview');
+
+	</script>
+
+	<!-- Piwik -->
+	<script type="text/javascript">
+	var pkBaseURL = (("https:" == document.location.protocol) ? "http://chancecoin.com/piwik/" : "http://chancecoin.com/piwik/");
+	document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
+	</script><script type="text/javascript">
+	try {
+	var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", 1);
+	piwikTracker.trackPageView();
+	piwikTracker.enableLinkTracking();
+	} catch( err ) {}
+	</script><noscript><p><img src="http://chancecoin.com/piwik/piwik.php?idsite=1" style="border:0" alt=""/></p></noscript>
+	<!-- End Piwik Tag -->
+
+</body>
+</html>
+</#macro>
