@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -39,13 +40,13 @@ public class Bet {
 				String txHash = rs.getString("tx_hash");
 
 				if (message.size() == length) {
-					ByteBuffer inputByteBuffer = ByteBuffer.allocate(length);
+					ByteBuffer byteBuffer = ByteBuffer.allocate(length);
 					for (byte b : message) {
-						inputByteBuffer.put(b);
+						byteBuffer.put(b);
 					}			
-					BigInteger bet = BigInteger.valueOf(inputByteBuffer.getLong(0));
-					Double chance = inputByteBuffer.getDouble(8);
-					Double payout = inputByteBuffer.getDouble(16);
+					BigInteger bet = BigInteger.valueOf(byteBuffer.getLong(0));
+					Double chance = byteBuffer.getDouble(8);
+					Double payout = byteBuffer.getDouble(16);
 					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && chance==100.0/(payout/(1.0-Config.houseEdge))) {
 						if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
 							BigInteger chaSupply = Util.chaSupply();
@@ -59,6 +60,30 @@ public class Bet {
 			}
 		} catch (SQLException e) {	
 		}
+	}
+	public static Transaction createBet(String source, BigInteger bet, Double chance, Double payout) {
+		if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && chance==100.0/(payout/(1.0-Config.houseEdge))) {
+			if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
+				BigInteger chaSupply = Util.chaSupply();
+				if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
+					Blocks blocks = Blocks.getInstance();
+					ByteBuffer byteBuffer = ByteBuffer.allocate(length);
+					byteBuffer.putLong(0, bet.longValue());
+					byteBuffer.putDouble(8, chance);
+					byteBuffer.putDouble(16, payout);
+					byte[] data = byteBuffer.array();
+
+					String dataString = "";
+					try {
+						dataString = new String(data,"ISO-8859-1");
+					} catch (UnsupportedEncodingException e) {
+					}
+					Transaction tx = blocks.transaction(source, source, BigInteger.valueOf(Config.dustSize), BigInteger.valueOf(Config.minFee), dataString);
+					return tx;
+				}
+			}
+		}
+		return null;
 	}
 	public static BigInteger factorial(BigInteger n) {
 	    BigInteger result = BigInteger.ONE;

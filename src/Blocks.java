@@ -35,10 +35,13 @@ import com.google.bitcoin.core.Wallet;
 import com.google.bitcoin.net.discovery.DnsDiscovery;
 import com.google.bitcoin.params.MainNetParams;
 import com.google.bitcoin.script.Script;
+import com.google.bitcoin.script.ScriptBuilder;
 import com.google.bitcoin.script.ScriptChunk;
+import com.google.bitcoin.script.ScriptOpCodes;
 import com.google.bitcoin.store.BlockStore;
 import com.google.bitcoin.store.H2FullPrunedBlockStore;
 import com.google.bitcoin.wallet.WalletTransaction;
+import com.sun.org.apache.xpath.internal.compiler.OpCodes;
 
 public class Blocks {
 	static NetworkParameters params;
@@ -72,9 +75,6 @@ public class Blocks {
 			if ((new File("wallet")).exists()) {
 				logger.info("Found wallet file");
 				wallet = Wallet.loadFromFile(new File("wallet"));
-				for (ECKey k : wallet.getKeys()) {
-					System.out.println(k.toAddress(params).toString());
-				}
 			} else {
 				wallet = new Wallet(params);
 				ECKey newKey = new ECKey();
@@ -82,7 +82,7 @@ public class Blocks {
 				wallet.addKey(newKey);
 				wallet.addWatchedAddress(burnAddress, Config.burnCreationTime);
 			}
-			BlockStore bs = new H2FullPrunedBlockStore(params, Config.appName.toLowerCase()+"2", 1000);
+			BlockStore bs = new H2FullPrunedBlockStore(params, Config.appName.toLowerCase(), 1000);
 			BlockChain chain = new BlockChain(params, wallet, bs);
 			peerGroup = new PeerGroup(params, chain);
 			peerGroup.addWallet(wallet);
@@ -310,35 +310,74 @@ public class Blocks {
 			ECKey key = dumpedPrivateKey.getKey();
 			logger.info("Importing address "+key.toAddress(params).toString());
 			wallet.addKey(key);
-			wallet.clearTransactions(0);
-			System.out.println(wallet.getBalance());
-			for (Transaction t : wallet.getTransactions(true)) {
-				System.out.println(t.toString());
-			}
 		} catch (AddressFormatException e) {
 		}
 	}
 	
-	public Transaction transaction(String source, String destination, BigInteger btcAmount, BigInteger fee, String data) {
+	public Transaction transaction(String source, String destination, BigInteger btcAmount, BigInteger fee, String dataString) {
 		Transaction tx = new Transaction(params);
 		LinkedList<TransactionOutput> unspentOutputs = wallet.calculateAllSpendCandidates(true);
-		for (Transaction t : wallet.getTransactions(true)) {
-			System.out.println(t);
-		}
-		System.out.println("getting unspents");
-		for (TransactionOutput out : unspentOutputs) {
-			System.out.println(out);
-			Script script = out.getScriptPubKey();
-			Address address = script.getToAddress(params);
-			if (address.toString().equals(source)) {
-				System.out.println(out);
-				System.exit(0);
+		if (btcAmount.compareTo(BigInteger.valueOf(Config.dustSize))>=0) {
+			
+			byte[] data = null;
+			List<Byte> dataArrayList = new ArrayList<Byte>();
+			try {
+				data = dataString.getBytes("ISO-8859-1");
+				dataArrayList = Util.toByteArrayList(data);
+			} catch (UnsupportedEncodingException e) {
+			}
+
+			BigInteger totalOutput = BigInteger.ZERO;
+			BigInteger totalInput = BigInteger.ZERO;
+
+			for (int i = 0; i < dataArrayList.size(); i+=32) {
+				totalOutput = totalOutput.add(BigInteger.valueOf(Config.dustSize));
+				List<Byte> chunk = new ArrayList<Byte>(dataArrayList.subList(i, Math.min(i+32, dataArrayList.size())));
+				chunk.add(0, (byte) chunk.size());
+				while (chunk.size()<32+1) {
+					chunk.add((byte) 0);
+				}
+				List<ECKey> keys = new ArrayList<ECKey>();
+				for (ECKey key : wallet.getKeys()) {
+					try {
+						if (key.toAddress(params).equals(new Address(params, source))) {
+							keys.add(key);
+							break;
+						}
+					} catch (AddressFormatException e) {
+					}
+				}
+				keys.add(new ECKey(null, Util.toByteArray(chunk)));
+				Script script = ScriptBuilder.createMultiSigOutputScript(1, keys);
+				tx.addOutput(BigInteger.valueOf(Config.dustSize), script);
+			}
+			
+			if (!destination.equals("") && btcAmount.compareTo(BigInteger.ZERO)>0) {
+				totalOutput = totalOutput.add(btcAmount);
+			}
+			
+			for (TransactionOutput out : unspentOutputs) {
+				Script script = out.getScriptPubKey();
+				Address address = script.getToAddress(params);
+				if (address.toString().equals(source)) {
+					if (totalOutput.compareTo(totalInput)>0) {
+						totalInput.add(out.getValue());
+						tx.addInput(out);
+					}
+				}
+			}
+			BigInteger totalChange = totalInput.subtract(totalOutput);
+						
+			try {
+				if (totalChange.compareTo(BigInteger.ZERO)>0) {
+					tx.addOutput(totalChange, new Address(params, source));
+				}
+				if (!destination.equals("") && btcAmount.compareTo(BigInteger.ZERO)>0) {
+					tx.addOutput(btcAmount, new Address(params, destination));
+				}
+			} catch (AddressFormatException e) {
 			}
 		}
-		try {
-			//peerGroup.broadcastTransaction(tx).get();
-		} catch (Exception e) {
-		}
-		return null;
+		return tx;
 	}
 }
