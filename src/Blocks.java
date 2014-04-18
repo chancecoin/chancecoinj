@@ -295,8 +295,9 @@ public class Blocks {
 						List<Byte> message = dataArrayList.subList(4, dataArrayList.size());
 
 						if (messageType.get(3)==Bet.id.byteValue()) {
-							//parse Bet
 							Bet.parse(txIndex, message);
+						} else if (messageType.get(3)==Send.id.byteValue()) {
+							Send.parse(txIndex, message);
 						}						
 					}
 				}
