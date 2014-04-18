@@ -107,13 +107,80 @@ public class Order {
 	}
 	public static void match(Integer txIndex) {
 		Database db = Database.getInstance();
-		ResultSet rsOrder = db.executeQuery("select * from orders where tx_index="+txIndex.toString());
+		ResultSet rstx1 = db.executeQuery("select * from orders where tx_index="+txIndex.toString());
 		try {
-			if (rsOrder.next()) {
-				String giveAsset = rsOrder.getString("give_asset");
-				String getAsset = rsOrder.getString("get_asset");
-				ResultSet rsMatches = db.executeQuery("select * from orders where give_asset='"+getAsset+"' and get_asset='"+giveAsset+"' and validity='valid';");
-				
+			if (rstx1.next()) {
+				Integer tx1Index = txIndex;
+				BigInteger tx1ExpireIndex = BigInteger.valueOf(rstx1.getInt("expire_index"));
+				BigInteger tx1BlockIndex = BigInteger.valueOf(rstx1.getInt("block_index"));
+				String tx1GiveAsset = rstx1.getString("give_asset");
+				String tx1GetAsset = rstx1.getString("get_asset");
+				String tx1Hash = rstx1.getString("tx_hash");
+				String tx1Source = rstx1.getString("source");
+				ResultSet rstx0 = db.executeQuery("select * from orders where give_asset='"+tx1GetAsset+"' and get_asset='"+tx1GiveAsset+"' and validity='valid' order by get_amount/give_amount, tx_index;");
+				BigInteger tx1FeeRemaining = BigInteger.valueOf(rstx1.getInt("fee_remaining"));
+				BigInteger tx1FeeRequired = BigInteger.valueOf(rstx1.getInt("fee_required"));
+				BigInteger tx1GiveRemaining = BigInteger.valueOf(rstx1.getInt("give_remaining"));
+				BigInteger tx1GetRemaining = BigInteger.valueOf(rstx1.getInt("get_remaining"));
+				BigInteger tx1GiveAmount = BigInteger.valueOf(rstx1.getInt("give_amount"));
+				BigInteger tx1GetAmount = BigInteger.valueOf(rstx1.getInt("get_amount"));
+				while (rstx0.next()) {
+					Integer tx0Index = rstx0.getInt("tx_index");
+					BigInteger tx0ExpireIndex = BigInteger.valueOf(rstx0.getInt("expire_index"));
+					BigInteger tx0BlockIndex = BigInteger.valueOf(rstx0.getInt("block_index"));
+					String tx0GiveAsset = rstx0.getString("give_asset");
+					String tx0GetAsset = rstx0.getString("get_asset");
+					String tx0Hash = rstx0.getString("tx_hash");
+					String tx0Source = rstx0.getString("source");
+					BigInteger tx0FeeRemaining = BigInteger.valueOf(rstx0.getInt("fee_remaining"));
+					BigInteger tx0FeeRequired = BigInteger.valueOf(rstx0.getInt("fee_required"));
+					BigInteger tx0GiveRemaining = BigInteger.valueOf(rstx0.getInt("give_remaining"));
+					BigInteger tx0GetRemaining = BigInteger.valueOf(rstx0.getInt("get_remaining"));
+					BigInteger tx0GiveAmount = BigInteger.valueOf(rstx0.getInt("give_amount"));
+					BigInteger tx0GetAmount = BigInteger.valueOf(rstx0.getInt("get_amount"));
+					if (tx1GiveRemaining.compareTo(BigInteger.ZERO)>0 && tx0GiveRemaining.compareTo(BigInteger.ZERO)>0) {
+						Double tx0Price = tx0GetAmount.doubleValue() / tx0GiveAmount.doubleValue();
+						Double tx1Price = tx1GetAmount.doubleValue() / tx1GiveAmount.doubleValue();
+						Double tx1InversePrice = tx1GiveAmount.doubleValue() / tx1GetAmount.doubleValue();
+						if (tx0Price.compareTo(tx1InversePrice)<=0) {
+							BigInteger forwardAmount = tx0GiveRemaining.min(new BigDecimal(tx1GiveRemaining.doubleValue()/tx0Price).toBigInteger());
+							BigInteger backwardAmount = new BigDecimal(forwardAmount.doubleValue() * tx0Price).toBigInteger();
+							BigInteger fee = BigInteger.ZERO;
+							if (tx1GetAsset.equals("BTC")) {
+								fee = new BigDecimal(tx1FeeRequired.doubleValue() * forwardAmount.doubleValue() / tx1GetRemaining.doubleValue()).toBigInteger();
+								if (tx1FeeRemaining.compareTo(fee)<0) {
+									continue;
+								} else {
+									tx0FeeRemaining = tx0FeeRemaining.subtract(fee);
+								}
+							} else if (tx1GiveAsset.equals("BTC")) {
+								fee = new BigDecimal(tx0FeeRequired.doubleValue() * backwardAmount.doubleValue() / tx0GetRemaining.doubleValue()).toBigInteger();
+								if (tx1FeeRemaining.compareTo(fee)<0) {
+									continue;
+								} else {
+									tx1FeeRemaining = tx0FeeRemaining.subtract(fee);
+								}								
+							}
+							String forwardAsset = tx1GetAsset;
+							String backwardAsset = tx1GiveAsset;
+							String orderMatchId = tx0Hash + tx1Hash;
+							String validity = "pending";
+							if (!tx1GiveAsset.equals("BTC") && !tx1GetAsset.equals("BTC")) {
+								validity = "valid";
+								Util.credit(tx1Source, tx1GetAsset, forwardAmount);
+								Util.credit(tx0Source, tx0GetAsset, backwardAmount);
+							}
+							tx0GiveRemaining = tx0GiveRemaining.subtract(forwardAmount);
+							tx0GetRemaining = tx0GetRemaining.subtract(backwardAmount);
+							tx1GiveRemaining = tx1GiveRemaining.subtract(backwardAmount);
+							tx1GetRemaining = tx1GetRemaining.subtract(forwardAmount);
+							db.executeUpdate("update orders set give_remaining='"+tx0GiveRemaining.toString()+"', get_remaining='"+tx0GetRemaining.toString()+"', fee_remaining='"+tx0FeeRemaining.toString()+"' where tx_index='"+tx0Index+"';");
+							db.executeUpdate("update orders set give_remaining='"+tx1GiveRemaining.toString()+"', get_remaining='"+tx1GetRemaining.toString()+"', fee_remaining='"+tx1FeeRemaining.toString()+"' where tx_index='"+tx1Index+"';");
+							BigInteger matchExpireIndex = tx0ExpireIndex.min(tx1ExpireIndex);
+							db.executeUpdate("insert into order_matches(id, tx0_index, tx0_hash, tx0_address, tx1_index, tx1_hash, tx1_address, forward_asset, forward_amount, backward_asset, backward_amount, tx0_block_index, tx1_block_index, tx0_expiration, tx1_expiration, match_expire_index, validity) values('"+orderMatchId+"', '"+tx0Index.toString()+"', '"+tx0Hash+"', '"+tx0Source+"', '"+tx1Index.toString()+"', '"+tx1Hash+"', '"+tx1Source+"', '"+forwardAsset+"', '"+forwardAmount.toString()+"', '"+backwardAsset+"', '"+backwardAmount.toString()+"', '"+tx0BlockIndex.toString()+"', '"+tx1BlockIndex.toString()+"', '"+tx0ExpireIndex.toString()+"', '"+tx1ExpireIndex.toString()+"', '"+matchExpireIndex.toString()+"', '"+validity+"');");
+						}
+					}
+				}
 			}
 		} catch (SQLException e) {	
 		}
