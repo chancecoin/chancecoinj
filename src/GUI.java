@@ -68,7 +68,7 @@ class Browser extends Region {
 		buttonHome.setOnMouseClicked(new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent e) {
-				webEngine.loadContent(Util.getPage(address));
+				webEngine.load(address);
 			}
 		});
 		return buttonHome;
