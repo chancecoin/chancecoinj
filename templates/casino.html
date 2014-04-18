@@ -60,16 +60,50 @@
 
 		<div class="pure-g-r section padding-bottom">
 			<div class="pure-u-1">
+			
+				<h2>Top winners</h2>
+
+				<table class="pure-table pure-table-bordered">
+				    <thead>
+				        <tr>
+				            <th>Source Address</th>
+				            <th>Total Bets</th>
+				            <th>Average Bet Size</th>
+				            <th>Average Win Chance</th>
+				            <th>Total Profit</th>
+				        </tr>
+				    </thead>
+						<#list winners as winner>
+								<tr>
+										<td><a href="http://blockchain.info/address/${winner["source"]}">${winner["source"]}</a></td>
+										<td>${winner["bet_count"]}</td>
+										<td>${winner["avg_bet"]} CHA</td>
+										<td>${winner["avg_chance"]}%</td>
+										<td>${winner["sum_profit"]} CHA</td>
+								</tr>
+						</#list>
+				    <tbody>
+
+				    </tbody>
+				</table>
+			
+			
+			
+			
+			
+			
+			
+			
 				<h2>All bets</h2>
 
 				<table class="pure-table pure-table-bordered">
 				    <thead>
 				        <tr>
-				            <th>Source address</th>
-				            <th>Bet size</th>
-				            <th>Chance to win</th>
-				            <th>Payout multiplier</th>
-										<th>Roll</th>
+				            <th>Source Address</th>
+				            <th>Bet Size</th>
+				            <th>Chance to Win</th>
+				            <th>Payout Multiplier</th>
+							<th>Roll</th>
 				            <th>Profit</th>
 				        </tr>
 				    </thead>
@@ -121,6 +155,8 @@
 									</tr>
 							</#list>
 						</tbody>
+						
+						
 				</table>
 				</#if>
 			</div>

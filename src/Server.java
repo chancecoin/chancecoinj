@@ -128,7 +128,29 @@ public class Server implements Runnable {
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
 				Database db = Database.getInstance();
-				ResultSet rs = db.executeQuery("select source,bet,chance,payout,profit,tx_hash,rolla,rollb,roll,resolved from bets where validity='valid' order by block_index desc limit 200;");
+				
+				
+				//get top winners
+				ResultSet rs = db.executeQuery("select source, count(bet) as bet_count, avg(bet) as avg_bet, avg(chance) as avg_chance, sum(profit) as sum_profit from bets where validity='valid' group by source order by sum(profit) desc;");
+				ArrayList<HashMap<String, Object>> winners = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("source", rs.getString("source"));
+						map.put("bet_count", rs.getDouble("bet_count"));
+						map.put("avg_bet", BigInteger.valueOf(rs.getLong("avg_bet")).doubleValue()/Config.unit.doubleValue());
+						map.put("avg_chance", rs.getDouble("avg_chance"));
+						map.put("sum_profit", BigInteger.valueOf(rs.getLong("sum_profit")).doubleValue()/Config.unit.doubleValue());
+						winners.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("winners", winners);				
+				
+				
+				
+				//get last 200 bets
+				rs = db.executeQuery("select source,bet,chance,payout,profit,tx_hash,rolla,rollb,roll,resolved from bets where validity='valid' order by block_index desc limit 200;");
 				ArrayList<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -146,6 +168,9 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("bets", bets);
+				
+				
+				
 				if (request.queryParams("form").equals("my_bets")) {
 					rs = db.executeQuery("select source,bet,chance,payout,profit,tx_hash,rolla,rollb,roll,resolved from bets where validity='valid' and source='"+request.queryParams("address")+"' order by block_index desc;");
 					bets = new ArrayList<HashMap<String, Object>>();
@@ -179,7 +204,26 @@ public class Server implements Runnable {
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
 				Database db = Database.getInstance();
-				ResultSet rs = db.executeQuery("select source,bet,chance,payout,profit,tx_hash,rolla,rollb,roll,resolved from bets where validity='valid' order by block_index desc limit 200;");
+				
+				//get top winners
+				ResultSet rs = db.executeQuery("select source, count(bet) as bet_count, avg(bet) as avg_bet, avg(chance) as avg_chance, sum(profit) as sum_profit from bets where validity='valid' group by source order by sum(profit) desc;");
+				ArrayList<HashMap<String, Object>> winners = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("source", rs.getString("source"));
+						map.put("bet_count", rs.getDouble("bet_count"));
+						map.put("avg_bet", BigInteger.valueOf(rs.getLong("avg_bet")).doubleValue()/Config.unit.doubleValue());
+						map.put("avg_chance", rs.getDouble("avg_chance"));
+						map.put("sum_profit", BigInteger.valueOf(rs.getLong("sum_profit")).doubleValue()/Config.unit.doubleValue());
+						winners.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("winners", winners);				
+				
+				//get last 200 bets
+				rs = db.executeQuery("select source,bet,chance,payout,profit,tx_hash,rolla,rollb,roll,resolved from bets where validity='valid' order by block_index desc limit 200;");
 				ArrayList<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -197,6 +241,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("bets", bets);
+				
 				return modelAndView(attributes, "casino.html");
 			}
 		});
