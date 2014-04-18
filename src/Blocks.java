@@ -117,6 +117,7 @@ public class Blocks {
 				parseFrom(nextBlock);
 			}
 			Bet.resolve();
+			Order.expire();
 			
 		} catch (Exception e) {
 			logger.error(e.toString());
@@ -124,6 +125,7 @@ public class Blocks {
 		}
 	}
 
+	/*
 	public void reDownloadBlockTransactions(Integer blockHeight) {
 		Database db = Database.getInstance();
 		ResultSet rs = db.executeQuery("select * from blocks where block_index='"+blockHeight.toString()+"';");
@@ -134,13 +136,14 @@ public class Blocks {
 				for (Transaction tx : block.getTransactions()) {
 					Blocks.getInstance().importTransaction(tx, block, blockHeight);
 				}
-				//resolve bets
-				Bet.resolve();				
+				Bet.resolve();
+				Order.expire();
 			}
 		} catch (Exception e) {
 			
 		}
 	}
+	*/
 	
 	public void importBlock(Block block, Integer blockHeight) {
 		logger.info("Block height: "+blockHeight);
@@ -153,8 +156,8 @@ public class Blocks {
 			for (Transaction tx : block.getTransactions()) {
 				Blocks.getInstance().importTransaction(tx, block, blockHeight);
 			}
-			//resolve bets
 			Bet.resolve();
+			Order.expire();
 		} catch (SQLException e) {
 		}
 	}
@@ -298,11 +301,18 @@ public class Blocks {
 							Bet.parse(txIndex, message);
 						} else if (messageType.get(3)==Send.id.byteValue()) {
 							Send.parse(txIndex, message);
+						} else if (messageType.get(3)==Order.id.byteValue()) {
+							Order.parse(txIndex, message);
+						} else if (messageType.get(3)==Cancel.id.byteValue()) {
+							Cancel.parse(txIndex, message);
+						} else if (messageType.get(3)==BTCPay.id.byteValue()) {
+							BTCPay.parse(txIndex, message);
 						}						
 					}
 				}
 			}
 			Bet.resolve();
+			Order.expire();
 		} catch (SQLException e) {
 			logger.error(e.toString());
 		} catch (UnsupportedEncodingException e) {
