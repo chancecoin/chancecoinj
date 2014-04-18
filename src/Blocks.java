@@ -28,6 +28,7 @@ import com.google.bitcoin.core.PeerGroup;
 import com.google.bitcoin.core.PeerGroup.FilterRecalculateMode;
 import com.google.bitcoin.core.ScriptException;
 import com.google.bitcoin.core.Sha256Hash;
+import com.google.bitcoin.core.StoredBlock;
 import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.TransactionInput;
 import com.google.bitcoin.core.TransactionOutput;
@@ -39,6 +40,7 @@ import com.google.bitcoin.script.ScriptBuilder;
 import com.google.bitcoin.script.ScriptChunk;
 import com.google.bitcoin.script.ScriptOpCodes;
 import com.google.bitcoin.store.BlockStore;
+import com.google.bitcoin.store.BlockStoreException;
 import com.google.bitcoin.store.H2FullPrunedBlockStore;
 import com.google.bitcoin.wallet.WalletTransaction;
 import com.sun.org.apache.xpath.internal.compiler.OpCodes;
@@ -49,6 +51,8 @@ public class Blocks {
 	private static Blocks instance = null;
 	static Wallet wallet;
 	static PeerGroup peerGroup;
+	static BlockChain blockChain;
+	static BlockStore blockStore;
 	
 	public static Blocks getInstance() {
 		if(instance == null) {
@@ -82,9 +86,9 @@ public class Blocks {
 				wallet.addKey(newKey);
 				wallet.addWatchedAddress(burnAddress, Config.burnCreationTime);
 			}
-			BlockStore bs = new H2FullPrunedBlockStore(params, Config.appName.toLowerCase(), 1000);
-			BlockChain chain = new BlockChain(params, wallet, bs);
-			peerGroup = new PeerGroup(params, chain);
+			blockStore = new H2FullPrunedBlockStore(params, Config.appName.toLowerCase(), 1000);
+			blockChain = new BlockChain(params, wallet, blockStore);
+			peerGroup = new PeerGroup(params, blockChain);
 			peerGroup.addWallet(wallet);
 			peerGroup.setFastCatchupTimeSecs(Config.burnCreationTime);
 			//peerGroup.recalculateFastCatchupAndFilter(FilterRecalculateMode.FORCE_SEND);
@@ -94,21 +98,37 @@ public class Blocks {
 			peerGroup.addEventListener(new ChancecoinPeerEventListener());
 			peerGroup.downloadBlockChain();
 
-			Block block = peerGroup.getDownloadPeer().getBlock(bs.getChainHead().getHeader().getHash()).get();
-			Integer blockHeight = bs.getChainHead().getHeight();
+			Block block = peerGroup.getDownloadPeer().getBlock(blockStore.getChainHead().getHeader().getHash()).get();
+			Integer blockHeight = blockStore.getChainHead().getHeight();
 
 			//traverse new blocks
 			Database db = Database.getInstance();
 			logger.info("Bitcoin block height: "+blockHeight);	
 			logger.info("Chancecoin block height: "+lastBlock);	
 			Integer blocksToScan = blockHeight - lastBlock;
+			List<Sha256Hash> blockHashes = new ArrayList<Sha256Hash>();
+			
+			while (blockStore.get(block.getHash()).getHeight()>lastBlock) {
+				blockHashes.add(block.getHash());
+				block = blockStore.get(block.getPrevBlockHash()).getHeader();
+			}
+			
+			for (int i = blockHashes.size()-1; i>=0; i--) { //traverse blocks in reverse order
+				block = peerGroup.getDownloadPeer().getBlock(block.getPrevBlockHash()).get();
+				blockHeight = blockStore.get(block.getHash()).getHeight();
+				logger.info("Catching Chancecoin up to Bitcoin (block "+blockHeight.toString()+"): "+Util.format((blockHashes.size() - i)/((double) blockHashes.size())*100.0)+"%");	
+				importBlock(block, blockHeight);
+			}
+			
+			/*
 			while (blockHeight > lastBlock) {
 				logger.info("Catching Chancecoin up to Bitcoin: "+Util.format((blocksToScan - (blockHeight - lastBlock))/((double) blocksToScan)*100.0)+"%");	
 				importBlock(block, blockHeight);
 				blockHeight -= 1;
 				block = peerGroup.getDownloadPeer().getBlock(block.getPrevBlockHash()).get();
 			}
-
+			*/
+			
 			if (db.getDBMinorVersion()<Config.minorVersionDB){
 				reparse();
 				db.updateMinorVersion();		    	
@@ -220,7 +240,7 @@ public class Blocks {
 			if (in.isCoinBase()) return;
 			try {
 				Script script = in.getScriptSig();
-				//fee = fee.add(); //TODO
+				//fee = fee.add(in.getValue()); //TODO, turn this on
 				Address address = script.getFromAddress(params);
 				if (source.equals("")) {
 					source = address.toString();
@@ -304,9 +324,9 @@ public class Blocks {
 						} else if (messageType.get(3)==Order.id.byteValue()) {
 							Order.parse(txIndex, message);
 						} else if (messageType.get(3)==Cancel.id.byteValue()) {
-							Cancel.parse(txIndex, message);
+							//Cancel.parse(txIndex, message);
 						} else if (messageType.get(3)==BTCPay.id.byteValue()) {
-							BTCPay.parse(txIndex, message);
+							//BTCPay.parse(txIndex, message);
 						}						
 					}
 				}

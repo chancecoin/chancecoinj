@@ -5,7 +5,7 @@ import com.google.bitcoin.core.Transaction;
 public class Chancecoin {
 	public static void main(String[] args) {
 		Blocks blocks = Blocks.getInstance();
-		blocks.reparse();
+		//blocks.reparse();
 		Double rawBet = 0.001;
 		BigInteger bet = BigInteger.valueOf((long) (rawBet*Config.unit));
 		System.out.println(bet);
