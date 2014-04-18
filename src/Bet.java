@@ -61,24 +61,28 @@ public class Bet {
 		} catch (SQLException e) {	
 		}
 	}
-	public static Transaction createBet(String source, BigInteger bet, Double chance, Double payout) {
+	public static Transaction create(String source, BigInteger bet, Double chance, Double payout) {
 		if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && chance==100.0/(payout/(1.0-Config.houseEdge))) {
 			if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
 				BigInteger chaSupply = Util.chaSupply();
 				if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
 					Blocks blocks = Blocks.getInstance();
-					ByteBuffer byteBuffer = ByteBuffer.allocate(length);
-					byteBuffer.putLong(0, bet.longValue());
-					byteBuffer.putDouble(8, chance);
-					byteBuffer.putDouble(16, payout);
-					byte[] data = byteBuffer.array();
+					ByteBuffer byteBuffer = ByteBuffer.allocate(length+4);
+					byteBuffer.putInt(0, id);
+					byteBuffer.putLong(0+4, bet.longValue());
+					byteBuffer.putDouble(8+4, chance);
+					byteBuffer.putDouble(16+4, payout);
+					List<Byte> dataArrayList = Util.toByteArrayList(byteBuffer.array());
+					dataArrayList.addAll(0, Util.toByteArrayList(Config.prefix.getBytes()));
+					byte[] data = Util.toByteArray(dataArrayList);
 
 					String dataString = "";
 					try {
 						dataString = new String(data,"ISO-8859-1");
 					} catch (UnsupportedEncodingException e) {
 					}
-					Transaction tx = blocks.transaction(source, source, BigInteger.valueOf(Config.dustSize), BigInteger.valueOf(Config.minFee), dataString);
+					String destination = source;
+					Transaction tx = blocks.transaction(source, destination, BigInteger.valueOf(Config.dustSize), BigInteger.valueOf(Config.minFee), dataString);
 					return tx;
 				}
 			}
@@ -112,7 +116,7 @@ public class Bet {
 	public static void resolve() {
 		//resolve bets
 		Database db = Database.getInstance();
-		ResultSet rs = db.executeQuery("select block_time,tx_index,tx_hash,source,bet,payout,chance,cha_supply from bets,blocks where bets.block_index=blocks.block_index and profit=0;");
+		ResultSet rs = db.executeQuery("select block_time,tx_index,tx_hash,source,bet,payout,chance,cha_supply from bets,blocks where bets.block_index=blocks.block_index and resolved IS NOT 'true';");
 
 		SimpleDateFormat dateFormatStandard = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
 		SimpleDateFormat dateFormatDateTimeLotto = new SimpleDateFormat("MM/dd/yyyy HH:mm");
@@ -161,9 +165,9 @@ public class Bet {
 								n = n.add(combinations(number.subtract(BigInteger.ONE),i));
 								i = i.add(BigInteger.ONE);
 							}
-							Double roll1 = n.doubleValue() / (denominator.doubleValue());
-							Double roll2 = (new BigInteger(txHash.substring(10, txHash.length()),16)).mod(BigInteger.valueOf(1000000000)).doubleValue()/1000000000.0;
-							Double roll = (roll1 + roll2) % 1.0;
+							Double rollA = n.doubleValue() / (denominator.doubleValue());
+							Double rollB = (new BigInteger(txHash.substring(10, txHash.length()),16)).mod(BigInteger.valueOf(1000000000)).doubleValue()/1000000000.0;
+							Double roll = (rollA + rollB) % 1.0;
 							roll = roll * 100.0;
 							
 							BigInteger profit = BigInteger.ZERO;
@@ -176,7 +180,7 @@ public class Bet {
 								//lose
 								profit = bet.multiply(BigInteger.valueOf(-1));
 							}
-							db.executeUpdate("update bets set profit='"+profit.toString()+"' where tx_index='"+txIndex+"';");
+							db.executeUpdate("update bets set profit='"+profit.toString()+"', rolla='"+(rollA*100.0)+"', rollb='"+(rollB*100.0)+"', roll='"+roll+"', resolved='true' where tx_index='"+txIndex+"';");
 							break;
 						}
 					}

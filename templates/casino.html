@@ -69,6 +69,7 @@
 				            <th>Bet size</th>
 				            <th>Chance to win</th>
 				            <th>Payout multiplier</th>
+										<th>Roll</th>
 				            <th>Profit</th>
 				        </tr>
 				    </thead>
@@ -76,11 +77,12 @@
 				    <tbody>
 							<#list bets as bet>
 									<tr>
-											<td>${bet["source"]}</td>
+											<td><a href="http://blockchain.info/tx/${bet["tx_hash"]}">${bet["source"]}</a></td>
 											<td>${bet["bet"]} CHA</td>
 											<td>${bet["chance"]}%</td>
 											<td>${bet["payout"]}X</td>
-											<td><#if bet["profit"] != 0>${bet["profit"]} CHA<#else>Unresolved</#if></td>
+											<td>${bet["roll"]}</td>
+											<td><#if bet["resolved"] = "true">${bet["profit"]} CHA<#else>Unresolved</#if></td>
 									</tr>
 							</#list>
 				    </tbody>
@@ -102,6 +104,7 @@
 										<th>Bet size</th>
 										<th>Chance to win</th>
 										<th>Payout multiplier</th>
+										<th>Roll</th>
 										<th>Profit</th>
 								</tr>
 						</thead>
@@ -109,11 +112,12 @@
 						<tbody>
 							<#list my_bets as bet>
 									<tr>
-											<td>${bet["source"]}</td>
+											<td><a href="http://blockchain.info/tx/${bet["tx_hash"]}">${bet["source"]}</a></td>
 											<td>${bet["bet"]} CHA</td>
 											<td>${bet["chance"]}%</td>
 											<td>${bet["payout"]}X</td>
-											<td><#if bet["profit"] != 0>${bet["profit"]} CHA<#else>Unresolved</#if></td>
+											<td>${bet["roll"]}</td>
+											<td><#if bet["resolved"] = "true">${bet["profit"]} CHA<#else>Unresolved</#if></td>
 									</tr>
 							</#list>
 						</tbody>

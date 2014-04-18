@@ -90,7 +90,7 @@ public class Database {
 			statement.executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON btcpays (block_index)");
 
 			// Bets
-			statement.executeUpdate("CREATE TABLE IF NOT EXISTS bets(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, bet INTEGER, chance REAL, payout REAL, profit INTEGER, cha_supply INTEGER, validity TEXT)");
+			statement.executeUpdate("CREATE TABLE IF NOT EXISTS bets(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, bet INTEGER, chance REAL, payout REAL, profit INTEGER, cha_supply INTEGER, rolla REAL, rollb REAL, roll REAL, resolved TEXT, validity TEXT)");
 			statement.executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON bets (block_index)");
 
 			// Burns

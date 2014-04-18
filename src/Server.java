@@ -128,7 +128,7 @@ public class Server implements Runnable {
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
 				Database db = Database.getInstance();
-				ResultSet rs = db.executeQuery("select source,bet,chance,payout,profit from bets where validity='valid' order by block_index desc limit 200;");
+				ResultSet rs = db.executeQuery("select source,bet,chance,payout,profit,tx_hash,rolla,rollb,roll,resolved from bets where validity='valid' order by block_index desc limit 200;");
 				ArrayList<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -137,6 +137,9 @@ public class Server implements Runnable {
 						map.put("bet", BigInteger.valueOf(rs.getLong("bet")).doubleValue()/Config.unit.doubleValue());
 						map.put("chance", rs.getDouble("chance"));
 						map.put("payout", rs.getDouble("payout"));
+						map.put("tx_hash", rs.getString("tx_hash"));
+						map.put("roll", rs.getDouble("roll"));
+						map.put("resolved", rs.getString("resolved"));
 						map.put("profit", BigInteger.valueOf(rs.getLong("profit")).doubleValue()/Config.unit.doubleValue());
 						bets.add(map);
 					}
@@ -144,7 +147,7 @@ public class Server implements Runnable {
 				}
 				attributes.put("bets", bets);
 				if (request.queryParams("form").equals("my_bets")) {
-					rs = db.executeQuery("select source,bet,chance,payout,profit from bets where validity='valid' and source='"+request.queryParams("address")+"' order by block_index desc;");
+					rs = db.executeQuery("select source,bet,chance,payout,profit,tx_hash,rolla,rollb,roll,resolved from bets where validity='valid' and source='"+request.queryParams("address")+"' order by block_index desc;");
 					bets = new ArrayList<HashMap<String, Object>>();
 					try {
 						while (rs.next()) {
@@ -153,6 +156,9 @@ public class Server implements Runnable {
 							map.put("bet", BigInteger.valueOf(rs.getLong("bet")).doubleValue()/Config.unit.doubleValue());
 							map.put("chance", rs.getDouble("chance"));
 							map.put("payout", rs.getDouble("payout"));
+							map.put("tx_hash", rs.getString("tx_hash"));
+							map.put("roll", rs.getDouble("roll"));
+							map.put("resolved", rs.getString("resolved"));							
 							map.put("profit", BigInteger.valueOf(rs.getLong("profit")).doubleValue()/Config.unit.doubleValue());
 							bets.add(map);
 						}
@@ -173,7 +179,7 @@ public class Server implements Runnable {
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
 				Database db = Database.getInstance();
-				ResultSet rs = db.executeQuery("select source,bet,chance,payout,profit from bets where validity='valid' order by block_index desc limit 200;");
+				ResultSet rs = db.executeQuery("select source,bet,chance,payout,profit,tx_hash,rolla,rollb,roll,resolved from bets where validity='valid' order by block_index desc limit 200;");
 				ArrayList<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -182,6 +188,9 @@ public class Server implements Runnable {
 						map.put("bet", BigInteger.valueOf(rs.getLong("bet")).doubleValue()/Config.unit.doubleValue());
 						map.put("chance", rs.getDouble("chance"));
 						map.put("payout", rs.getDouble("payout"));
+						map.put("tx_hash", rs.getString("tx_hash"));
+						map.put("roll", rs.getDouble("roll"));
+						map.put("resolved", rs.getString("resolved"));
 						map.put("profit", BigInteger.valueOf(rs.getLong("profit")).doubleValue()/Config.unit.doubleValue());
 						bets.add(map);
 					}

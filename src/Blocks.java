@@ -242,7 +242,11 @@ public class Blocks {
 			ResultSet rs = db.executeQuery("select * from transactions where tx_hash='"+tx.getHashAsString()+"';");
 			try {
 				if (!rs.next()) {
-					db.executeUpdate("INSERT INTO transactions(tx_index, tx_hash, block_index, block_time, source, destination, btc_amount, fee, data) VALUES('"+(Util.getLastTxIndex()+1)+"','"+tx.getHashAsString()+"','"+blockHeight+"','"+block.getTimeSeconds()+"','"+source+"','"+destination+"','"+btcAmount.toString()+"','"+fee.toString()+"','"+dataString+"')");
+					if (block!=null) {
+						db.executeUpdate("INSERT INTO transactions(tx_index, tx_hash, block_index, block_time, source, destination, btc_amount, fee, data) VALUES('"+(Util.getLastTxIndex()+1)+"','"+tx.getHashAsString()+"','"+blockHeight+"','"+block.getTimeSeconds()+"','"+source+"','"+destination+"','"+btcAmount.toString()+"','"+fee.toString()+"','"+dataString+"')");
+					}else{
+						db.executeUpdate("INSERT INTO transactions(tx_index, tx_hash, block_index, block_time, source, destination, btc_amount, fee, data) VALUES('"+(Util.getLastTxIndex()+1)+"','"+tx.getHashAsString()+"','"+blockHeight+"','','"+source+"','"+destination+"','"+btcAmount.toString()+"','"+fee.toString()+"','"+dataString+"')");						
+					}
 				}
 			} catch (SQLException e) {
 			}
@@ -297,6 +301,7 @@ public class Blocks {
 					}
 				}
 			}
+			Bet.resolve();
 		} catch (SQLException e) {
 			logger.error(e.toString());
 		} catch (UnsupportedEncodingException e) {
@@ -350,6 +355,7 @@ public class Blocks {
 				keys.add(new ECKey(null, Util.toByteArray(chunk)));
 				Script script = ScriptBuilder.createMultiSigOutputScript(1, keys);
 				tx.addOutput(BigInteger.valueOf(Config.dustSize), script);
+				totalOutput = totalOutput.add(BigInteger.valueOf(Config.dustSize));
 			}
 			
 			if (!destination.equals("") && btcAmount.compareTo(BigInteger.ZERO)>0) {
@@ -366,14 +372,17 @@ public class Blocks {
 					}
 				}
 			}
+			if (totalInput.compareTo(totalOutput)<0) {
+				//return null; //not enough inputs
+			}
 			BigInteger totalChange = totalInput.subtract(totalOutput);
-						
+				
 			try {
-				if (totalChange.compareTo(BigInteger.ZERO)>0) {
-					tx.addOutput(totalChange, new Address(params, source));
-				}
 				if (!destination.equals("") && btcAmount.compareTo(BigInteger.ZERO)>0) {
 					tx.addOutput(btcAmount, new Address(params, destination));
+				}
+				if (totalChange.compareTo(BigInteger.ZERO)>0) {
+					tx.addOutput(totalChange, new Address(params, source));
 				}
 			} catch (AddressFormatException e) {
 			}
