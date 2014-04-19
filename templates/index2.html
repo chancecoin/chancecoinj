@@ -1,0 +1,37 @@
+<#import "template.html" as template>
+<@template.content>
+
+<div class="front_page_container">
+		<div class="pure-g-r center front_page_bet_table">
+				<div class="pure-u-1">
+						<form class="pure-form pure-form-stacked" action="/casino" method="post">
+								<input type="hidden" name="form" value="roll">
+						  	<fieldset>
+										<table class="pure-table pure-table-bordered">
+												<thead>
+														<tr>
+																<th>Source address</th>
+																<th>Bet size (in CHA)</th>
+																<th>Chance to win (%)</th>
+																<th>Payout</th>
+														</tr>
+												</thead>
+												<tbody>
+														<tr>
+																<td><input type="text" placeholder="source address" name="source"></td>
+																<td><input type="text" placeholder="bet size" name="bet"></td>
+																<td><input type="text" placeholder="chance to win" name="chance" value="50" onchange="document.getElementsByName('payout')[0].value=100/document.getElementsByName('chance')[0].value*(${1-house_edge});"></td>
+																<td><input type="text" placeholder="payout" name="payout" value="1.96" onchange="document.getElementsByName('chance')[0].value=100/(document.getElementsByName('payout')[0].value/(${1-house_edge}));"></td>
+														</tr>
+												</tbody>
+										</table>
+						  	</fieldset>
+						  	<div id="roll_button">
+						  		<button type="submit" class="pure-button pure-button-primary" name="roll" value="high">Roll Dice</button>
+						  	</div>
+						</form>
+				</div>
+		</div>
+</div>
+
+</@template.content>
