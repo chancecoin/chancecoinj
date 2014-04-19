@@ -31,6 +31,12 @@ body {
 	background-color: #eee;
 }
 
+.header .selected-highlight {
+	background: none;
+	color: #fc0;
+	background-color: #eee;
+}
+
 .splash {
 	margin-top: 0;
 	background: #eee;
@@ -167,7 +173,7 @@ blockquote p {
 }
 
 .front_page_bet_table {
-	width:719px;
+	width:744px;
 	height: 157px;
 	padding-top: 50px;
 	margin-left: auto;
@@ -175,6 +181,6 @@ blockquote p {
 }
 
 #roll_button {
-	width: 133px;
+	width: 112px;
 	margin: 0px auto;
 }
