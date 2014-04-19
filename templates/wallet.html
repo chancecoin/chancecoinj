@@ -21,13 +21,11 @@
 							</fieldset>
 					</form>
 				</div>
-
-				<h1>Wallet</h1>
-
+				
 			</div>
 		</div>
 		<div class="pure-g-r section">
-				<div class="pure-u-1-4 segment one-fourth border-right">
+				<div class="pure-u-1-3 segment one-third border-right">
 						<h2>Balance</h2>
 						<#if balanceCHA??>
 						<table class="pure-table pure-table-bordered center">
@@ -50,7 +48,7 @@
 						</#if>
 						<p>See <a href="/balances">all balances</a>.</p>
 				</div>
-				<div class="pure-u-1-4 segment one-fourth border-right">
+				<div class="pure-u-1-3 segment one-third border-right">
 						<h2>Import address</h2>
 						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
 								<fieldset>
@@ -62,21 +60,7 @@
 						</form>
 						<p>Note: importing requires a blockchain re-download.</p>
 				</div>
-				<div class="pure-u-1-4 segment one-fourth border-right">
-						<h2>Burn</h2>
-						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
-						    <fieldset>
-										<input type="hidden" name="form" value="burn">
-										<input type="hidden" name="source" value="${address}">
-
-						        <label>Quantity</label>
-						        <input type="text" placeholder="quantity" name="quantity">
-
-						        <button type="submit" class="pure-button pure-button-primary">Burn</button>
-						    </fieldset>
-						</form>
-				</div>
-				<div class="pure-u-1-4 segment one-fourth">
+				<div class="pure-u-1-3 segment one-third">
 						<h2>Send</h2>
 						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
 						    <fieldset>
@@ -114,7 +98,7 @@
 				</div>
 				<div class="pure-u-1-3 segment one-third border-right">
 						<h2>Order book</h2>
-						<table class="pure-table pure-table-bordered">
+						<table class="pure-table pure-table-bordered center">
 						    <thead>
 						        <tr>
 						            <th>Buy quantity (CHA)</th>
@@ -166,7 +150,7 @@
 		<div class="pure-g-r section">
 				<div class="pure-u-1-2 segment one-half border-right">
 						<h2>My orders</h2>
-						<table class="pure-table pure-table-bordered">
+						<table class="pure-table pure-table-bordered center">
 								<thead>
 										<tr>
 												<th>Buy/sell CHA</th>
@@ -198,12 +182,11 @@
 										</#list>
 										</#if>
 								</tbody>
-						</table>
-						</#if>
+						</table><br />
 					</div>
 					<div class="pure-u-1-2 segment one-half">
 						<h2>My matched orders</h2>
-						<table class="pure-table pure-table-bordered">
+						<table class="pure-table pure-table-bordered center">
 								<thead>
 										<tr>
 												<th>BTC owed</th>
@@ -228,8 +211,8 @@
 														</form>
 												</td>
 										</tr>
-										<#/list>
-										<#/if>
+										</#list>
+										</#if>
 								</tbody>
 						</table><br />
 				</div>

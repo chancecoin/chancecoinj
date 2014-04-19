@@ -2,7 +2,6 @@
 <@template.content>
     <div class="pure-g-r section">
       <div class="pure-u-1">
-        <h1>Technical</h1>
         <h2>Betting</h2>
           <p>Generally speaking, when you bet, you specify a bet size, a chance of winning, and a payout. The chance of winning and the payout must correspond. For example, if there were no house edge, a `50%` chance of winning would correspond to a `2`-to-`1` payout (`2x`). Because the house edge is `${ house_edge*100 }%`, this payout is adjusted to `${ 1/0.5*(1-house_edge) }x` (this is `1/0.5*(1-${ house_edge }`).</p>
           <p>Specifically, in Chancecoin, a bet is comprised of a bet amount (`b`), a chance of winning (`1/p`), and an edge-adjusted payout (`p*(1-e)`). The house edge (`e`) is `${ house_edge }` (`${ house_edge*100 }%`). The protocol enforces that the edge-adjusted payout and the chance of winning correspond exactly as described.</p>
