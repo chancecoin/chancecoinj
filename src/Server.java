@@ -39,7 +39,6 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "A coin for decentralized dice betting");
-				attributes.put("page", "Home");
 				String address = Util.getAddresses().get(0);
 				request.session(true);
 				if (request.session().attributes().contains("address")) {
@@ -50,7 +49,18 @@ public class Server implements Runnable {
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
-
+				return modelAndView(attributes, "index2.html");
+			}
+		});
+		post(new FreeMarkerRoute("/") {
+			@Override
+			public ModelAndView handle(Request request, Response response) {
+				setConfiguration(configuration);
+				Map<String, Object> attributes = new HashMap<String, Object>();
+				attributes.put("title", "A coin for decentralized dice betting");
+				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
+				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
+				attributes.put("house_edge", Config.houseEdge);
 				return modelAndView(attributes, "index2.html");
 			}
 		});
@@ -60,7 +70,6 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Participate");
-				attributes.put("page", "Participate");
 				attributes.put("house_edge", Config.houseEdge);
 				attributes.put("max_profit", Config.maxProfit);
 				attributes.put("burn_address", Config.burnAddress);
@@ -79,7 +88,6 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Technical");
-				attributes.put("page", "Technical");
 				attributes.put("house_edge", Config.houseEdge);
 				return modelAndView(attributes, "technical.html");
 			}
@@ -90,7 +98,6 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Balances");
-				attributes.put("page", "Balances");
 				Database db = Database.getInstance();
 				ResultSet rs = db.executeQuery("select address,amount as balance,amount*100.0/(select sum(amount) from balances) as share from balances where asset='CHA' group by address order by amount desc;");
 				ArrayList<HashMap<String, Object>> balances = new ArrayList<HashMap<String, Object>>();
@@ -114,7 +121,6 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Wallet");
-				attributes.put("page", "Wallet");
 				String address = Util.getAddresses().get(0);
 				request.session(true);
 				if (request.session().attributes().contains("address")) {
@@ -137,7 +143,6 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Wallet");
-				attributes.put("page", "Wallet");
 				String address = Util.getAddresses().get(0);
 				request.session(true);
 				if (request.session().attributes().contains("address")) {
@@ -156,7 +161,6 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Casino");
-				attributes.put("page", "Casino");
 				String address = Util.getAddresses().get(0);
 				request.session(true);
 				if (request.session().attributes().contains("address")) {
@@ -241,7 +245,6 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Casino");
-				attributes.put("page", "Casino");
 				String address = Util.getAddresses().get(0);
 				request.session(true);
 				if (request.session().attributes().contains("address")) {
@@ -319,7 +322,6 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Error");
-				attributes.put("page", "Error");
 				return modelAndView(attributes, "error.html");
 			}
 		});

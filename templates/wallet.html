@@ -124,20 +124,24 @@
 						    </thead>
 
 						    <tbody>
-										{% for order in orders_sell %}
+										<#if orders_sell??>
+										<#list orders_sell as order>
 						        <tr>
 												<td></td>
-												<td>{{ order[1] }}</td>
-												<td>{{ order[0] }}</td>
+												<td>${order["price"]}</td>
+												<td>${order["quantity"]}</td>
 						        </tr>
-										{% end %}
-										{% for order in orders_buy %}
+										</#list>
+										</#if>
+										<#if orders_buy??>
+										<#list orders_buy as order>
 										<tr>
-												<td>{{ order[0] }}</td>
-												<td>{{ order[1] }}</td>
+												<td>${ order["price"] }</td>
+												<td>${ order["quantity"] }</td>
 												<td></td>
 										</tr>
-										{% end %}
+										</#list>
+										</#if>
 						    </tbody>
 						</table><br />
 				</div>
@@ -161,7 +165,6 @@
 		</div>
 		<div class="pure-g-r section">
 				<div class="pure-u-1-2 segment one-half border-right">
-						{% if my_orders!=None %}
 						<h2>My orders</h2>
 						<table class="pure-table pure-table-bordered">
 								<thead>
@@ -175,29 +178,30 @@
 								</thead>
 
 								<tbody>
-										{% for order in my_orders %}
+										<#if my_orders??>
+										<#list my_orders as order>
 										<tr>
-												<td>{{ order[3] }}</td>
-												<td>{{ order[1] }}</td>
-												<td>{{ order[0] }}</td>
-												<td>{{ order[2] }}</td>
+												<td>${ order["buysell"] }</td>
+												<td>${ order["price"] }</td>
+												<td>${ order["quantity_cha"] }</td>
+												<td>${ order["quantity_btc"] }</td>
 												<td>
 														<form class="pure-form pure-form-stacked" action="/wallet" method="post">
 																<fieldset>
 																		<input type="hidden" name="form" value="cancel">
-																		<input type="hidden" name="tx_hash" value="{{ order[4] }}">
+																		<input type="hidden" name="tx_hash" value="${ order["tx_hash"] }">
 																		<button type="submit" class="pure-button pure-button-primary">Cancel</button>
 																</fieldset>
 														</form>
 												</td>
 										</tr>
-										{% end %}
+										</#list>
+										</#if>
 								</tbody>
 						</table>
-						{% end %}
+						</#if>
 					</div>
 					<div class="pure-u-1-2 segment one-half">
-						{% if my_order_matches!=None %}
 						<h2>My matched orders</h2>
 						<table class="pure-table pure-table-bordered">
 								<thead>
@@ -209,24 +213,25 @@
 								</thead>
 
 								<tbody>
-										{% for order_match in my_order_matches %}
+										<#if my_order_matches??>
+										<#list my_order_matches as order_match>
 										<tr>
-												<td>{{ order_match[0] }}</td>
-												<td>{{ order_match[1] }}</td>
+												<td>${ order_match["btc_owed"] }</td>
+												<td>${ order_match["cha_return"] }</td>
 												<td>
 														<form class="pure-form pure-form-stacked" action="/wallet" method="post">
 																<fieldset>
 																		<input type="hidden" name="form" value="btcpay">
-																		<input type="hidden" name="order_match_id" value="{{ order_match[2] }}">
+																		<input type="hidden" name="order_match_id" value="${ order_match["order_match_id"] }">
 																		<button type="submit" class="pure-button pure-button-primary">Pay BTC</button>
 																</fieldset>
 														</form>
 												</td>
 										</tr>
-										{% end %}
+										<#/list>
+										<#/if>
 								</tbody>
 						</table><br />
-						{% end %}
 				</div>
 		</div>
 </@template.content>
