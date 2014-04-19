@@ -34,7 +34,7 @@ public class GUI extends Application {
 		// create the scene
 		stage.setTitle("Chancecoin");
 		stage.getIcons().add(new Image("file:./static/images/logo.png"));
-		scene = new Scene(new Browser(),1000,720, Color.web("#EEEEEE"));
+		scene = new Scene(new Browser(),1000,690, Color.web("#EEEEEE"));
 		stage.setResizable(false);
 		stage.setScene(scene);
 		stage.show();
@@ -47,6 +47,7 @@ public class GUI extends Application {
 class Browser extends Region {
 
 	final WebView browser = new WebView();
+	final Button buttonHome = createHomeButton();
 	final WebEngine webEngine = browser.getEngine();
 	final String address = "http://0.0.0.0:8080/";
 
@@ -56,8 +57,8 @@ class Browser extends Region {
 
 		VBox vbox1 = new VBox(0);
 		vbox1.getChildren().add(browser);
-		vbox1.getChildren().add(createHomeButton());
-		browser.setPrefSize(1000, 700);
+		vbox1.getChildren().add(buttonHome);
+		browser.setPrefSize(1000, 654);
 		vbox1.setAlignment(Pos.TOP_CENTER);
 		getChildren().add(vbox1);
 

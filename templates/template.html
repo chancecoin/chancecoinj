@@ -20,10 +20,10 @@
 		<div class="pure-menu pure-menu-open pure-menu-fixed pure-menu-horizontal">
 			<a class="pure-menu-heading logo" href="/">Chancecoin</a>
 			<ul>
-				<li><a href="/casino">Casino</a></li>
-				<li><a href="/wallet">Wallet</a></li>
-				<li><a href="/participate">Participate</a></li>
-				<li><a href="/technical">Technical</a></li>
+				<li <#if title?? && title=="Casino">class="pure-menu-selected selected-highlight"</#if>><a href="/casino">Casino</a></li>
+				<li <#if title?? && title=="Wallet">class="pure-menu-selected selected-highlight"</#if>><a href="/wallet">Wallet</a></li>
+				<li <#if title?? && title=="Participate">class="pure-menu-selected selected-highlight"</#if>><a href="/participate">Participate</a></li>
+				<li <#if title?? && title=="Technical">class="pure-menu-selected selected-highlight"</#if>><a href="/technical">Technical</a></li>
 				<li><a href="http://reddit.com/r/chancecoin">Subreddit</a></li>
 				<li><a href="https://github.com/chancecoin/chancecoinj">GitHub</a></li>
 				<li><a href="https://bitcointalk.org/index.php?topic=528023.0">Bitcointalk</a></li>

@@ -43,12 +43,21 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "A coin for decentralized dice betting");
-				
-//				attributes.put("title", "Casino");
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
-
+				return modelAndView(attributes, "index2.html");
+			}
+		});
+		post(new FreeMarkerRoute("/") {
+			@Override
+			public ModelAndView handle(Request request, Response response) {
+				setConfiguration(configuration);
+				Map<String, Object> attributes = new HashMap<String, Object>();
+				attributes.put("title", "A coin for decentralized dice betting");
+				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
+				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
+				attributes.put("house_edge", Config.houseEdge);
 				return modelAndView(attributes, "index2.html");
 			}
 		});
