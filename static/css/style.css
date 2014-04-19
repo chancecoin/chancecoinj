@@ -10,7 +10,7 @@ body {
 }
 
 .logo {
-	background-image: url('/static/images/logo.png');
+	background-image: url('/images/logo.png');
 	background-repeat: no-repeat;
 	background-position: left top;
 	background-size: contain;
@@ -92,6 +92,11 @@ body {
 
 .one-fifth {
 	width: 19%;
+}
+
+.center {
+	text-align: center;
+	margin: 0 auto;
 }
 
 .vert-bottom {

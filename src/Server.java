@@ -104,7 +104,9 @@ public class Server implements Runnable {
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Wallet");
 				if (request.queryParams("form").equals("balance")) {
-					attributes.put("balance", Util.getBalance(request.queryParams("address"), "CHA").doubleValue() / Config.unit.doubleValue());
+					attributes.put("balanceCHA", Util.getBalance(request.queryParams("address"), "CHA").doubleValue() / Config.unit.doubleValue());
+					attributes.put("balanceBTC", Util.getBalance(request.queryParams("address"), "BTC").doubleValue() / Config.unit.doubleValue());
+					attributes.put("addresses", Util.getAddresses());
 				}
 				return modelAndView(attributes, "wallet.html");
 			}
@@ -115,6 +117,7 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Wallet");
+				attributes.put("addresses", Util.getAddresses());
 				return modelAndView(attributes, "wallet.html");
 			}
 		});	

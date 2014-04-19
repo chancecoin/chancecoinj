@@ -114,7 +114,7 @@ public class Blocks {
 			}
 			
 			for (int i = blockHashes.size()-1; i>=0; i--) { //traverse blocks in reverse order
-				block = peerGroup.getDownloadPeer().getBlock(block.getPrevBlockHash()).get();
+				block = peerGroup.getDownloadPeer().getBlock(blockHashes.get(i)).get();
 				blockHeight = blockStore.get(block.getHash()).getHeight();
 				logger.info("Catching Chancecoin up to Bitcoin (block "+blockHeight.toString()+"): "+Util.format((blockHashes.size() - i)/((double) blockHashes.size())*100.0)+"%");	
 				importBlock(block, blockHeight);
@@ -324,9 +324,9 @@ public class Blocks {
 						} else if (messageType.get(3)==Order.id.byteValue()) {
 							Order.parse(txIndex, message);
 						} else if (messageType.get(3)==Cancel.id.byteValue()) {
-							//Cancel.parse(txIndex, message);
+							Cancel.parse(txIndex, message);
 						} else if (messageType.get(3)==BTCPay.id.byteValue()) {
-							//BTCPay.parse(txIndex, message);
+							BTCPay.parse(txIndex, message);
 						}						
 					}
 				}
@@ -404,7 +404,7 @@ public class Blocks {
 				}
 			}
 			if (totalInput.compareTo(totalOutput)<0) {
-				//return null; //not enough inputs
+				return null; //not enough inputs
 			}
 			BigInteger totalChange = totalInput.subtract(totalOutput);
 				
