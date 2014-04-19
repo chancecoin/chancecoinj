@@ -1,5 +1,4 @@
 import java.io.BufferedInputStream;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLConnection;
@@ -11,15 +10,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.TransactionOutput;
 import com.google.bitcoin.script.Script;
-import com.google.bitcoin.wallet.CoinSelector;
 
 
 public class Util {
@@ -87,6 +82,15 @@ public class Util {
 	public static String format(Double input, String format) {
 		return (new DecimalFormat(format)).format(input);
 	}
+	
+    static float roundOff(Double x, int position)
+    {
+        float a = x.floatValue();
+        double temp = Math.pow(10.0, position);
+        a *= temp;
+        a = Math.round(a);
+        return (a / (float)temp);
+    }
 		
 	public static Integer getLastBlock() {
 		Database db = Database.getInstance();

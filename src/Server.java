@@ -1,16 +1,12 @@
 import static spark.Spark.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import com.google.common.collect.ImmutableMap;
 
 import freemarker.template.Configuration;
 import spark.*;
@@ -43,8 +39,14 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "A coin for decentralized dice betting");
-				
-//				attributes.put("title", "Casino");
+				attributes.put("page", "Home");
+				String address = Util.getAddresses().get(0);
+				request.session(true);
+				if (request.session().attributes().contains("address")) {
+					address = request.session().attribute("address");
+				}
+				attributes.put("address", address);
+				attributes.put("addresses", Util.getAddresses());				
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
@@ -58,6 +60,7 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Participate");
+				attributes.put("page", "Participate");
 				attributes.put("house_edge", Config.houseEdge);
 				attributes.put("max_profit", Config.maxProfit);
 				attributes.put("burn_address", Config.burnAddress);
@@ -76,6 +79,7 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Technical");
+				attributes.put("page", "Technical");
 				attributes.put("house_edge", Config.houseEdge);
 				return modelAndView(attributes, "technical.html");
 			}
@@ -86,6 +90,7 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Balances");
+				attributes.put("page", "Balances");
 				Database db = Database.getInstance();
 				ResultSet rs = db.executeQuery("select address,amount as balance,amount*100.0/(select sum(amount) from balances) as share from balances where asset='CHA' group by address order by amount desc;");
 				ArrayList<HashMap<String, Object>> balances = new ArrayList<HashMap<String, Object>>();
@@ -109,11 +114,20 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Wallet");
-				if (request.queryParams("form").equals("balance")) {
-					attributes.put("balanceCHA", Util.getBalance(request.queryParams("address"), "CHA").doubleValue() / Config.unit.doubleValue());
-					attributes.put("balanceBTC", Util.getBalance(request.queryParams("address"), "BTC").doubleValue() / Config.unit.doubleValue());
-					attributes.put("addresses", Util.getAddresses());
+				attributes.put("page", "Wallet");
+				String address = Util.getAddresses().get(0);
+				request.session(true);
+				if (request.session().attributes().contains("address")) {
+					address = request.session().attribute("address");
 				}
+				if (request.queryParams("form").equals("address")) {
+					address = request.queryParams("source");
+					request.session().attribute("address", address);
+				}
+				attributes.put("address", address);
+				attributes.put("addresses", Util.getAddresses());
+				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
 				return modelAndView(attributes, "wallet.html");
 			}
 		});	
@@ -123,7 +137,16 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Wallet");
+				attributes.put("page", "Wallet");
+				String address = Util.getAddresses().get(0);
+				request.session(true);
+				if (request.session().attributes().contains("address")) {
+					address = request.session().attribute("address");
+				}
+				attributes.put("address", address);
 				attributes.put("addresses", Util.getAddresses());
+				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
 				return modelAndView(attributes, "wallet.html");
 			}
 		});	
@@ -133,6 +156,18 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Casino");
+				attributes.put("page", "Casino");
+				String address = Util.getAddresses().get(0);
+				request.session(true);
+				if (request.session().attributes().contains("address")) {
+					address = request.session().attribute("address");
+				}
+				if (request.queryParams("form").equals("address")) {
+					address = request.queryParams("source");
+					request.session().attribute("address", address);
+				}
+				attributes.put("address", address);
+				attributes.put("addresses", Util.getAddresses());				
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
@@ -178,28 +213,25 @@ public class Server implements Runnable {
 				}
 				attributes.put("bets", bets);
 				
-				
-				
-				if (request.queryParams("form").equals("my_bets")) {
-					rs = db.executeQuery("select source,bet,chance,payout,profit,tx_hash,rolla,rollb,roll,resolved from bets where validity='valid' and source='"+request.queryParams("address")+"' order by block_index desc;");
-					bets = new ArrayList<HashMap<String, Object>>();
-					try {
-						while (rs.next()) {
-							HashMap<String,Object> map = new HashMap<String,Object>();
-							map.put("source", rs.getString("source"));
-							map.put("bet", BigInteger.valueOf(rs.getLong("bet")).doubleValue()/Config.unit.doubleValue());
-							map.put("chance", rs.getDouble("chance"));
-							map.put("payout", rs.getDouble("payout"));
-							map.put("tx_hash", rs.getString("tx_hash"));
-							map.put("roll", rs.getDouble("roll"));
-							map.put("resolved", rs.getString("resolved"));							
-							map.put("profit", BigInteger.valueOf(rs.getLong("profit")).doubleValue()/Config.unit.doubleValue());
-							bets.add(map);
-						}
-					} catch (SQLException e) {
+				rs = db.executeQuery("select source,bet,chance,payout,profit,tx_hash,rolla,rollb,roll,resolved from bets where validity='valid' and source='"+address+"' order by block_index desc;");
+				bets = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("source", rs.getString("source"));
+						map.put("bet", BigInteger.valueOf(rs.getLong("bet")).doubleValue()/Config.unit.doubleValue());
+						map.put("chance", rs.getDouble("chance"));
+						map.put("payout", rs.getDouble("payout"));
+						map.put("tx_hash", rs.getString("tx_hash"));
+						map.put("roll", rs.getDouble("roll"));
+						map.put("resolved", rs.getString("resolved"));							
+						map.put("profit", BigInteger.valueOf(rs.getLong("profit")).doubleValue()/Config.unit.doubleValue());
+						bets.add(map);
 					}
-					attributes.put("my_bets", bets);
+				} catch (SQLException e) {
 				}
+				attributes.put("my_bets", bets);
+				
 				return modelAndView(attributes, "casino.html");
 			}
 		});
@@ -209,6 +241,14 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Casino");
+				attributes.put("page", "Casino");
+				String address = Util.getAddresses().get(0);
+				request.session(true);
+				if (request.session().attributes().contains("address")) {
+					address = request.session().attribute("address");
+				}
+				attributes.put("address", address);
+				attributes.put("addresses", Util.getAddresses());
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
@@ -250,7 +290,26 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("bets", bets);
-				
+
+				rs = db.executeQuery("select source,bet,chance,payout,profit,tx_hash,rolla,rollb,roll,resolved from bets where validity='valid' and source='"+address+"' order by block_index desc;");
+				bets = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("source", rs.getString("source"));
+						map.put("bet", BigInteger.valueOf(rs.getLong("bet")).doubleValue()/Config.unit.doubleValue());
+						map.put("chance", rs.getDouble("chance"));
+						map.put("payout", rs.getDouble("payout"));
+						map.put("tx_hash", rs.getString("tx_hash"));
+						map.put("roll", rs.getDouble("roll"));
+						map.put("resolved", rs.getString("resolved"));							
+						map.put("profit", BigInteger.valueOf(rs.getLong("profit")).doubleValue()/Config.unit.doubleValue());
+						bets.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("my_bets", bets);
+								
 				return modelAndView(attributes, "casino.html");
 			}
 		});
@@ -260,6 +319,7 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Error");
+				attributes.put("page", "Error");
 				return modelAndView(attributes, "error.html");
 			}
 		});
