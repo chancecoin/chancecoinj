@@ -43,7 +43,13 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "A coin for decentralized dice betting");
-				return modelAndView(attributes, "index.html");
+				
+//				attributes.put("title", "Casino");
+				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
+				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
+				attributes.put("house_edge", Config.houseEdge);
+
+				return modelAndView(attributes, "index2.html");
 			}
 		});
 		get(new FreeMarkerRoute("/participate") {
@@ -127,8 +133,8 @@ public class Server implements Runnable {
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
+
 				Database db = Database.getInstance();
-				
 				
 				//get top winners
 				ResultSet rs = db.executeQuery("select source, count(bet) as bet_count, avg(bet) as avg_bet, avg(chance) as avg_chance, sum(profit) as sum_profit from bets where validity='valid' group by source order by sum(profit) desc;");

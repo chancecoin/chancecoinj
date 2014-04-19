@@ -10,7 +10,7 @@ body {
 }
 
 .logo {
-	background-image: url('/static/images/logo.png');
+	background-image: url('/images/logo.png');
 	background-repeat: no-repeat;
 	background-position: left top;
 	background-size: contain;
@@ -19,8 +19,7 @@ body {
 }
 
 .header {
-	height: 25px;
-	margin-bottom: 1em;
+	height: 46px;
 }
 .header .pure-menu {
 	padding: 0.25em;
@@ -137,3 +136,29 @@ blockquote:before {
 blockquote p {
   display: inline;
 }
+
+
+.front_page_container {
+	width: 1000px;
+	height: 549px;
+	margin-left: auto;
+	margin-right: auto;
+	background-image: url("/images/cubes_background.jpg");
+	background-repeat: no-repeat;
+	background-size: contain;
+
+}
+
+.front_page_bet_table {
+	width:719px;
+	height: 157px;
+	padding-top: 50px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+#roll_button {
+	width: 133px;
+	margin: 0px auto;
+}
+

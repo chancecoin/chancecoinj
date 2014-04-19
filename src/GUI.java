@@ -34,7 +34,7 @@ public class GUI extends Application {
 		// create the scene
 		stage.setTitle("Chancecoin");
 		stage.getIcons().add(new Image("file:./static/images/logo.png"));
-		scene = new Scene(new Browser(),1000,800, Color.web("#EEEEEE"));
+		scene = new Scene(new Browser(),1000,720, Color.web("#EEEEEE"));
 		stage.setResizable(false);
 		stage.setScene(scene);
 		stage.show();
@@ -54,10 +54,10 @@ class Browser extends Region {
 		//getStyleClass().add("browser");
 		webEngine.load(address);
 
-		VBox vbox1 = new VBox(10);
-		vbox1.getChildren().add(createHomeButton());
+		VBox vbox1 = new VBox(0);
 		vbox1.getChildren().add(browser);
-		browser.setPrefSize(1000, 725);
+		vbox1.getChildren().add(createHomeButton());
+		browser.setPrefSize(1000, 700);
 		vbox1.setAlignment(Pos.TOP_CENTER);
 		getChildren().add(vbox1);
 

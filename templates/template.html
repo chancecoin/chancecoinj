@@ -32,7 +32,7 @@
 	</div>
 
 	<div class="content">
-
+		<#if info?? || error?? || success?? || warning??>
 		<div class="pure-g-r section">
 			<div class="pure-u-1">
 				<#if info??>
@@ -49,6 +49,7 @@
 				</#if>
 			</div>
 		</div>
+		</#if>
 
 		<#nested/>
 	</div>
