@@ -80,10 +80,19 @@ body {
 .segment {
 	text-align: center;
 	padding-right: 1em;
+	padding-left: 1em;
+}
+
+.border-right {
+	border-right: 1px solid #ccc;
 }
 
 .one-third {
 	width: 32%;
+}
+
+.one-fourth {
+	width: 25%;
 }
 
 .one-half {
@@ -100,8 +109,11 @@ body {
 }
 
 .center {
-	text-align: center;
 	margin: 0 auto;
+}
+
+.upper-right {
+	float: right;
 }
 
 .vert-bottom {
@@ -172,4 +184,3 @@ blockquote p {
 	width: 112px;
 	margin: 0px auto;
 }
-

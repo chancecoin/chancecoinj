@@ -46,13 +46,13 @@ import com.google.bitcoin.wallet.WalletTransaction;
 import com.sun.org.apache.xpath.internal.compiler.OpCodes;
 
 public class Blocks {
-	static NetworkParameters params;
-	static Logger logger = LoggerFactory.getLogger(Blocks.class);
+	public NetworkParameters params;
+	public Logger logger = LoggerFactory.getLogger(Blocks.class);
 	private static Blocks instance = null;
-	static Wallet wallet;
-	static PeerGroup peerGroup;
-	static BlockChain blockChain;
-	static BlockStore blockStore;
+	public Wallet wallet;
+	public PeerGroup peerGroup;
+	public BlockChain blockChain;
+	public BlockStore blockStore;
 	
 	public static Blocks getInstance() {
 		if(instance == null) {

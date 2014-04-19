@@ -2,6 +2,24 @@
 <@template.content>
 		<div class="pure-g-r section">
 			<div class="pure-u-1">
+				<div class="upper-right">
+					<form class="pure-form" action="/casino" method="post">
+							<fieldset>
+									<#if addresses??>
+									<input type="hidden" name="form" value="address">
+									</#if>
+									<select name="source">
+										<#if addresses??>
+											<#list addresses as addr>
+												<option<#if addr==address> selected="selected"</#if>>${addr}</option>
+											</#list>
+										</#if>
+									</select>
+
+									<button type="submit" class="pure-button pure-button-primary">Select wallet address</button>
+							</fieldset>
+					</form>
+				</div>
 				<h1>Casino</h1>
 			</div>
 		</div>
@@ -12,10 +30,10 @@
 						<form class="pure-form pure-form-stacked" action="/casino" method="post">
 								<input type="hidden" name="form" value="roll">
 						  	<fieldset>
+										<input type="hidden" name="source" value="${address}">
 										<table class="pure-table pure-table-bordered">
 												<thead>
 														<tr>
-																<th>Source address</th>
 																<th>Bet size (in CHA)</th>
 																<th>Chance to win (%)</th>
 																<th>Payout</th>
@@ -24,7 +42,6 @@
 												</thead>
 												<tbody>
 														<tr>
-																<td><input type="text" placeholder="source address" name="source"></td>
 																<td><input type="text" placeholder="bet size" name="bet"></td>
 																<td><input type="text" placeholder="chance to win" name="chance" value="50" onchange="document.getElementsByName('payout')[0].value=100/document.getElementsByName('chance')[0].value*(${1-house_edge});"></td>
 																<td><input type="text" placeholder="payout" name="payout" value="1.96" onchange="document.getElementsByName('chance')[0].value=100/(document.getElementsByName('payout')[0].value/(${1-house_edge}));"></td>
@@ -60,7 +77,7 @@
 
 		<div class="pure-g-r section padding-bottom">
 			<div class="pure-u-1">
-			
+
 				<h2>Leaderboard</h2>
 
 				<table class="pure-table pure-table-bordered">
@@ -86,14 +103,14 @@
 
 				    </tbody>
 				</table>
-			
-			
-			
-			
-			
-			
-			
-			
+
+
+
+
+
+
+
+
 				<h2>All bets</h2>
 
 				<table class="pure-table pure-table-bordered">
@@ -122,14 +139,6 @@
 				    </tbody>
 				</table>
 				<h2>My bets</h2>
-				<form class="pure-form" action="/casino" method="post">
-						<fieldset>
-								<input type="hidden" name="form" value="my_bets">
-
-								<input type="text" placeholder="address" name="address">
-								<button type="submit" class="pure-button pure-button-primary">Get my bets</button>
-						</fieldset>
-				</form>
 				<#if my_bets??>
 				<table class="pure-table pure-table-bordered">
 						<thead>
@@ -155,8 +164,8 @@
 									</tr>
 							</#list>
 						</tbody>
-						
-						
+
+
 				</table>
 				</#if>
 			</div>

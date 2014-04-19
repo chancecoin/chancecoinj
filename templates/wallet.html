@@ -2,20 +2,33 @@
 <@template.content>
 		<div class="pure-g-r section">
 			<div class="pure-u-1">
+
+				<div class="upper-right">
+					<form class="pure-form" action="/wallet" method="post">
+							<fieldset>
+									<#if addresses??>
+									<input type="hidden" name="form" value="address">
+									</#if>
+									<select name="source">
+										<#if addresses??>
+											<#list addresses as addr>
+												<option<#if addr==address> selected="selected"</#if>>${addr}</option>
+											</#list>
+										</#if>
+									</select>
+
+									<button type="submit" class="pure-button pure-button-primary">Select wallet address</button>
+							</fieldset>
+					</form>
+				</div>
+
 				<h1>Wallet</h1>
+
 			</div>
 		</div>
 		<div class="pure-g-r section">
-				<div class="pure-u-1-3 segment one-third">
+				<div class="pure-u-1-4 segment one-fourth border-right">
 						<h2>Balance</h2>
-						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
-						    <fieldset>
-						        <input type="hidden" name="form" value="balance">
-
-						        <input type="text" placeholder="address" name="address">
-						        <button type="submit" class="pure-button pure-button-primary">Get balance</button>
-						    </fieldset>
-						</form>
 						<#if balanceCHA??>
 						<table class="pure-table pure-table-bordered center">
 								<thead>
@@ -36,6 +49,9 @@
 						</table>
 						</#if>
 						<p>See <a href="/balances">all balances</a>.</p>
+				</div>
+				<div class="pure-u-1-4 segment one-fourth border-right">
+						<h2>Import address</h2>
 						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
 								<fieldset>
 										<input type="hidden" name="form" value="import">
@@ -44,24 +60,14 @@
 										<button type="submit" class="pure-button pure-button-primary">Import address</button>
 								</fieldset>
 						</form>
+						<p>Note: importing requires a blockchain re-download.</p>
 				</div>
-				<div class="pure-u-1-3 segment one-third">
+				<div class="pure-u-1-4 segment one-fourth border-right">
 						<h2>Burn</h2>
 						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
 						    <fieldset>
-										<#if addresses??>
 										<input type="hidden" name="form" value="burn">
-										</#if>
-						        <label>Source address</label>
-						        <select name="source">
-											<#if addresses??>
-												<#list addresses as address>
-							            <option>${address}</option>
-												</#list>
-											<#else>
-												<option>Please import an address first.</option>
-											</#if>
-						        </select>
+										<input type="hidden" name="source" value="${address}">
 
 						        <label>Quantity</label>
 						        <input type="text" placeholder="quantity" name="quantity">
@@ -70,14 +76,12 @@
 						    </fieldset>
 						</form>
 				</div>
-				<div class="pure-u-1-3 segment one-third">
+				<div class="pure-u-1-4 segment one-fourth">
 						<h2>Send</h2>
 						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
 						    <fieldset>
 						        <input type="hidden" name="form" value="send">
-
-						        <label>Source address</label>
-						        <input type="text" placeholder="source address" name="source">
+										<input type="hidden" name="source" value="${address}">
 
 						        <label>Destination address</label>
 						        <input type="text" placeholder="destination address" name="destination">
@@ -91,14 +95,12 @@
 				</div>
 		</div>
 		<div class="pure-g-r section">
-				<div class="pure-u-1-3 segment one-third">
+				<div class="pure-u-1-3 segment one-third border-right">
 						<h2>Buy CHA</h2>
 						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
 						    <fieldset>
 						        <input type="hidden" name="form" value="buy">
-
-						        <label>Source address</label>
-						        <input type="text" placeholder="source address" name="source">
+										<input type="hidden" name="source" value="${address}">
 
 						        <label>Quantity (CHA)</label>
 						        <input type="text" placeholder="quantity" name="quantity">
@@ -110,7 +112,7 @@
 						    </fieldset>
 						</form>
 				</div>
-				<div class="pure-u-1-3 segment one-third">
+				<div class="pure-u-1-3 segment one-third border-right">
 						<h2>Order book</h2>
 						<table class="pure-table pure-table-bordered">
 						    <thead>
@@ -137,16 +139,14 @@
 										</tr>
 										{% end %}
 						    </tbody>
-						</table>
+						</table><br />
 				</div>
 				<div class="pure-u-1-3 segment one-third">
 						<h2>Sell CHA</h2>
 						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
 						    <fieldset>
 						        <input type="hidden" name="form" value="sell">
-
-						        <label>Source address</label>
-						        <input type="text" placeholder="source address" name="source">
+										<input type="hidden" name="source" value="${address}">
 
 						        <label>Quantity (CHA)</label>
 						        <input type="text" placeholder="quantity" name="quantity">
@@ -160,18 +160,7 @@
 				</div>
 		</div>
 		<div class="pure-g-r section">
-				<div class="pure-u-1-3 segment one-third">
-						<h2>Get my orders</h2>
-						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
-								<fieldset>
-										<input type="hidden" name="form" value="my_orders">
-
-										<input type="text" placeholder="address" name="address">
-										<button type="submit" class="pure-button pure-button-primary">Get my orders</button>
-								</fieldset>
-						</form>
-				</div>
-				<div class="pure-u-2-3 segment two-thirds">
+				<div class="pure-u-1-2 segment one-half border-right">
 						{% if my_orders!=None %}
 						<h2>My orders</h2>
 						<table class="pure-table pure-table-bordered">
@@ -206,6 +195,8 @@
 								</tbody>
 						</table>
 						{% end %}
+					</div>
+					<div class="pure-u-1-2 segment one-half">
 						{% if my_order_matches!=None %}
 						<h2>My matched orders</h2>
 						<table class="pure-table pure-table-bordered">

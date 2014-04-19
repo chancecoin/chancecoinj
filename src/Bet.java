@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -9,16 +8,12 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.bitcoin.core.Transaction;
 
@@ -47,7 +42,7 @@ public class Bet {
 					BigInteger bet = BigInteger.valueOf(byteBuffer.getLong(0));
 					Double chance = byteBuffer.getDouble(8);
 					Double payout = byteBuffer.getDouble(16);
-					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && chance==100.0/(payout/(1.0-Config.houseEdge))) {
+					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-Config.houseEdge)),6)) {
 						if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
 							BigInteger chaSupply = Util.chaSupply();
 							if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
@@ -62,7 +57,7 @@ public class Bet {
 		}
 	}
 	public static Transaction create(String source, BigInteger bet, Double chance, Double payout) {
-		if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && chance==100.0/(payout/(1.0-Config.houseEdge))) {
+		if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-Config.houseEdge)),6)) {
 			if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
 				BigInteger chaSupply = Util.chaSupply();
 				if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
