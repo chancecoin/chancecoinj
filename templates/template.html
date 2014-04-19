@@ -7,13 +7,15 @@
 	<meta name="description" content="Chancecoin is a coin for betting on dice in a decentralized casino.">
 
 	<title>Chancecoin<#if title??> - ${title}</#if></title>
-	<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+	<link rel="stylesheet" href="http://yui.yahooapis.com/combo?pure/0.4.2/tables-min.css&pure/0.4.2/grids-min.css&pure/0.4.2/menus-min.css">
 	<link rel="stylesheet" href="/css/style.css">
-  <link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon">
+	<link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon">
   <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
 	<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
 	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	<script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 </head>
 <body>
 	<div class="header">
@@ -36,16 +38,16 @@
 		<div class="pure-g-r section">
 			<div class="pure-u-1">
 				<#if info??>
-				<p class="info">${info}</p>
+				<div class="alert alert-info">${info}</div>
 				</#if>
 				<#if error??>
-				<p class="error">${error}</p>
+				<div class="alert alert-error">${error}</div>
 				</#if>
 				<#if success??>
-				<p class="success">${success}</p>
+				<div class="alert alert-success">${success}</div>
 				</#if>
 				<#if warning??>
-				<p class="warning">${warning}</p>
+				<div class="alert alert-warning">${warning}</div>
 				</#if>
 			</div>
 		</div>

@@ -126,8 +126,8 @@ public class Server implements Runnable {
 				if (request.session().attributes().contains("address")) {
 					address = request.session().attribute("address");
 				}
-				if (request.queryParams("form").equals("address")) {
-					address = request.queryParams("source");
+				if (request.queryParams().contains("address")) {
+					address = request.queryParams("address");
 					request.session().attribute("address", address);
 				}
 				attributes.put("address", address);
@@ -148,6 +148,10 @@ public class Server implements Runnable {
 				if (request.session().attributes().contains("address")) {
 					address = request.session().attribute("address");
 				}
+				if (request.queryParams().contains("address")) {
+					address = request.queryParams("address");
+					request.session().attribute("address", address);
+				}				
 				attributes.put("address", address);
 				attributes.put("addresses", Util.getAddresses());
 				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
@@ -166,8 +170,8 @@ public class Server implements Runnable {
 				if (request.session().attributes().contains("address")) {
 					address = request.session().attribute("address");
 				}
-				if (request.queryParams("form").equals("address")) {
-					address = request.queryParams("source");
+				if (request.queryParams().contains("address")) {
+					address = request.queryParams("address");
 					request.session().attribute("address", address);
 				}
 				attributes.put("address", address);
@@ -249,6 +253,10 @@ public class Server implements Runnable {
 				request.session(true);
 				if (request.session().attributes().contains("address")) {
 					address = request.session().attribute("address");
+				}
+				if (request.queryParams().contains("address")) {
+					address = request.queryParams("address");
+					request.session().attribute("address", address);
 				}
 				attributes.put("address", address);
 				attributes.put("addresses", Util.getAddresses());

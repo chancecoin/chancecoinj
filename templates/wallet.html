@@ -1,29 +1,22 @@
 <#import "template.html" as template>
 <@template.content>
 		<div class="pure-g-r section">
-			<div class="pure-u-1">
-
-				<div class="upper-right">
-					<form class="pure-form" action="/wallet" method="post">
-							<fieldset>
-									<#if addresses??>
-									<input type="hidden" name="form" value="address">
-									</#if>
-									<select name="source">
-										<#if addresses??>
-											<#list addresses as addr>
-												<option<#if addr==address> selected="selected"</#if>>${addr}</option>
-											</#list>
-										</#if>
-									</select>
-
-									<button type="submit" class="pure-button pure-button-primary">Select wallet address</button>
-							</fieldset>
-					</form>
-				</div>
-				
+			<div class="pure-u-1 padding-bottom padding-top">
+					<div class="btn-group">
+					  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+					    <span class="glyphicon glyphicon-user"></span> ${address} <span class="caret"></span>
+					  </button>
+					  <ul class="dropdown-menu" role="menu">
+							<#if addresses??>
+								<#list addresses as addr>
+									<li><a href="?address=${addr}"><#if addr==address><strong></#if>${addr}<#if addr==address></strong></#if></a></li>
+								</#list>
+							</#if>
+					  </ul>
+					</div>
 			</div>
 		</div>
+
 		<div class="pure-g-r section">
 				<div class="pure-u-1-3 segment one-third border-right">
 						<h2>Balance</h2>
@@ -50,50 +43,68 @@
 				</div>
 				<div class="pure-u-1-3 segment one-third border-right">
 						<h2>Import address</h2>
-						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
-								<fieldset>
-										<input type="hidden" name="form" value="import">
+						<form action="/wallet" method="post">
+								<input type="hidden" name="form" value="import">
 
-										<input type="text" placeholder="address" name="address">
-										<button type="submit" class="pure-button pure-button-primary">Import address</button>
-								</fieldset>
+								<div class="input-group">
+									<span class="input-group-addon">@</span>
+									<input type="text" placeholder="address" name="address">
+								</div>
+
+								<div class="input-group">
+									<span class="input-group-btn">
+										<button class="btn btn-default" type="submit">Import address</button>
+									</span>
+								</div>
 						</form>
 						<p>Note: importing requires a blockchain re-download.</p>
 				</div>
 				<div class="pure-u-1-3 segment one-third">
 						<h2>Send</h2>
-						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
-						    <fieldset>
-						        <input type="hidden" name="form" value="send">
-										<input type="hidden" name="source" value="${address}">
+						<form action="/wallet" method="post">
+				        <input type="hidden" name="form" value="send">
+								<input type="hidden" name="source" value="${address}">
 
-						        <label>Destination address</label>
-						        <input type="text" placeholder="destination address" name="destination">
+								<div class="input-group">
+									<span class="input-group-addon">@</span>
+				        	<input type="text" placeholder="destination address" name="destination">
+								</div>
 
-						        <label>Quantity</label>
-						        <input type="text" placeholder="quantity" name="quantity">
+								<div class="input-group">
+								  <span class="input-group-addon">#</span>
+				        	<input type="text" placeholder="quantity (CHA)" name="quantity">
+								</div>
 
-						        <button type="submit" class="pure-button pure-button-primary">Send</button>
-						    </fieldset>
+								<div class="input-group">
+						      <span class="input-group-btn">
+						        <button class="btn btn-default" type="submit">Send</button>
+						      </span>
+						    </div>
 						</form>
 				</div>
 		</div>
 		<div class="pure-g-r section">
 				<div class="pure-u-1-3 segment one-third border-right">
-						<h2>Buy CHA</h2>
-						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
-						    <fieldset>
-						        <input type="hidden" name="form" value="buy">
-										<input type="hidden" name="source" value="${address}">
+						<h2>Buy</h2>
+						<form action="/wallet" method="post">
+								<input type="hidden" name="form" value="buy">
+								<input type="hidden" name="source" value="${address}">
 
-						        <label>Quantity (CHA)</label>
-						        <input type="text" placeholder="quantity" name="quantity">
+								<div class="input-group">
+									<span class="input-group-addon">#</span>
+									<input type="text" placeholder="quantity (CHA)" name="quantity">
+								</div>
 
-						        <label>Price (CHA/BTC)</label>
-						        <input type="text" placeholder="price" name="price">
+								<div class="input-group">
+									<span class="input-group-addon">$</span>
+									<input type="text" placeholder="price (CHA/BTC)" name="price">
+								</div>
 
-						        <button type="submit" class="pure-button pure-button-primary">Buy CHA</button>
-						    </fieldset>
+								<div class="input-group">
+									<span class="input-group-btn">
+										<button class="btn btn-default" type="submit">Buy</button>
+									</span>
+								</div>
 						</form>
 				</div>
 				<div class="pure-u-1-3 segment one-third border-right">
@@ -127,23 +138,29 @@
 										</#list>
 										</#if>
 						    </tbody>
-						</table><br />
+						</table>
 				</div>
 				<div class="pure-u-1-3 segment one-third">
-						<h2>Sell CHA</h2>
+						<h2>Sell</h2>
 						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
-						    <fieldset>
-						        <input type="hidden" name="form" value="sell">
-										<input type="hidden" name="source" value="${address}">
+								<input type="hidden" name="form" value="sell">
+								<input type="hidden" name="source" value="${address}">
 
-						        <label>Quantity (CHA)</label>
-						        <input type="text" placeholder="quantity" name="quantity">
+								<div class="input-group">
+									<span class="input-group-addon">#</span>
+									<input type="text" placeholder="quantity (CHA)" name="quantity">
+								</div>
 
-						        <label>Price (CHA/BTC)</label>
-						        <input type="text" placeholder="price" name="price">
+								<div class="input-group">
+									<span class="input-group-addon">$</span>
+									<input type="text" placeholder="price (CHA/BTC)" name="price">
+								</div>
 
-						        <button type="submit" class="pure-button pure-button-primary">Sell CHA</button>
-						    </fieldset>
+								<div class="input-group">
+									<span class="input-group-btn">
+										<button class="btn btn-default" type="submit">Sell</button>
+									</span>
+								</div>
 						</form>
 				</div>
 		</div>
@@ -182,7 +199,7 @@
 										</#list>
 										</#if>
 								</tbody>
-						</table><br />
+						</table>
 					</div>
 					<div class="pure-u-1-2 segment one-half">
 						<h2>My matched orders</h2>
@@ -214,7 +231,7 @@
 										</#list>
 										</#if>
 								</tbody>
-						</table><br />
+						</table>
 				</div>
 		</div>
 </@template.content>

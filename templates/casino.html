@@ -1,54 +1,56 @@
 <#import "template.html" as template>
 <@template.content>
 		<div class="pure-g-r section">
-			<div class="pure-u-1">
-				<div class="upper-right">
-					<form class="pure-form" action="/casino" method="post">
-							<fieldset>
-									<#if addresses??>
-									<input type="hidden" name="form" value="address">
-									</#if>
-									<select name="source">
-										<#if addresses??>
-											<#list addresses as addr>
-												<option<#if addr==address> selected="selected"</#if>>${addr}</option>
-											</#list>
-										</#if>
-									</select>
-
-									<button type="submit" class="pure-button pure-button-primary">Select wallet address</button>
-							</fieldset>
-					</form>
-				</div>
+			<div class="pure-u-1 padding-bottom padding-top">
+					<div class="btn-group">
+						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+							${address} <span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu" role="menu">
+							<#if addresses??>
+								<#list addresses as addr>
+									<li><a href="?address=${addr}"><#if addr==address><strong></#if>${addr}<#if addr==address></strong></#if></a></li>
+								</#list>
+							</#if>
+						</ul>
+					</div>
 			</div>
 		</div>
 
 		<div class="pure-g-r section">
 				<div class="pure-u-1">
-						<h2>Roll the dice</h2>
-						<form class="pure-form pure-form-stacked" action="/casino" method="post">
+						<h2>Roll dice</h2>
+						<form action="/casino" class="form-inline" method="post">
+
 								<input type="hidden" name="form" value="roll">
-						  	<fieldset>
-										<input type="hidden" name="source" value="${address}">
-										<table class="pure-table pure-table-bordered">
-												<thead>
-														<tr>
-																<th>Bet size (in CHA)</th>
-																<th>Chance to win (%)</th>
-																<th>Payout</th>
-																<th>Roll</th>
-														</tr>
-												</thead>
-												<tbody>
-														<tr>
-																<td><input type="text" placeholder="bet size" name="bet"></td>
-																<td><input type="text" placeholder="chance to win" name="chance" value="50" onchange="document.getElementsByName('payout')[0].value=100/document.getElementsByName('chance')[0].value*(${1-house_edge});"></td>
-																<td><input type="text" placeholder="payout" name="payout" value="1.96" onchange="document.getElementsByName('chance')[0].value=100/(document.getElementsByName('payout')[0].value/(${1-house_edge}));"></td>
-																<td><button type="submit" class="pure-button pure-button-primary" name="roll" value="high">Roll the dice</button></td>
-														</tr>
-												</tbody>
-										</table>
-						  	</fieldset>
+								<input type="hidden" name="source" value="${address}">
+
+							  <div class="form-group">
+									<div class="input-group">
+										<span class="input-group-addon">#</span>
+										<input type="text" placeholder="bet size (CHA)" name="bet">
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="input-group">
+										<span class="input-group-addon">%</span>
+										<input type="text" placeholder="chance to win" name="chance" onchange="document.getElementsByName('payout')[0].value=100/document.getElementsByName('chance')[0].value*(${1-house_edge});">
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="input-group">
+										<span class="input-group-addon">X</span>
+										<input type="text" placeholder="payout" name="payout" onchange="document.getElementsByName('chance')[0].value=100/(document.getElementsByName('payout')[0].value/(${1-house_edge}));">
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="input-group">
+										<span class="input-group-btn">
+											<button class="btn btn-default" type="submit">Roll dice</button>
+										</span>
+									</div>
+								</div>
+
 						</form>
 				</div>
 		</div>
