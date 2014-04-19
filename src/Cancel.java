@@ -42,48 +42,61 @@ public class Cancel {
 
 				if (message.size() == length) {
 					ByteBuffer byteBuffer = ByteBuffer.allocate(length);
-					for (byte b : message) {
-						byteBuffer.put(b);
-					}			
-					Integer assetId = Ints.checkedCast(byteBuffer.getLong(0));
-					BigInteger amount = BigInteger.valueOf(byteBuffer.getLong(8));
-					String asset = Util.getAssetName(assetId);
-					if (!source.equals("") && !destination.equals("") && asset.equals("CHA")) {
-						BigInteger sourceBalance = Util.getBalance(source, asset);
-						BigInteger amountToTransfer = amount.min(sourceBalance);
-						if (amountToTransfer.compareTo(BigInteger.ZERO)>0) {
-							db.executeUpdate("insert into sends(tx_index, tx_hash, block_index, source, destination, asset, amount, validity) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+destination+"','"+asset+"','"+amountToTransfer.toString()+"','valid')");
-							Util.debit(source, asset, amountToTransfer);								
-							Util.credit(destination, asset, amountToTransfer);								
+					String offerHash = new BigInteger(1, Util.toByteArray(message.subList(0, 32))).toString(16);
+					ResultSet rsOrder = db.executeQuery("select * from orders where tx_hash='"+offerHash+"' and source='"+source+"' and validity='valid';");
+					String validity = "invalid";
+					if (rsOrder.next()) {
+						String orderTxHash = rsOrder.getString("tx_hash");
+						String orderGiveAsset = rsOrder.getString("give_asset");
+						BigInteger orderGiveRemaining = BigInteger.valueOf(rsOrder.getLong("get_remaining"));
+						db.executeUpdate("update orders set validity='cancelled' where tx_hash='"+orderTxHash+"';");
+						if (!orderGiveAsset.equals("BTC")) {
+							Util.credit(source, orderGiveAsset, orderGiveRemaining);
 						}
+						validity = "valid";
 					}
+					db.executeUpdate("insert into cancels(tx_index, tx_hash, block_index, source, offer_hash, validity) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+offerHash+"','"+validity+"')");
 				}				
 			}
 		} catch (SQLException e) {	
 		}
 	}
-	public static Transaction create(String source, String destination, String asset, BigInteger amount) {
-		if (!source.equals("") && !destination.equals("") && asset.equals("CHA")) {
-			BigInteger sourceBalance = Util.getBalance(source, asset);
-			Integer assetId = Util.getAssetId(asset);
-			if (sourceBalance.compareTo(amount)>=0) {
-				Blocks blocks = Blocks.getInstance();
-				ByteBuffer byteBuffer = ByteBuffer.allocate(length+4);
-				byteBuffer.putInt(0, id);
-				byteBuffer.putLong(0+4, assetId);
-				byteBuffer.putLong(8+4, amount.longValue());
-				List<Byte> dataArrayList = Util.toByteArrayList(byteBuffer.array());
-				dataArrayList.addAll(0, Util.toByteArrayList(Config.prefix.getBytes()));
-				byte[] data = Util.toByteArray(dataArrayList);
-
-				String dataString = "";
-				try {
-					dataString = new String(data,"ISO-8859-1");
-				} catch (UnsupportedEncodingException e) {
+	public static Transaction create(String offerHash) {
+		Database db = Database.getInstance();
+		ResultSet rsOrderMatch = db.executeQuery("select * from orders where tx_hash='"+offerHash+"';");
+		String source = "";
+		String destination = "";
+		BigInteger btcAmount = BigInteger.ZERO;
+		try {
+			if (rsOrderMatch.next()) {
+				String orderMatchValidity = rsOrderMatch.getString("validity");
+				String orderMatchSource = rsOrderMatch.getString("source");
+				if (orderMatchValidity.equals("pending")) {
+					byte[] offerHashBytes = null;
+					try {
+						offerHashBytes = offerHash.getBytes("UTF-8");
+					} catch (UnsupportedEncodingException e1) {
+					}
+					Blocks blocks = Blocks.getInstance();
+					ByteBuffer byteBuffer = ByteBuffer.allocate(length+4);
+					byteBuffer.putInt(0, id);
+					byteBuffer.put(offerHashBytes, 0+4, 32);
+					List<Byte> dataArrayList = Util.toByteArrayList(byteBuffer.array());
+					dataArrayList.addAll(0, Util.toByteArrayList(Config.prefix.getBytes()));
+					byte[] data = Util.toByteArray(dataArrayList);
+	
+					String dataString = "";
+					try {
+						dataString = new String(data,"ISO-8859-1");
+					} catch (UnsupportedEncodingException e) {
+					}
+					source = orderMatchSource;
+					Transaction tx = blocks.transaction(source, "", BigInteger.ZERO, BigInteger.valueOf(Config.minFee), dataString);
+					return tx;
+					
 				}
-				Transaction tx = blocks.transaction(source, destination, BigInteger.valueOf(Config.dustSize), BigInteger.valueOf(Config.minFee), dataString);
-				return tx;
 			}
+		} catch (SQLException e) {
 		}
 		return null;
 	}

@@ -93,6 +93,11 @@ body {
 	width: 19%;
 }
 
+.center {
+	text-align: center;
+	margin: 0 auto;
+}
+
 .vert-bottom {
 	vertical-align: bottom;
 }

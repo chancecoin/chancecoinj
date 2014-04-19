@@ -16,8 +16,24 @@
 						        <button type="submit" class="pure-button pure-button-primary">Get balance</button>
 						    </fieldset>
 						</form>
-						<#if balance??>
-						<p><p>Your balance is ${balance} CHA.</p>
+						<#if balanceCHA??>
+						<table class="pure-table pure-table-bordered center">
+								<thead>
+										<tr>
+												<th>Balance</th>
+												<th>Currency</th>
+										</tr>
+								</thead>
+
+								<tbody>
+									<#if balanceCHA??>
+									<tr><td>${balanceCHA?string(",##0.00000000")}</td><td>CHA</td></tr>
+									</#if>
+									<#if balanceBTC??>
+									<tr><td>${balanceBTC?string(",##0.00000000")}</td><td>BTC</td></tr>
+									</#if>
+								</tbody>
+						</table>
 						</#if>
 						<p>See <a href="/balances">all balances</a>.</p>
 						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
@@ -33,10 +49,19 @@
 						<h2>Burn</h2>
 						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
 						    <fieldset>
-						        <input type="hidden" name="form" value="burn">
-
+										<#if addresses??>
+										<input type="hidden" name="form" value="burn">
+										</#if>
 						        <label>Source address</label>
-						        <input type="text" placeholder="source address" name="source">
+						        <select name="source">
+											<#if addresses??>
+												<#list addresses as address>
+							            <option>${address}</option>
+												</#list>
+											<#else>
+												<option>Please import an address first.</option>
+											</#if>
+						        </select>
 
 						        <label>Quantity</label>
 						        <input type="text" placeholder="quantity" name="quantity">

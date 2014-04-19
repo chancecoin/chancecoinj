@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +15,11 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.bitcoin.core.Address;
+import com.google.bitcoin.core.ECKey;
+import com.google.bitcoin.core.TransactionOutput;
+import com.google.bitcoin.script.Script;
+import com.google.bitcoin.wallet.CoinSelector;
 
 
 public class Util {
@@ -141,12 +147,25 @@ public class Util {
 	}
 	public static BigInteger getBalance(String address, String asset) {
 		Database db = Database.getInstance();
-		ResultSet rs = db.executeQuery("select sum(amount) as amount from balances where address='"+address+"' and asset='"+asset+"';");
-		try {
-			if (rs.next()) {
-				return BigInteger.valueOf(rs.getLong("amount"));
+		Blocks blocks = Blocks.getInstance();
+		if (asset.equals("BTC")) {
+			LinkedList<TransactionOutput> unspentOutputs = blocks.wallet.calculateAllSpendCandidates(true);
+			BigInteger totalBalance = BigInteger.ZERO;
+			for (TransactionOutput out : unspentOutputs) {
+				Script script = out.getScriptPubKey();
+				if (script.getToAddress(blocks.params).toString().equals(address)) {
+					totalBalance = totalBalance.add(out.getValue());
+				}
+			}			
+			return totalBalance;
+		} else {
+			ResultSet rs = db.executeQuery("select sum(amount) as amount from balances where address='"+address+"' and asset='"+asset+"';");
+			try {
+				if (rs.next()) {
+					return BigInteger.valueOf(rs.getLong("amount"));
+				}
+			} catch (SQLException e) {
 			}
-		} catch (SQLException e) {
 		}
 		return BigInteger.ZERO;
 	}
@@ -160,6 +179,16 @@ public class Util {
 		} catch (SQLException e) {
 		}
 		return BigInteger.ZERO;
+	}
+	
+	public static List<String> getAddresses() {
+		Blocks blocks = Blocks.getInstance();
+		List<ECKey> keys = blocks.wallet.getKeys();
+		List<String> addresses = new ArrayList<String>();
+		for(ECKey key : keys) {
+			addresses.add(key.toAddress(blocks.params).toString());
+		}
+		return addresses;
 	}
 	
 	public static Integer getAssetId(String asset) {
@@ -189,7 +218,6 @@ public class Util {
 	    }
 	    return ret;
 	}	
-
 	public static List<Byte> toByteArrayList(byte[] in) {
 		List<Byte> arrayList = new ArrayList<Byte>();
 		
