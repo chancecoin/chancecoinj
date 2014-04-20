@@ -5,16 +5,22 @@ import java.net.URLConnection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.bitcoin.core.ECKey;
+import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.TransactionOutput;
 import com.google.bitcoin.script.Script;
+import com.google.bitcoin.wallet.WalletTransaction;
 
 
 public class Util {
@@ -54,6 +60,20 @@ public class Util {
 		}
 		return text;
 	}	
+	
+	public static List<Map.Entry<String,String>> infoGetTransactions(String address) {
+		List<Map.Entry<String,String>> txs = new ArrayList<Map.Entry<String,String>>();
+		String result = getPage("https://blockexplorer.com/q/mytransactions/"+address);
+	    try {
+			Map<String, Object> map = (new ObjectMapper()).readValue(result, new TypeReference<Map<String,Object>>() { });
+			for (String key : map.keySet()) {
+				Map<String, Object> txMap = (Map<String, Object>) map.get(key);
+				txs.add(new AbstractMap.SimpleEntry(key, txMap.get("block").toString()));
+			}
+		} catch (Exception e) {
+		}
+	    return txs;
+	}
 	
 	public static Map<String,Object> infoGetBlock(Integer blockNumber) {
 		String result = getPage("https://blockchain.info/block-index/"+Integer.toString(blockNumber)+"?format=json");
@@ -153,14 +173,22 @@ public class Util {
 		Database db = Database.getInstance();
 		Blocks blocks = Blocks.getInstance();
 		if (asset.equals("BTC")) {
-			LinkedList<TransactionOutput> unspentOutputs = blocks.wallet.calculateAllSpendCandidates(true);
 			BigInteger totalBalance = BigInteger.ZERO;
+			LinkedList<TransactionOutput> unspentOutputs = blocks.wallet.calculateAllSpendCandidates(true);
+			Set<Transaction> txs = blocks.wallet.getTransactions(true);
+			/*
+			for (Transaction tx : txs) {
+				System.out.println(tx);
+				totalBalance = totalBalance.add(tx.getValueSentToMe(blocks.wallet));
+				totalBalance = totalBalance.subtract(tx.getValueSentFromMe(blocks.wallet));
+			}
+			*/
 			for (TransactionOutput out : unspentOutputs) {
 				Script script = out.getScriptPubKey();
-				if (script.getToAddress(blocks.params).toString().equals(address)) {
+				if (script.getToAddress(blocks.params).toString().equals(address) && out.isAvailableForSpending()) {
 					totalBalance = totalBalance.add(out.getValue());
 				}
-			}			
+			}
 			return totalBalance;
 		} else {
 			ResultSet rs = db.executeQuery("select sum(amount) as amount from balances where address='"+address+"' and asset='"+asset+"';");
@@ -230,4 +258,19 @@ public class Util {
 		}
 		return arrayList;
 	}	
+	
+	public static String getMinVersion() {
+		String minVersion = getPage("https://raw2.github.com/chancecoin/chancecoinj/master/min_version.txt");
+		return minVersion;
+	}
+	public static Integer getMinMinorVersion() {
+		String minVersion = getMinVersion();
+		String[] pieces = minVersion.split("\\.");
+		return Integer.parseInt(pieces[1].trim());
+	}
+	public static Integer getMinMajorVersion() {
+		String minVersion = getMinVersion();
+		String[] pieces = minVersion.split("\\.");
+		return Integer.parseInt(pieces[0].trim());
+	}
 }

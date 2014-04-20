@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -84,14 +85,13 @@ public class Blocks {
 				ECKey newKey = new ECKey();
 				newKey.setCreationTimeSeconds(Config.burnCreationTime);
 				wallet.addKey(newKey);
-				wallet.addWatchedAddress(burnAddress, Config.burnCreationTime);
+				//wallet.addWatchedAddress(burnAddress, Config.burnCreationTime);
 			}
-			blockStore = new H2FullPrunedBlockStore(params, Config.appName.toLowerCase(), 1000);
+			blockStore = new H2FullPrunedBlockStore(params, Config.appName.toLowerCase(), 2000);
 			blockChain = new BlockChain(params, wallet, blockStore);
 			peerGroup = new PeerGroup(params, blockChain);
 			peerGroup.addWallet(wallet);
 			peerGroup.setFastCatchupTimeSecs(Config.burnCreationTime);
-			//peerGroup.recalculateFastCatchupAndFilter(FilterRecalculateMode.FORCE_SEND);
 			wallet.autosaveToFile(new File("wallet"), 1, TimeUnit.MINUTES, null);
 			peerGroup.addPeerDiscovery(new DnsDiscovery(params));
 			peerGroup.startAndWait();
@@ -120,20 +120,10 @@ public class Blocks {
 				importBlock(block, blockHeight);
 			}
 			
-			/*
-			while (blockHeight > lastBlock) {
-				logger.info("Catching Chancecoin up to Bitcoin: "+Util.format((blocksToScan - (blockHeight - lastBlock))/((double) blocksToScan)*100.0)+"%");	
-				importBlock(block, blockHeight);
-				blockHeight -= 1;
-				block = peerGroup.getDownloadPeer().getBlock(block.getPrevBlockHash()).get();
-			}
-			*/
-			
-			if (db.getDBMinorVersion()<Config.minorVersionDB){
+			if (getDBMinorVersion()<Config.minorVersionDB){
 				reparse();
-				db.updateMinorVersion();		    	
+				updateMinorVersion();		    	
 			}else{
-				//reparse(); 
 				parseFrom(nextBlock);
 			}
 			Bet.resolve();
@@ -154,7 +144,7 @@ public class Blocks {
 				Block block = peerGroup.getDownloadPeer().getBlock(new Sha256Hash(rs.getString("block_hash"))).get();
 				db.executeUpdate("delete from transactions where block_index='"+blockHeight.toString()+"';");
 				for (Transaction tx : block.getTransactions()) {
-					Blocks.getInstance().importTransaction(tx, block, blockHeight);
+					importTransaction(tx, block, blockHeight);
 				}
 				Bet.resolve();
 				Order.expire();
@@ -174,7 +164,7 @@ public class Blocks {
 				db.executeUpdate("INSERT INTO blocks(block_index,block_hash,block_time) VALUES('"+blockHeight.toString()+"','"+block.getHashAsString()+"','"+block.getTimeSeconds()+"')");
 			}
 			for (Transaction tx : block.getTransactions()) {
-				Blocks.getInstance().importTransaction(tx, block, blockHeight);
+				importTransaction(tx, block, blockHeight);
 			}
 			Bet.resolve();
 			Order.expire();
@@ -291,7 +281,7 @@ public class Blocks {
 		db.executeUpdate("delete from order_expirations;");
 		db.executeUpdate("delete from order_match_expirations;");
 		db.executeUpdate("delete from messages;");
-		Blocks.getInstance().parseFrom(0);
+		parseFrom(0);
 	}
 
 	public void parseFrom(Integer blockNumber) {
@@ -339,13 +329,172 @@ public class Blocks {
 		}
 	}
 	
+	public void recreateBlockchainDatabase() {
+		/*
+		try {
+			blockStore.close();
+		} catch (BlockStoreException e) {
+			System.out.println(e.toString());
+		}
+		peerGroup.stop();
+		File h2Store = new File(Config.appName.toLowerCase()+".h2.db");
+		h2Store.delete();
+		//h2Store.renameTo(new File(Config.appName.toLowerCase()+(Long.toString(System.currentTimeMillis()))+".h2.db"));		
+		File h2Store2 = new File(Config.appName.toLowerCase()+".trace.db");
+		h2Store2.delete();
+		instance = null;
+		Blocks blocks = Blocks.getInstance();
+		try {
+			Block block = blockStore.getChainHead().getHeader();
+			while (blockStore.get(block.getHash()).getHeight()>0) {
+				System.out.println("a");
+				block = blockStore.get(block.getPrevBlockHash()).getHeader();
+				System.out.println(blockStore.get(block.getHash()).getHeight());
+			}
+		} catch (BlockStoreException e) {
+		}
+		*/
+	}
+	
+	public void recreateDatabase() {
+		Database db = Database.getInstance();
+		try {
+			db.connection.close();
+		} catch (SQLException e) {
+		}
+		File dbFile = new File(db.dbFile);
+		dbFile.renameTo(new File(Config.appName.toLowerCase()+"-"+Config.majorVersionDB.toString()+(Long.toString(System.currentTimeMillis()))+".db"));		
+		db.init();
+		createTables();
+	}
+	
+	public void createTables() {
+		Database db = Database.getInstance();
+		try {
+			// Blocks
+			db.executeUpdate("CREATE TABLE IF NOT EXISTS blocks(block_index INTEGER PRIMARY KEY, block_hash TEXT UNIQUE, block_time INTEGER)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS blocks_block_index_idx ON blocks (block_index)");
+
+			// Transactions
+			db.executeUpdate("CREATE TABLE IF NOT EXISTS transactions(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, block_time INTEGER, source TEXT, destination TEXT, btc_amount INTEGER, fee INTEGER, data BLOB, supported BOOL DEFAULT 1)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS transactions_block_index_idx ON transactions (block_index)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS transactions_tx_index_idx ON transactions (tx_index)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS transactions_tx_hash_idx ON transactions (tx_hash)");
+
+			// (Valid) debits
+			db.executeUpdate("CREATE TABLE IF NOT EXISTS debits(block_index INTEGER, address TEXT, asset TEXT, amount INTEGER, calling_function TEXT, event TEXT)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS debits_address_idx ON debits (address)");
+
+			// (Valid) credits
+			db.executeUpdate("CREATE TABLE IF NOT EXISTS credits(block_index INTEGER, address TEXT, asset TEXT, amount INTEGER, calling_function TEXT, event TEXT)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS credits_address_idx ON credits (address)");
+
+			// Balances
+			db.executeUpdate("CREATE TABLE IF NOT EXISTS balances(address TEXT, asset TEXT, amount INTEGER)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS address_idx ON balances (address)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS asset_idx ON balances (asset)");
+
+			// Sends
+			db.executeUpdate("CREATE TABLE IF NOT EXISTS sends(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, destination TEXT, asset TEXT, amount INTEGER, validity TEXT)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS sends_block_index_idx ON sends (block_index)");
+
+			// Orders
+			db.executeUpdate("CREATE TABLE IF NOT EXISTS orders(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, give_asset TEXT, give_amount INTEGER, give_remaining INTEGER, get_asset TEXT, get_amount INTEGER, get_remaining INTEGER, expiration INTEGER, expire_index INTEGER, fee_required INTEGER, fee_provided INTEGER, fee_remaining INTEGER, validity TEXT)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON orders (block_index)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS expire_index_idx ON orders (expire_index)");
+
+			// Order Matches
+			db.executeUpdate("CREATE TABLE IF NOT EXISTS order_matches(id TEXT PRIMARY KEY, tx0_index INTEGER, tx0_hash TEXT, tx0_address TEXT, tx1_index INTEGER, tx1_hash TEXT, tx1_address TEXT, forward_asset TEXT, forward_amount INTEGER, backward_asset TEXT, backward_amount INTEGER, tx0_block_index INTEGER, tx1_block_index INTEGER, tx0_expiration INTEGER, tx1_expiration INTEGER, match_expire_index INTEGER, validity TEXT)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS match_expire_index_idx ON order_matches (match_expire_index)");
+
+			// BTCpays
+			db.executeUpdate("CREATE TABLE IF NOT EXISTS btcpays(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, destination TEXT, btc_amount INTEGER, order_match_id TEXT, validity TEXT)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON btcpays (block_index)");
+
+			// Bets
+			db.executeUpdate("CREATE TABLE IF NOT EXISTS bets(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, bet INTEGER, chance REAL, payout REAL, profit INTEGER, cha_supply INTEGER, rolla REAL, rollb REAL, roll REAL, resolved TEXT, validity TEXT)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON bets (block_index)");
+
+			// Burns
+			db.executeUpdate("CREATE TABLE IF NOT EXISTS burns(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, burned INTEGER, earned INTEGER, validity TEXT)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS validity_idx ON burns (validity)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS address_idx ON burns (address)");
+
+			// Cancels
+			db.executeUpdate("CREATE TABLE IF NOT EXISTS cancels(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, offer_hash TEXT, validity TEXT)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS cancels_block_index_idx ON cancels (block_index)");
+
+			// Order Expirations
+			db.executeUpdate("CREATE TABLE IF NOT EXISTS order_expirations(order_index INTEGER PRIMARY KEY, order_hash TEXT UNIQUE, source TEXT, block_index INTEGER)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON order_expirations (block_index)");
+
+			// Order Match Expirations
+			db.executeUpdate("CREATE TABLE IF NOT EXISTS order_match_expirations(order_match_id TEXT PRIMARY KEY, tx0_address TEXT, tx1_address TEXT, block_index INTEGER)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON order_match_expirations (block_index)");
+
+			// Messages
+			db.executeUpdate("CREATE TABLE IF NOT EXISTS messages(message_index INTEGER PRIMARY KEY, block_index INTEGER, command TEXT, category TEXT, bindings TEXT)");
+			db.executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON messages (block_index)");
+			
+			updateMinorVersion();
+		} catch (Exception e) {
+			logger.error(e.toString());
+			System.exit(0);			
+		}
+	}
+	
+	public Integer getDBMinorVersion() {
+		Database db = Database.getInstance();
+		ResultSet rs = db.executeQuery("PRAGMA user_version;");
+		try {
+			while(rs.next()) {
+			    return rs.getInt("user_version");
+			}
+		} catch (SQLException e) {
+		}	
+		return 0;
+	}
+
+	public void updateMinorVersion() {
+		// Update minor version
+		Database db = Database.getInstance();
+		db.executeUpdate("PRAGMA user_version = "+Config.minorVersionDB.toString());
+	}
+
 	public void importPrivateKey(String privateKey) {
 		DumpedPrivateKey dumpedPrivateKey;
 		try {
 			dumpedPrivateKey = new DumpedPrivateKey(params, privateKey);
 			ECKey key = dumpedPrivateKey.getKey();
-			logger.info("Importing address "+key.toAddress(params).toString());
+			String address = key.toAddress(params).toString();
+			logger.info("Importing address "+address);
 			wallet.addKey(key);
+			//recreateBlockchainDatabase();
+			List<Map.Entry<String,String>> txsInfo = Util.infoGetTransactions(address);
+			BigInteger balance = BigInteger.ZERO;
+			BigInteger balanceSent = BigInteger.ZERO;
+			BigInteger balanceReceived = BigInteger.ZERO;
+			Integer transactionCount = 0;
+			for (Map.Entry<String,String> txHashBlockHash : txsInfo) {
+				String txHash = txHashBlockHash.getKey();
+				String blockHash = txHashBlockHash.getValue();
+				try {
+					Block block = peerGroup.getDownloadPeer().getBlock(new Sha256Hash(blockHash)).get();
+					List<Transaction> txs = block.getTransactions();
+					for (Transaction tx : txs) {
+						if (tx.getHashAsString().equals(txHash)){// && wallet.isPendingTransactionRelevant(tx)) {
+							transactionCount ++;
+							wallet.receivePending(tx, peerGroup.getDownloadPeer().downloadDependencies(tx).get());
+							balanceReceived = balanceReceived.add(tx.getValueSentToMe(wallet));
+							balanceSent = balanceSent.add(tx.getValueSentFromMe(wallet));
+							balance = balance.add(tx.getValueSentToMe(wallet));
+							balance = balance.subtract(tx.getValueSentFromMe(wallet));
+						}
+					}
+				} catch (InterruptedException e) {
+				} catch (ExecutionException e) {				
+				}
+			}			
 		} catch (AddressFormatException e) {
 		}
 	}
@@ -353,7 +502,7 @@ public class Blocks {
 	public Transaction transaction(String source, String destination, BigInteger btcAmount, BigInteger fee, String dataString) {
 		Transaction tx = new Transaction(params);
 		LinkedList<TransactionOutput> unspentOutputs = wallet.calculateAllSpendCandidates(true);
-		if (btcAmount.compareTo(BigInteger.valueOf(Config.dustSize))>=0) {
+		if (destination.equals("") || btcAmount.compareTo(BigInteger.valueOf(Config.dustSize))>=0) {
 			
 			byte[] data = null;
 			List<Byte> dataArrayList = new ArrayList<Byte>();
@@ -398,7 +547,7 @@ public class Blocks {
 				Address address = script.getToAddress(params);
 				if (address.toString().equals(source)) {
 					if (totalOutput.compareTo(totalInput)>0) {
-						totalInput.add(out.getValue());
+						totalInput = totalInput.add(out.getValue());
 						tx.addInput(out);
 					}
 				}

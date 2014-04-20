@@ -93,7 +93,6 @@ public class Cancel {
 					source = orderMatchSource;
 					Transaction tx = blocks.transaction(source, "", BigInteger.ZERO, BigInteger.valueOf(Config.minFee), dataString);
 					return tx;
-					
 				}
 			}
 		} catch (SQLException e) {

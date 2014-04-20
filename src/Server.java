@@ -24,6 +24,7 @@ public class Server implements Runnable {
 	} 
 
 	public void init() {
+		Blocks blocks = Blocks.getInstance();
 		setPort(8080);    
 		externalStaticFileLocation("./static");
 
@@ -121,6 +122,11 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Wallet");
+				if (request.queryParams().contains("form") && request.queryParams("form").equals("import")) {
+					String privateKey = request.queryParams("privatekey");
+					Blocks.getInstance().importPrivateKey(privateKey);
+					attributes.put("success", "Your private key has been imported.");
+				}				
 				String address = Util.getAddresses().get(0);
 				request.session(true);
 				if (request.session().attributes().contains("address")) {
@@ -143,6 +149,7 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Wallet");
+
 				String address = Util.getAddresses().get(0);
 				request.session(true);
 				if (request.session().attributes().contains("address")) {
