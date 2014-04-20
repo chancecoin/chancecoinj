@@ -76,8 +76,8 @@ public class Bet {
 						dataString = new String(data,"ISO-8859-1");
 					} catch (UnsupportedEncodingException e) {
 					}
-					String destination = source;
-					Transaction tx = blocks.transaction(source, destination, BigInteger.valueOf(Config.dustSize), BigInteger.valueOf(Config.minFee), dataString);
+
+					Transaction tx = blocks.transaction(source, "", BigInteger.ZERO, BigInteger.valueOf(Config.minFee), dataString);
 					return tx;
 				}
 			}
