@@ -260,17 +260,17 @@ public class Util {
 	}	
 	
 	public static String getMinVersion() {
-		String minVersion = getPage("https://raw2.github.com/chancecoin/chancecoin/master/min_version.txt");
+		String minVersion = getPage("https://raw2.github.com/chancecoin/chancecoinj/master/min_version.txt");
 		return minVersion;
 	}
 	public static Integer getMinMinorVersion() {
 		String minVersion = getMinVersion();
 		String[] pieces = minVersion.split("\\.");
-		return Integer.parseInt(pieces[1]);
+		return Integer.parseInt(pieces[1].trim());
 	}
 	public static Integer getMinMajorVersion() {
 		String minVersion = getMinVersion();
 		String[] pieces = minVersion.split("\\.");
-		return Integer.parseInt(pieces[0]);
+		return Integer.parseInt(pieces[0].trim());
 	}
 }

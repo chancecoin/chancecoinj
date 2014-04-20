@@ -22,9 +22,6 @@ import javafx.stage.Stage;
 public class GUI extends Application {
 	private Scene scene;
 	@Override public void start(Stage stage) {
-		// start Blocks
-		//Blocks blocks = Blocks.getInstance();
-
 		// start Server
 		Server server = new Server();
 		Thread serverThread = new Thread(server);
