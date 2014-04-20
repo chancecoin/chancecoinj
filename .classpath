@@ -21,5 +21,8 @@
 	<classpathentry kind="lib" path="./jars/spark-template-freemarker-1.0.jar"/>
 	<classpathentry kind="lib" path="./jars/spark-template-velocity-1.0.jar"/>
 	<classpathentry kind="lib" path="./jars/freemarker.jar"/>
+	<classpathentry kind="lib" path="./jars/jsonrpc4j-1.0.jar"/>
+	<classpathentry kind="lib" path="./jars/portlet-api-2.0-r12.jar"/>
+	<classpathentry kind="lib" path="./jars/jetty-security-9.1.3.v20140225.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
