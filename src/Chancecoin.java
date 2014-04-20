@@ -20,9 +20,12 @@ public class Chancecoin {
 		Transaction txSend = Send.create("1BckY64TE6VrjVcGMizYBE7gt22axnq6CM", "1JSgzenaqrRtdscWvurhbPgFBt1YMBuFDj", "CHA", BigInteger.ONE);
 		System.out.println(txSend);
 		//blocks.importPrivateKey("");
+		System.out.println(Util.getMinVersion());
+		System.out.println(Util.getMinMajorVersion());
+		System.out.println(Util.getMinMinorVersion());
 		System.out.println("done");
-		//blocks.importTransaction(txBet, null, Util.getLastBlock());
 		System.exit(0);
+		//blocks.importTransaction(txBet, null, Util.getLastBlock());
 		blocks.recreateBlockchainDatabase();
 		try {
 			//peerGroup.broadcastTransaction(txBet).get();
