@@ -9,7 +9,7 @@ public class Config {
 	
 	//version
 	public static Integer majorVersion = 1;
-	public static Integer minorVersion = 2;
+	public static Integer minorVersion = 6;
 	public static String version = Integer.toString(majorVersion)+"."+Integer.toString(minorVersion);
 	public static Integer majorVersionDB = 1;
 	public static Integer minorVersionDB = 2;

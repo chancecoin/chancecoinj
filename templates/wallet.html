@@ -1,27 +1,10 @@
 <#import "template.html" as template>
 <@template.content>
-		<div class="pure-g-r section">
-			<div class="pure-u-1 padding-bottom padding-top">
-					<div class="btn-group">
-					  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-					    <span class="glyphicon glyphicon-user"></span> ${address} <span class="caret"></span>
-					  </button>
-					  <ul class="dropdown-menu" role="menu">
-							<#if addresses??>
-								<#list addresses as addr>
-									<li><a href="?address=${addr}"><#if addr==address><strong></#if>${addr}<#if addr==address></strong></#if></a></li>
-								</#list>
-							</#if>
-					  </ul>
-					</div>
-			</div>
-		</div>
-
-		<div class="pure-g-r section">
-				<div class="pure-u-1-3 segment one-third border-right">
+		<div class="row section">
+				<div class="col-md-4 segment one-third">
 						<h2>Balance</h2>
 						<#if balanceCHA??>
-						<table class="pure-table pure-table-bordered center">
+						<table class="table">
 								<thead>
 										<tr>
 												<th>Balance</th>
@@ -41,7 +24,7 @@
 						</#if>
 						<p>See <a href="/balances">all balances</a>.</p>
 				</div>
-				<div class="pure-u-1-3 segment one-third border-right">
+				<div class="col-md-4 segment one-third">
 						<h2>Import address</h2>
 						<form action="/wallet" method="post">
 								<input type="hidden" name="form" value="import">
@@ -59,7 +42,7 @@
 						</form>
 						<p>Note: importing requires a blockchain re-download.</p>
 				</div>
-				<div class="pure-u-1-3 segment one-third">
+				<div class="col-md-4 segment one-third">
 						<h2>Send</h2>
 						<form action="/wallet" method="post">
 				        <input type="hidden" name="form" value="send">
@@ -83,8 +66,8 @@
 						</form>
 				</div>
 		</div>
-		<div class="pure-g-r section">
-				<div class="pure-u-1-3 segment one-third border-right">
+		<div class="row section">
+				<div class="col-md-4 segment one-third">
 						<h2>Buy</h2>
 						<form action="/wallet" method="post">
 								<input type="hidden" name="form" value="buy">
@@ -107,9 +90,9 @@
 								</div>
 						</form>
 				</div>
-				<div class="pure-u-1-3 segment one-third border-right">
+				<div class="col-md-4 segment one-third">
 						<h2>Order book</h2>
-						<table class="pure-table pure-table-bordered center">
+						<table class="table">
 						    <thead>
 						        <tr>
 						            <th>Buy quantity (CHA)</th>
@@ -140,7 +123,7 @@
 						    </tbody>
 						</table>
 				</div>
-				<div class="pure-u-1-3 segment one-third">
+				<div class="col-md-4 segment one-third">
 						<h2>Sell</h2>
 						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
 								<input type="hidden" name="form" value="sell">
@@ -164,10 +147,10 @@
 						</form>
 				</div>
 		</div>
-		<div class="pure-g-r section">
-				<div class="pure-u-1-2 segment one-half border-right">
+		<div class="row section">
+				<div class="col-md-6 segment one-half">
 						<h2>My orders</h2>
-						<table class="pure-table pure-table-bordered center">
+						<table class="table table-striped">
 								<thead>
 										<tr>
 												<th>Buy/sell CHA</th>
@@ -201,9 +184,9 @@
 								</tbody>
 						</table>
 					</div>
-					<div class="pure-u-1-2 segment one-half">
+					<div class="col-md-6 segment one-half">
 						<h2>My matched orders</h2>
-						<table class="pure-table pure-table-bordered center">
+						<table class="table table-striped">
 								<thead>
 										<tr>
 												<th>BTC owed</th>

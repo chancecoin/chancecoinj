@@ -20,31 +20,17 @@ h6 { font-size: .75em; font-weight: bold; }
 	background-repeat: no-repeat;
 	background-position: left top;
 	background-size: contain;
-	width: 200px;
+	width: 210px;
 	text-align: center;
 }
 
-.header {
-	height: 3em;
-}
-.header .pure-menu {
-	padding: 0.25em;
-}
-.header .pure-menu li a:hover,
-.header .pure-menu li a:focus {
-	background: none;
-	color: #fc0;
-	background-color: #eee;
-}
-
-.header .selected-highlight {
-	background: none;
-	color: #fc0;
-	background-color: #eee;
+.content {
+	padding: 0;
+	margin-top: -2em;
 }
 
 .splash {
-	margin-top: 0;
+	margin-top: 0em;
 	background: #eee;
 }
 .splash .splash-head {
@@ -62,7 +48,12 @@ h6 { font-size: .75em; font-weight: bold; }
 	padding-top: 1em;
 }
 
-.content {
+.row {
+	padding-top: 0em;
+}
+
+.half {
+	width: 50%;
 }
 
 .footer {
@@ -73,10 +64,16 @@ h6 { font-size: .75em; font-weight: bold; }
 	font-size: 1em;
 }
 
+.status {
+	float: right;
+}
+
 .section {
 	border-bottom: 1px solid #ccc;
-	padding-right: 1em;
-	padding-left: 1em;
+	padding-top: 0em;
+	padding-bottom: 0em;
+	padding-right: 2em;
+	padding-left: 2em;
 }
 
 .padding-bottom {
@@ -167,10 +164,6 @@ input {
 	margin: 1em auto;
 }
 
-table {
-	margin-bottom: 1em;
-}
-
 blockquote {
   background: #f9f9f9;
   border-left: 10px solid #ccc;
@@ -199,7 +192,6 @@ blockquote p {
 	background-image: url("/images/cubes_background.jpg");
 	background-repeat: no-repeat;
 	background-size: contain;
-
 }
 
 .front_page_bet_table {
