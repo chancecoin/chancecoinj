@@ -9,6 +9,7 @@ import com.google.bitcoin.core.Message;
 import com.google.bitcoin.core.Peer;
 import com.google.bitcoin.core.PeerEventListener;
 import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.store.BlockStoreException;
 
 public class ChancecoinPeerEventListener implements PeerEventListener {
     Logger logger = LoggerFactory.getLogger(ChancecoinPeerEventListener.class);
@@ -21,6 +22,12 @@ public class ChancecoinPeerEventListener implements PeerEventListener {
 	@Override
 	public void onBlocksDownloaded(Peer peer, Block block, int blocksLeft) {
 		logger.info("Block downloaded: "+blocksLeft);
+		//TODO: for some reason, inside importBlock, the transaction grabbing doesn't work, so this ends up failing
+		Blocks blocks = Blocks.getInstance();
+		try {
+			blocks.importBlock(block, blocks.blockStore.get(block.getHash()).getHeight());
+		} catch (BlockStoreException e) {
+		}
 	}
 
 	@Override

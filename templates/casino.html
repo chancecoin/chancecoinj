@@ -108,8 +108,8 @@
 											<td>${bet["bet"]} CHA</td>
 											<td>${bet["chance"]}%</td>
 											<td>${bet["payout"]}X</td>
-											<td>${bet["roll"]}</td>
-											<td><#if bet["resolved"] = "true">${bet["profit"]} CHA<#else>Unresolved</#if></td>
+											<td><#if bet["resolved"]??>${bet["roll"]}<#else>?</#if></td>
+											<td><#if bet["resolved"]?? && bet["resolved"]="true">${bet["profit"]} CHA<#else>Unresolved</#if></td>
 									</tr>
 							</#list>
 				    </tbody>
@@ -139,8 +139,8 @@
 											<td>${bet["bet"]} CHA</td>
 											<td>${bet["chance"]}%</td>
 											<td>${bet["payout"]}X</td>
-											<td>${bet["roll"]}</td>
-											<td><#if bet["resolved"] = "true">${bet["profit"]} CHA<#else>Unresolved</#if></td>
+											<td><#if bet["resolved"]??>${bet["roll"]}<#else>?</#if></td>
+											<td><#if bet["resolved"]?? && bet["resolved"]="true">${bet["profit"]} CHA<#else>Unresolved</#if></td>
 									</tr>
 							</#list>
 						</tbody>

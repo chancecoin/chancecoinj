@@ -27,6 +27,7 @@ import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.NetworkParameters;
 import com.google.bitcoin.core.PeerGroup;
 import com.google.bitcoin.core.PeerGroup.FilterRecalculateMode;
+import com.google.bitcoin.core.Transaction.SigHash;
 import com.google.bitcoin.core.ScriptException;
 import com.google.bitcoin.core.Sha256Hash;
 import com.google.bitcoin.core.StoredBlock;
@@ -470,7 +471,7 @@ public class Blocks {
 		return 0;
 	}
 
-	public void importPrivateKey(String privateKey) {
+	public String importPrivateKey(String privateKey) {
 		DumpedPrivateKey dumpedPrivateKey;
 		try {
 			dumpedPrivateKey = new DumpedPrivateKey(params, privateKey);
@@ -503,9 +504,11 @@ public class Blocks {
 				} catch (InterruptedException e) {
 				} catch (ExecutionException e) {				
 				}
-			}			
+			}	
+			return address;
 		} catch (AddressFormatException e) {
 		}
+		return null;
 	}
 	
 	public Transaction transaction(String source, String destination, BigInteger btcAmount, BigInteger fee, String dataString) {
@@ -521,11 +524,10 @@ public class Blocks {
 			} catch (UnsupportedEncodingException e) {
 			}
 
-			BigInteger totalOutput = BigInteger.ZERO;
+			BigInteger totalOutput = fee;
 			BigInteger totalInput = BigInteger.ZERO;
 
 			for (int i = 0; i < dataArrayList.size(); i+=32) {
-				totalOutput = totalOutput.add(BigInteger.valueOf(Config.dustSize));
 				List<Byte> chunk = new ArrayList<Byte>(dataArrayList.subList(i, Math.min(i+32, dataArrayList.size())));
 				chunk.add(0, (byte) chunk.size());
 				while (chunk.size()<32+1) {
@@ -547,8 +549,12 @@ public class Blocks {
 				totalOutput = totalOutput.add(BigInteger.valueOf(Config.dustSize));
 			}
 			
-			if (!destination.equals("") && btcAmount.compareTo(BigInteger.ZERO)>0) {
-				totalOutput = totalOutput.add(btcAmount);
+			try {
+				if (!destination.equals("") && btcAmount.compareTo(BigInteger.ZERO)>0) {
+					totalOutput = totalOutput.add(btcAmount);
+					tx.addOutput(btcAmount, new Address(params, destination));
+				}
+			} catch (AddressFormatException e) {
 			}
 			
 			for (TransactionOutput out : unspentOutputs) {
@@ -567,9 +573,6 @@ public class Blocks {
 			BigInteger totalChange = totalInput.subtract(totalOutput);
 				
 			try {
-				if (!destination.equals("") && btcAmount.compareTo(BigInteger.ZERO)>0) {
-					tx.addOutput(btcAmount, new Address(params, destination));
-				}
 				if (totalChange.compareTo(BigInteger.ZERO)>0) {
 					tx.addOutput(totalChange, new Address(params, source));
 				}
@@ -577,5 +580,22 @@ public class Blocks {
 			}
 		}
 		return tx;
+	}
+	
+	public void sendTransaction(Transaction tx) {
+		try {
+			tx.signInputs(SigHash.ALL, wallet);
+			//System.out.println(tx);
+			//blocks.wallet.commitTx(txBet);
+			peerGroup.broadcastTransaction(tx).get(60, TimeUnit.SECONDS);
+			/*
+			byte[] rawTxBytes = tx.bitcoinSerialize();
+			String rawTx = new BigInteger(1, rawTxBytes).toString(16);
+			rawTx = "0" + rawTx;
+			System.out.println(rawTx);
+			*/
+		} catch (Exception e) {
+			logger.error(e.toString());
+		}		
 	}
 }

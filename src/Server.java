@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.store.BlockStoreException;
 
 import freemarker.template.Configuration;
@@ -131,11 +132,6 @@ public class Server implements Runnable {
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
 				
-				if (request.queryParams().contains("form") && request.queryParams("form").equals("import")) {
-					String privateKey = request.queryParams("privatekey");
-					Blocks.getInstance().importPrivateKey(privateKey);
-					attributes.put("success", "Your private key has been imported.");
-				}				
 				String address = Util.getAddresses().get(0);
 				request.session(true);
 				if (request.session().attributes().contains("address")) {
@@ -144,6 +140,12 @@ public class Server implements Runnable {
 				if (request.queryParams().contains("address")) {
 					address = request.queryParams("address");
 					request.session().attribute("address", address);
+				}
+				if (request.queryParams().contains("form") && request.queryParams("form").equals("import")) {
+					String privateKey = request.queryParams("privatekey");
+					address = Blocks.getInstance().importPrivateKey(privateKey);
+					request.session().attribute("address", address);
+					attributes.put("success", "Your private key has been imported.");
 				}
 				attributes.put("address", address);
 				attributes.put("addresses", Util.getAddresses());
@@ -209,6 +211,17 @@ public class Server implements Runnable {
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
 
+				if (request.queryParams().contains("form") && request.queryMap("form").equals("bet")) {
+					Double rawBet = Double.parseDouble(request.queryParams("bet"));
+					Double chance = Double.parseDouble(request.queryParams("chance"));
+					Double payout = Double.parseDouble(request.queryParams("payout"));
+					BigInteger bet = BigInteger.valueOf((long) (rawBet*Config.unit));
+					Transaction tx = Bet.create("1BckY64TE6VrjVcGMizYBE7gt22axnq6CM", bet, chance, payout);
+					if (tx!=null) {
+						blocks.sendTransaction(tx);
+					}
+				}
+				
 				Database db = Database.getInstance();
 				
 				//get top winners
