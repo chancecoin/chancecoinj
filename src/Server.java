@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.bitcoin.store.BlockStoreException;
+
 import freemarker.template.Configuration;
 import spark.*;
 import spark.template.freemarker.FreeMarkerRoute;
@@ -50,7 +52,7 @@ public class Server implements Runnable {
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
-				return modelAndView(attributes, "index2.html");
+				return modelAndView(attributes, "index.html");
 			}
 		});
 		post(new FreeMarkerRoute("/") {
@@ -122,6 +124,13 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Wallet");
+				
+				Blocks blocks = Blocks.getInstance();
+				attributes.put("blocksBTC", blocks.getHeight());
+				attributes.put("blocksCHA", Util.getLastBlock());
+				attributes.put("version", Config.version);
+				attributes.put("min_version", Util.getMinVersion());
+				
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("import")) {
 					String privateKey = request.queryParams("privatekey");
 					Blocks.getInstance().importPrivateKey(privateKey);
@@ -149,7 +158,13 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Wallet");
-
+				
+				Blocks blocks = Blocks.getInstance();
+				attributes.put("blocksBTC", blocks.getHeight());
+				attributes.put("blocksCHA", Util.getLastBlock());
+				attributes.put("version", Config.version);
+				attributes.put("min_version", Util.getMinVersion());
+				
 				String address = Util.getAddresses().get(0);
 				request.session(true);
 				if (request.session().attributes().contains("address")) {
@@ -172,6 +187,13 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Casino");
+				
+				Blocks blocks = Blocks.getInstance();
+				attributes.put("blocksBTC", blocks.getHeight());
+				attributes.put("blocksCHA", Util.getLastBlock());
+				attributes.put("version", Config.version);
+				attributes.put("min_version", Util.getMinVersion());
+
 				String address = Util.getAddresses().get(0);
 				request.session(true);
 				if (request.session().attributes().contains("address")) {
@@ -256,6 +278,13 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Casino");
+				
+				Blocks blocks = Blocks.getInstance();
+				attributes.put("blocksBTC", blocks.getHeight());
+				attributes.put("blocksCHA", Util.getLastBlock());
+				attributes.put("version", Config.version);
+				attributes.put("min_version", Util.getMinVersion());
+				
 				String address = Util.getAddresses().get(0);
 				request.session(true);
 				if (request.session().attributes().contains("address")) {

@@ -18,46 +18,79 @@
 	<script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 </head>
 <body>
-	<div class="header">
-		<div class="pure-menu pure-menu-open pure-menu-fixed pure-menu-horizontal">
-			<a class="pure-menu-heading logo" href="/">Chancecoin</a>
-			<ul>
-				<li <#if title?? && title=="Casino">class="pure-menu-selected selected-highlight"</#if>><a href="/casino">Casino</a></li>
-				<li <#if title?? && title=="Wallet">class="pure-menu-selected selected-highlight"</#if>><a href="/wallet">Wallet</a></li>
-				<li <#if title?? && title=="Participate">class="pure-menu-selected selected-highlight"</#if>><a href="/participate">Participate</a></li>
-				<li <#if title?? && title=="Technical">class="pure-menu-selected selected-highlight"</#if>><a href="/technical">Technical</a></li>
-				<li><a href="http://reddit.com/r/chancecoin">Subreddit</a></li>
-				<li><a href="https://github.com/chancecoin/chancecoinj">GitHub</a></li>
-				<li><a href="https://bitcointalk.org/index.php?topic=528023.0">Bitcointalk</a></li>
-			</ul>
-		</div>
-	</div>
+	<nav class="navbar navbar-default" role="navigation">
+	  <div class="container-fluid">
+	    <!-- Brand and toggle get grouped for better mobile display -->
+	    <div class="navbar-header">
+	      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+	        <span class="sr-only">Toggle navigation</span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	      </button>
+	      <a class="navbar-brand logo" href="/">Chancecoin</a>
+	    </div>
 
-	<div class="content">
+	    <!-- Collect the nav links, forms, and other content for toggling -->
+	    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+	      <ul class="nav navbar-nav">
+					<li <#if title?? && title=="Casino">class="active"</#if>><a href="/casino">Casino</a></li>
+					<li <#if title?? && title=="Wallet">class="active"</#if>><a href="/wallet">Wallet</a></li>
+					<li <#if title?? && title=="Participate">class="active"</#if>><a href="/participate">Participate</a></li>
+					<li <#if title?? && title=="Technical">class="active"</#if>><a href="/technical">Technical</a></li>
+					<li><a href="http://reddit.com/r/chancecoin">Subreddit</a></li>
+					<li><a href="https://github.com/chancecoin/chancecoinj">GitHub</a></li>
+					<li><a href="https://bitcointalk.org/index.php?topic=528023.0">Bitcointalk</a></li>
+	      </ul>
+	      <ul class="nav navbar-nav navbar-right">
+					<#if addresses??>
+	        <li class="dropdown">
+	          <a href="#" class="dropdown-toggle" data-toggle="dropdown">${address?substring(0,6)}... <b class="caret"></b></a>
+	          <ul class="dropdown-menu">
+								<#list addresses as addr>
+									<li><a href="?address=${addr}"><#if addr==address><strong>${addr}</strong><#else>${addr}</#if></a></li>
+								</#list>
+	          </ul>
+	        </li>
+					</#if>
+					<#if blocksBTC?? && blocksCHA?? && version?? && min_version??>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">${blocksCHA} / ${blocksBTC} <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="#">CHA blocks <span class="badge">${blocksCHA}</span></a></li>
+							<li><a href="#">BTC blocks <span class="badge">${blocksBTC}</span></a></li>
+							<li><a href="#">Version <span class="badge">${version}</span></a></li>
+						</ul>
+					</li>
+					</#if>
+	      </ul>
+	    </div><!-- /.navbar-collapse -->
+	  </div><!-- /.container-fluid -->
+	</nav>
+
+	<div class="container-fluid content">
 		<#if info?? || error?? || success?? || warning??>
-		<div class="pure-g-r section">
-			<div class="pure-u-1 padding-top">
-				<#if info??>
-				<div class="alert alert-info">${info}</div>
-				</#if>
-				<#if error??>
-				<div class="alert alert-error">${error}</div>
-				</#if>
-				<#if success??>
-				<div class="alert alert-success">${success}</div>
-				</#if>
-				<#if warning??>
-				<div class="alert alert-warning">${warning}</div>
-				</#if>
-			</div>
+		<div class="row">
+			<#if info??>
+			<div class="alert alert-info">${info}</div>
+			</#if>
+			<#if error??>
+			<div class="alert alert-error">${error}</div>
+			</#if>
+			<#if success??>
+			<div class="alert alert-success">${success}</div>
+			</#if>
+			<#if warning??>
+			<div class="alert alert-warning">${warning}</div>
+			</#if>
 		</div>
 		</#if>
 
 		<#nested/>
 	</div>
 
-	<div class="footer">
-		Chancecoin &copy; 2014. Released under the <a href="http://opensource.org/licenses/mit-license.php">MIT License</a>.
+	<div class="container-fluid footer">
+	Chancecoin &copy; 2014. Released under the <a href="http://opensource.org/licenses/mit-license.php">MIT License</a>.
 	</div>
 
 	<script src="http://yui.yahooapis.com/3.12.0/build/yui/yui.js"></script>

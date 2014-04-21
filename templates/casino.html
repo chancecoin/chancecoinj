@@ -1,87 +1,65 @@
 <#import "template.html" as template>
 <@template.content>
-		<div class="pure-g-r section">
-			<div class="pure-u-1 padding-bottom padding-top">
-					<div class="btn-group">
-						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-							<span class="glyphicon glyphicon-user"></span> ${address} <span class="caret"></span>
-						</button>
-						<ul class="dropdown-menu" role="menu">
-							<#if addresses??>
-								<#list addresses as addr>
-									<li><a href="?address=${addr}"><#if addr==address><strong></#if>${addr}<#if addr==address></strong></#if></a></li>
-								</#list>
-							</#if>
-						</ul>
-					</div>
-			</div>
+		<div class="row section">
+				<h2>Roll dice</h2>
+				<form action="/casino" class="form-inline" method="post">
+
+						<input type="hidden" name="form" value="roll">
+						<input type="hidden" name="source" value="${address}">
+
+					  <div class="form-group">
+							<div class="input-group">
+								<span class="input-group-addon">#</span>
+								<input type="text" placeholder="bet size (CHA)" name="bet">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="input-group">
+								<span class="input-group-addon">%</span>
+								<input type="text" placeholder="chance to win" name="chance" onchange="document.getElementsByName('payout')[0].value=100/document.getElementsByName('chance')[0].value*(${1-house_edge});">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="input-group">
+								<span class="input-group-addon">X</span>
+								<input type="text" placeholder="payout" name="payout" onchange="document.getElementsByName('chance')[0].value=100/(document.getElementsByName('payout')[0].value/(${1-house_edge}));">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="input-group">
+								<span class="input-group-btn">
+									<button class="btn btn-default" type="submit">Roll dice</button>
+								</span>
+							</div>
+						</div>
+
+				</form>
 		</div>
 
-		<div class="pure-g-r section">
-				<div class="pure-u-1">
-						<h2>Roll dice</h2>
-						<form action="/casino" class="form-inline" method="post">
+		<div class="row section">
+				<h2>Quick numbers</h2>
+				<table class="table half">
+						<thead>
+								<tr>
+										<th>Total CHA</th>
+										<th>Max profit</th>
+								</tr>
+						</thead>
 
-								<input type="hidden" name="form" value="roll">
-								<input type="hidden" name="source" value="${address}">
-
-							  <div class="form-group">
-									<div class="input-group">
-										<span class="input-group-addon">#</span>
-										<input type="text" placeholder="bet size (CHA)" name="bet">
-									</div>
-								</div>
-								<div class="form-group">
-									<div class="input-group">
-										<span class="input-group-addon">%</span>
-										<input type="text" placeholder="chance to win" name="chance" onchange="document.getElementsByName('payout')[0].value=100/document.getElementsByName('chance')[0].value*(${1-house_edge});">
-									</div>
-								</div>
-								<div class="form-group">
-									<div class="input-group">
-										<span class="input-group-addon">X</span>
-										<input type="text" placeholder="payout" name="payout" onchange="document.getElementsByName('chance')[0].value=100/(document.getElementsByName('payout')[0].value/(${1-house_edge}));">
-									</div>
-								</div>
-								<div class="form-group">
-									<div class="input-group">
-										<span class="input-group-btn">
-											<button class="btn btn-default" type="submit">Roll dice</button>
-										</span>
-									</div>
-								</div>
-
-						</form>
-				</div>
+						<tbody>
+								<tr>
+										<td>${supply} CHA</td>
+										<td>${max_profit} CHA</td>
+								</tr>
+						</tbody>
+				</table>
 		</div>
 
-		<div class="pure-g-r section padding-bottom">
-				<div class="pure-u-1">
-						<h2>Quick numbers</h2>
-						<table class="pure-table pure-table-bordered">
-								<thead>
-										<tr>
-												<th>Total CHA</th>
-												<th>Max profit</th>
-										</tr>
-								</thead>
-
-								<tbody>
-										<tr>
-												<td>${supply} CHA</td>
-												<td>${max_profit} CHA</td>
-										</tr>
-								</tbody>
-						</table>
-				</div>
-		</div>
-
-		<div class="pure-g-r section padding-bottom">
-			<div class="pure-u-1">
+		<div class="row section">
 
 				<h2>Leaderboard</h2>
 
-				<table class="pure-table pure-table-bordered">
+				<table class="table table-striped">
 				    <thead>
 				        <tr>
 				            <th>Source Address</th>
@@ -105,16 +83,13 @@
 				    </tbody>
 				</table>
 
+	</div>
 
-
-
-
-
-
+	<div class="row section">
 
 				<h2>All bets</h2>
 
-				<table class="pure-table pure-table-bordered">
+				<table class="table table-striped">
 				    <thead>
 				        <tr>
 				            <th>Source Address</th>
@@ -139,9 +114,14 @@
 							</#list>
 				    </tbody>
 				</table>
+
+		</div>
+
+		<div class="row section">
+
 				<h2>My bets</h2>
 				<#if my_bets??>
-				<table class="pure-table pure-table-bordered">
+				<table class="table table-striped">
 						<thead>
 								<tr>
 										<th>Source address</th>
@@ -152,7 +132,6 @@
 										<th>Profit</th>
 								</tr>
 						</thead>
-
 						<tbody>
 							<#list my_bets as bet>
 									<tr>
@@ -165,10 +144,7 @@
 									</tr>
 							</#list>
 						</tbody>
-
-
 				</table>
 				</#if>
-			</div>
 		</div>
 </@template.content>

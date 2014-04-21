@@ -1,93 +1,91 @@
 <#import "template.html" as template>
 <@template.content>
-		<div class="pure-g-r section">
-			<div class="pure-u-1">
-				<h2>Description</h2>
-				<p>Chancecoin (CHA) is a protocol, coin, and client used to bet on dice rolls in a decentralized casino. Owners of the coin may gamble on dice rolls, with randomness provided by published NY Lottery Quick Draw numbers. Owners of the coin are automatically invested in the house bankroll. The protocol is built on top of the Bitcoin blockchain. Coins are created by burning Bitcoins.</p>
-				<h2>Burn information</h2>
-				<ul>
-					<li><strong>Maximum coins burned</strong>: ${ max_burn }</li>
-					<li><strong>Burn period</strong>: Bitcoin blocks ${ start_block } to ${ end_block }</li>
-					<li><strong>Coins burned in first block</strong>: ${ multiplier_initial } CHA per 1 BTC</li>
-					<li><strong>Coins burned in last block</strong>: ${ multiplier } CHA per 1 BTC (coins per block scaled linearly in between these blocks)</li>
-					<li><strong>BTC burn address</strong>: <a href="http://blockchain.info/address/${ burn_address }">${ burn_address }</a></li>
-					<li><strong>Maximum coins burned per address</strong>: unlimited</li>
-				</ul>
+		<div class="row section">
+			<h2>Description</h2>
+			<p>Chancecoin (CHA) is a protocol, coin, and client used to bet on dice rolls in a decentralized casino. Owners of the coin may gamble on dice rolls, with randomness provided by published NY Lottery Quick Draw numbers. Owners of the coin are automatically invested in the house bankroll. The protocol is built on top of the Bitcoin blockchain. Coins are created by burning Bitcoins.</p>
+			<h2>Burn information</h2>
+			<ul>
+				<li><strong>Maximum coins burned</strong>: ${ max_burn }</li>
+				<li><strong>Burn period</strong>: Bitcoin blocks ${ start_block } to ${ end_block }</li>
+				<li><strong>Coins burned in first block</strong>: ${ multiplier_initial } CHA per 1 BTC</li>
+				<li><strong>Coins burned in last block</strong>: ${ multiplier } CHA per 1 BTC (coins per block scaled linearly in between these blocks)</li>
+				<li><strong>BTC burn address</strong>: <a href="http://blockchain.info/address/${ burn_address }">${ burn_address }</a></li>
+				<li><strong>Maximum coins burned per address</strong>: unlimited</li>
+			</ul>
 
-				<h2>Casino information</h2>
-				<ul>
-					<li><strong>House edge</strong>: ${ house_edge*100 }%</li>
-					<li><strong>Maximum win</strong>: ${ max_profit*100 }% of bankroll</li>
-				</ul>
+			<h2>Casino information</h2>
+			<ul>
+				<li><strong>House edge</strong>: ${ house_edge*100 }%</li>
+				<li><strong>Maximum win</strong>: ${ max_profit*100 }% of bankroll</li>
+			</ul>
 
-				<h2>Wallet software</h2>
-				<ul>
-					<li><a href="http://chancecoin.com/static/downloads/Chancecoin-${ version }.dmg">OS X binary</a></li>
-					<li><a href="http://chancecoin.com/static/downloads/Chancecoin-${ version }.zip">Windows binary</a></li>
-					<li><a href="http://github.com/chancecoin/chancecoin">Install from source on GitHub</a></li>
-				</ul>
+			<h2>Wallet software</h2>
+			<ul>
+				<li><a href="http://chancecoin.com/static/downloads/Chancecoin-${ version }.dmg">OS X binary</a></li>
+				<li><a href="http://chancecoin.com/static/downloads/Chancecoin-${ version }.zip">Windows binary</a></li>
+				<li><a href="http://github.com/chancecoin/chancecoin">Install from source on GitHub</a></li>
+			</ul>
 
-				<h2>Resources</h2>
-				<ul>
-					<li><a href="http://chancecoin.com">Home page</a></li>
-					<li><a href="http://www.reddit.com/r/chancecoin/">Subreddit</a></li>
-				</ul>
+			<h2>Resources</h2>
+			<ul>
+				<li><a href="http://chancecoin.com">Home page</a></li>
+				<li><a href="http://www.reddit.com/r/chancecoin/">Subreddit</a></li>
+			</ul>
 
-				<h2>How do I buy CHA?</h2>
-				<p>During the burn period, you can burn BTC into CHA using the standard Chancecoin wallet or command line interface. You can also burn BTC into CHA by sending BTC to ${ burn_address } using a Bitcoin client or Blockchain.info. After the burn period, you can still trade CHA for BTC on the decentralized exchange using the standard Chancecoin wallet or command line interface.</p>
-				<h3>Burning with the Chancecoin wallet</h3>
-				<p>Open the wallet software and click on "Wallet." Under the "Burn" section, fill in your address and desired quantity to burn. Then click "Burn."</p>
-				<h3>Burning with the command line interface</h3>
-				<p>Run "python chancecoind.py burn --source SOURCE --quantity QUANTITY"</p>
-				<h3>Burning with a Bitcoin client</h3>
-				<p>To burn with a Bitcoin client, simply send the amount of BTC you want to burn to ${ burn_address }. As long as one of the outputs is 1ChancecoinXXXXXXXXXXXXXXXXXZELUFD, the burn will be credited to the first input address.</p>
-				<h3>Burning with Blockchain.info</h3>
-				<p>To burn using a Blockchain.info wallet, do the following:</p>
-				<ol>
-					<li>Log in to your wallet.</li>
-					<li>Click "Send Money."</li>
-					<li>Choose "Quick Send" under "Transaction Type."</li>
-					<li>Enter ${ burn_address} for the "To" address.</li>
-					<li>Enter the amount of BTC you want to burn.</li>
-					<li>Click "Send Payment."</li>
-				</ol>
-				<p>Note that when you use multiple input addresses, the CHA is credited to the first input address.</p>
+			<h2>How do I buy CHA?</h2>
+			<p>During the burn period, you can burn BTC into CHA using the standard Chancecoin wallet or command line interface. You can also burn BTC into CHA by sending BTC to ${ burn_address } using a Bitcoin client or Blockchain.info. After the burn period, you can still trade CHA for BTC on the decentralized exchange using the standard Chancecoin wallet or command line interface.</p>
+			<h3>Burning with the Chancecoin wallet</h3>
+			<p>Open the wallet software and click on "Wallet." Under the "Burn" section, fill in your address and desired quantity to burn. Then click "Burn."</p>
+			<h3>Burning with the command line interface</h3>
+			<p>Run "python chancecoind.py burn --source SOURCE --quantity QUANTITY"</p>
+			<h3>Burning with a Bitcoin client</h3>
+			<p>To burn with a Bitcoin client, simply send the amount of BTC you want to burn to ${ burn_address }. As long as one of the outputs is 1ChancecoinXXXXXXXXXXXXXXXXXZELUFD, the burn will be credited to the first input address.</p>
+			<h3>Burning with Blockchain.info</h3>
+			<p>To burn using a Blockchain.info wallet, do the following:</p>
+			<ol>
+				<li>Log in to your wallet.</li>
+				<li>Click "Send Money."</li>
+				<li>Choose "Quick Send" under "Transaction Type."</li>
+				<li>Enter ${ burn_address} for the "To" address.</li>
+				<li>Enter the amount of BTC you want to burn.</li>
+				<li>Click "Send Payment."</li>
+			</ol>
+			<p>Note that when you use multiple input addresses, the CHA is credited to the first input address.</p>
 
-				<h2>How do I gamble?</h2>
-				<p>You can gamble using the standard Chancecoin wallet or command line interface.</p>
-				<h3>Gambling with the Chancecoin wallet</h3>
-				<p>Open the wallet software and click on "Casino." Choose the amount of CHA you want to bet, and the desired payout or odds of winning (one will determine the other). Then click "Roll the Dice."</p>
-				<h3>Gambling with the command line interface</h3>
-				<p>Run "python chancecoind.py bet --source SOURCE --bet BET --chance CHANCE --payout PAYOUT." Note that the chance of winning and the payout must be congruent. This is best illustrated with an example: if the chance of winning is 50 (meaning 50%), then the payout is 1/0.5*(1-${ house_edge })=${ 1/0.5*(1-house_edge) }, where ${ house_edge } is the house edge.</p>
+			<h2>How do I gamble?</h2>
+			<p>You can gamble using the standard Chancecoin wallet or command line interface.</p>
+			<h3>Gambling with the Chancecoin wallet</h3>
+			<p>Open the wallet software and click on "Casino." Choose the amount of CHA you want to bet, and the desired payout or odds of winning (one will determine the other). Then click "Roll the Dice."</p>
+			<h3>Gambling with the command line interface</h3>
+			<p>Run "python chancecoind.py bet --source SOURCE --bet BET --chance CHANCE --payout PAYOUT." Note that the chance of winning and the payout must be congruent. This is best illustrated with an example: if the chance of winning is 50 (meaning 50%), then the payout is 1/0.5*(1-${ house_edge })=${ 1/0.5*(1-house_edge) }, where ${ house_edge } is the house edge.</p>
 
-				<h2>How do I bankroll the house?</h2>
-				<p>By owning CHA, you are automatically bankrolling the house. On average, you can expect to earn the house edge of ${ house_edge*100 }% per bet.</p>
+			<h2>How do I bankroll the house?</h2>
+			<p>By owning CHA, you are automatically bankrolling the house. On average, you can expect to earn the house edge of ${ house_edge*100 }% per bet.</p>
 
-				<h2>Donations</h2>
-				<p>Donations to 1BckY64TE6VrjVcGMizYBE7gt22axnq6CM are welcome.</p>
+			<h2>Donations</h2>
+			<p>Donations to 1BckY64TE6VrjVcGMizYBE7gt22axnq6CM are welcome.</p>
 
-				<h2>Developers</h2>
-				<p><a href="https://bitcointalk.org/index.php?action=profile;u=252066">Magician</a> and <a href="https://bitcointalk.org/index.php?action=profile;u=272243">Venetian</a></p>
+			<h2>Developers</h2>
+			<p><a href="https://bitcointalk.org/index.php?action=profile;u=252066">Magician</a> and <a href="https://bitcointalk.org/index.php?action=profile;u=272243">Venetian</a></p>
 
-				<h2>Installation instructions</h2>
-				<h3>Prerequisites</h3>
-				<ul>
-					<li>Install bitcoind or a Bitcoin client with RPC capability (such as Bitcoin-Qt). The txindex option must be enabled.</li>
-				</ul>
-				<h3>From binary</h3>
-				<ul>
-					<li>Download and run a precompiled Chancecoin wallet binary.</li>
-					<li>When you load the program for the first time, it will tell you where you need to create your configuration file, and it will also show you an example of a valid configuration file. Create this file and fill it in with the details of your Bitcoin RPC server.</li>
-					<li>Restart the Chancecoin wallet and you should be good to go.</li>
-				</ul>
-				<h3>From source</h3>
-				<ul>
-					<li>Git fetch <a href="https://github.com/chancecoin/chancecoin.git">https://github.com/chancecoin/chancecoin.git</a>.</li>
-					<li>Install python3 and the following prerequisites: urllib3, apsw, requests, appdirs, prettytable, python-dateutil, json-rpc, cherrypy, pycoin, pyzmq(v2.2+), tornado.</li>
-					<li>You can run the GUI via gui.py, or the command line interface via chancecoind.py.</li>
-					<li>Either way, you need to create a configuration file first. When you first run the program, it will tell you where you need to create your configuration file. Example.conf is an example of a valid configuration file. Create this file and fill it in with the details of your Bitcoin RPC server.</li>
-					<li>Restart the Chancecoin wallet and you should be good to go.</li>
-				</ul>
-			</div>
+			<h2>Installation instructions</h2>
+			<h3>Prerequisites</h3>
+			<ul>
+				<li>Install bitcoind or a Bitcoin client with RPC capability (such as Bitcoin-Qt). The txindex option must be enabled.</li>
+			</ul>
+			<h3>From binary</h3>
+			<ul>
+				<li>Download and run a precompiled Chancecoin wallet binary.</li>
+				<li>When you load the program for the first time, it will tell you where you need to create your configuration file, and it will also show you an example of a valid configuration file. Create this file and fill it in with the details of your Bitcoin RPC server.</li>
+				<li>Restart the Chancecoin wallet and you should be good to go.</li>
+			</ul>
+			<h3>From source</h3>
+			<ul>
+				<li>Git fetch <a href="https://github.com/chancecoin/chancecoin.git">https://github.com/chancecoin/chancecoin.git</a>.</li>
+				<li>Install python3 and the following prerequisites: urllib3, apsw, requests, appdirs, prettytable, python-dateutil, json-rpc, cherrypy, pycoin, pyzmq(v2.2+), tornado.</li>
+				<li>You can run the GUI via gui.py, or the command line interface via chancecoind.py.</li>
+				<li>Either way, you need to create a configuration file first. When you first run the program, it will tell you where you need to create your configuration file. Example.conf is an example of a valid configuration file. Create this file and fill it in with the details of your Bitcoin RPC server.</li>
+				<li>Restart the Chancecoin wallet and you should be good to go.</li>
+			</ul>
 		</div>
 </@template.content>

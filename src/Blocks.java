@@ -460,6 +460,15 @@ public class Blocks {
 		Database db = Database.getInstance();
 		db.executeUpdate("PRAGMA user_version = "+Config.minorVersionDB.toString());
 	}
+	
+	public Integer getHeight() {
+		try {
+			Integer height = blockStore.getChainHead().getHeight();
+			return height;
+		} catch (BlockStoreException e) {
+		}
+		return 0;
+	}
 
 	public void importPrivateKey(String privateKey) {
 		DumpedPrivateKey dumpedPrivateKey;
