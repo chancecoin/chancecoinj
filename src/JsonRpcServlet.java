@@ -14,12 +14,11 @@ public class JsonRpcServlet extends HttpServlet {
 
 	public void init() {
 		jsonRpcServer = new JsonRpcServer(new JsonRpcServiceImpl());
-		Blocks blocks = Blocks.getInstance();
+		//Blocks blocks = Blocks.getInstance();
 	}
 
 	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-		throws ServletException, IOException {
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		jsonRpcServer.handle(req, resp);
 	}
 }

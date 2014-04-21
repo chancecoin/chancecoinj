@@ -14,9 +14,8 @@ public class JsonRpcTest {
 	}
 
 	public void runJsonRpcHttpClient() throws MalformedURLException {
-		
 		JsonRpcHttpClient jsonRpcHttpClient = new JsonRpcHttpClient(new URL(
-				"http://127.0.0.1:" + JsonRpcServletEngine.PORT + "/servlet"));
+				"http://127.0.0.1:" + JsonRpcServletEngine.PORT));
 		JsonRpcService service = ProxyUtil.createClientProxy(
 				JsonRpcService.class.getClassLoader(), JsonRpcService.class,
 				jsonRpcHttpClient);
@@ -39,15 +38,12 @@ public class JsonRpcTest {
 		JsonRpcTest test = new JsonRpcTest();
 		try {
 			test.setup();
-			test.runJsonRpcHttpClient();
-			test.teardown();
+			//test.runJsonRpcHttpClient();
+			//test.teardown();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		
-		
+		}		
 	}
-	
 
 }

@@ -3,7 +3,6 @@ import org.eclipse.jetty.server.Server;
 
 public class JsonRpcServletEngine {
 	public static final int PORT = 54321;
-
 	Server server;
 
 	public void startup() throws Exception {
@@ -17,5 +16,15 @@ public class JsonRpcServletEngine {
 
 	public void stop() throws Exception {
 		server.stop();
+	}
+	
+	public static void main(String args[]) {
+		JsonRpcServletEngine engine = new JsonRpcServletEngine();
+		try {
+			engine.startup();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
