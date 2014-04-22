@@ -59,25 +59,15 @@ public class Blocks {
 	public static Blocks getInstance() {
 		if(instance == null) {
 			instance = new Blocks();
-			instance.follow();
+			instance.init();
 		}
+		instance.follow();
 		return instance;
 	}
 
-	private Blocks() {
-
-	}
-
-	public void follow() {
+	public void init() {
 		params = MainNetParams.get();
 		try {
-			Integer lastBlock = Util.getLastBlock();
-			if (lastBlock == 0) {
-				lastBlock = Config.firstBlock - 1;
-			}
-			Integer nextBlock = lastBlock + 1;
-			Address burnAddress = new Address(params, Config.burnAddress);		    
-
 			if ((new File("wallet")).exists()) {
 				logger.info("Found wallet file");
 				wallet = Wallet.loadFromFile(new File("wallet"));
@@ -98,42 +88,56 @@ public class Blocks {
 			peerGroup.startAndWait();
 			peerGroup.addEventListener(new ChancecoinPeerEventListener());
 			peerGroup.downloadBlockChain();
-
-			Block block = peerGroup.getDownloadPeer().getBlock(blockStore.getChainHead().getHeader().getHash()).get();
-			Integer blockHeight = blockStore.getChainHead().getHeight();
-
-			//traverse new blocks
-			Database db = Database.getInstance();
-			logger.info("Bitcoin block height: "+blockHeight);	
-			logger.info("Chancecoin block height: "+lastBlock);	
-			Integer blocksToScan = blockHeight - lastBlock;
-			List<Sha256Hash> blockHashes = new ArrayList<Sha256Hash>();
-			
-			while (blockStore.get(block.getHash()).getHeight()>lastBlock) {
-				blockHashes.add(block.getHash());
-				block = blockStore.get(block.getPrevBlockHash()).getHeader();
-			}
-			
-			for (int i = blockHashes.size()-1; i>=0; i--) { //traverse blocks in reverse order
-				block = peerGroup.getDownloadPeer().getBlock(blockHashes.get(i)).get();
-				blockHeight = blockStore.get(block.getHash()).getHeight();
-				logger.info("Catching Chancecoin up to Bitcoin (block "+blockHeight.toString()+"): "+Util.format((blockHashes.size() - i)/((double) blockHashes.size())*100.0)+"%");	
-				importBlock(block, blockHeight);
-			}
-			
-			if (getDBMinorVersion()<Config.minorVersionDB){
-				reparse();
-				updateMinorVersion();		    	
-			}else{
-				parseFrom(nextBlock);
-			}
-			Bet.resolve();
-			Order.expire();
-			
 		} catch (Exception e) {
 			logger.error(e.toString());
 			System.exit(0);
 		}
+	}
+	
+	public void follow() {
+		try {
+			Block block = peerGroup.getDownloadPeer().getBlock(blockStore.getChainHead().getHeader().getHash()).get();
+			Integer blockHeight = blockStore.getChainHead().getHeight();
+	
+			Integer lastBlock = Util.getLastBlock();
+			if (lastBlock == 0) {
+				lastBlock = Config.firstBlock - 1;
+			}
+			Integer nextBlock = lastBlock + 1;
+			
+			if (lastBlock < blockHeight) {
+				//traverse new blocks
+				Database db = Database.getInstance();
+				logger.info("Bitcoin block height: "+blockHeight);	
+				logger.info("Chancecoin block height: "+lastBlock);	
+				Integer blocksToScan = blockHeight - lastBlock;
+				List<Sha256Hash> blockHashes = new ArrayList<Sha256Hash>();
+				
+				while (blockStore.get(block.getHash()).getHeight()>lastBlock) {
+					blockHashes.add(block.getHash());
+					block = blockStore.get(block.getPrevBlockHash()).getHeader();
+				}
+				
+				for (int i = blockHashes.size()-1; i>=0; i--) { //traverse blocks in reverse order
+					block = peerGroup.getDownloadPeer().getBlock(blockHashes.get(i)).get();
+					blockHeight = blockStore.get(block.getHash()).getHeight();
+					logger.info("Catching Chancecoin up to Bitcoin (block "+blockHeight.toString()+"): "+Util.format((blockHashes.size() - i)/((double) blockHashes.size())*100.0)+"%");	
+					importBlock(block, blockHeight);
+				}
+				
+				if (getDBMinorVersion()<Config.minorVersionDB){
+					reparse();
+					updateMinorVersion();		    	
+				}else{
+					parseFrom(nextBlock);
+				}
+				Bet.resolve();
+				Order.expire();
+			}
+		} catch (Exception e) {
+			logger.error(e.toString());
+			System.exit(0);
+		}		
 	}
 
 	/*

@@ -22,12 +22,14 @@ public class ChancecoinPeerEventListener implements PeerEventListener {
 	@Override
 	public void onBlocksDownloaded(Peer peer, Block block, int blocksLeft) {
 		logger.info("Block downloaded: "+blocksLeft);
-		//TODO: for some reason, inside importBlock, the transaction grabbing doesn't work, so this ends up failing
+		/*
+		//this doesn't work
 		Blocks blocks = Blocks.getInstance();
 		try {
 			blocks.importBlock(block, blocks.blockStore.get(block.getHash()).getHeight());
 		} catch (BlockStoreException e) {
 		}
+		*/
 	}
 
 	@Override
