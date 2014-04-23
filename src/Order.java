@@ -98,8 +98,10 @@ public class Order {
 					dataString = new String(data,"ISO-8859-1");
 				} catch (UnsupportedEncodingException e) {
 				}
-				String destination = source;
-				Transaction tx = blocks.transaction(source, destination, BigInteger.valueOf(Config.dustSize), BigInteger.valueOf(Config.minFee), dataString);
+				if (feeProvided.compareTo(BigInteger.valueOf(Config.minFee))<0) {
+					feeProvided = BigInteger.valueOf(Config.minFee);
+				}
+				Transaction tx = blocks.transaction(source, "", BigInteger.ZERO, feeProvided, dataString);
 				return tx;
 			}
 		}

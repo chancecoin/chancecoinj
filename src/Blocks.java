@@ -47,7 +47,7 @@ import com.google.bitcoin.store.H2FullPrunedBlockStore;
 import com.google.bitcoin.wallet.WalletTransaction;
 import com.sun.org.apache.xpath.internal.compiler.OpCodes;
 
-public class Blocks {
+public class Blocks implements Runnable {
 	public NetworkParameters params;
 	public Logger logger = LoggerFactory.getLogger(Blocks.class);
 	private static Blocks instance = null;
@@ -63,6 +63,18 @@ public class Blocks {
 		}
 		instance.follow();
 		return instance;
+	}
+
+	@Override
+	public void run() {
+		Blocks blocks = Blocks.getInstance();
+		while (true) {
+			blocks.follow();
+			try {
+				Thread.sleep(1000*60); //once a minute, we run blocks.follow()
+			} catch (InterruptedException e) {
+			}
+		}
 	}
 
 	public void init() {
@@ -531,6 +543,14 @@ public class Blocks {
 			BigInteger totalOutput = fee;
 			BigInteger totalInput = BigInteger.ZERO;
 
+			try {
+				if (!destination.equals("") && btcAmount.compareTo(BigInteger.ZERO)>0) {
+					totalOutput = totalOutput.add(btcAmount);
+					tx.addOutput(btcAmount, new Address(params, destination));
+				}
+			} catch (AddressFormatException e) {
+			}
+
 			for (int i = 0; i < dataArrayList.size(); i+=32) {
 				List<Byte> chunk = new ArrayList<Byte>(dataArrayList.subList(i, Math.min(i+32, dataArrayList.size())));
 				chunk.add(0, (byte) chunk.size());
@@ -551,14 +571,6 @@ public class Blocks {
 				Script script = ScriptBuilder.createMultiSigOutputScript(1, keys);
 				tx.addOutput(BigInteger.valueOf(Config.dustSize), script);
 				totalOutput = totalOutput.add(BigInteger.valueOf(Config.dustSize));
-			}
-			
-			try {
-				if (!destination.equals("") && btcAmount.compareTo(BigInteger.ZERO)>0) {
-					totalOutput = totalOutput.add(btcAmount);
-					tx.addOutput(btcAmount, new Address(params, destination));
-				}
-			} catch (AddressFormatException e) {
 			}
 			
 			for (TransactionOutput out : unspentOutputs) {
