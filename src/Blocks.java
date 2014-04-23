@@ -108,9 +108,7 @@ public class Blocks implements Runnable {
 	
 	public void follow() {
 		try {
-			Block block = peerGroup.getDownloadPeer().getBlock(blockStore.getChainHead().getHeader().getHash()).get();
 			Integer blockHeight = blockStore.getChainHead().getHeight();
-	
 			Integer lastBlock = Util.getLastBlock();
 			if (lastBlock == 0) {
 				lastBlock = Config.firstBlock - 1;
@@ -125,6 +123,7 @@ public class Blocks implements Runnable {
 				Integer blocksToScan = blockHeight - lastBlock;
 				List<Sha256Hash> blockHashes = new ArrayList<Sha256Hash>();
 				
+				Block block = peerGroup.getDownloadPeer().getBlock(blockStore.getChainHead().getHeader().getHash()).get();
 				while (blockStore.get(block.getHash()).getHeight()>lastBlock) {
 					blockHashes.add(block.getHash());
 					block = blockStore.get(block.getPrevBlockHash()).getHeader();
