@@ -3,3 +3,6 @@
 wallet
 *.db
 *.log
+.settings
+bin
+out
