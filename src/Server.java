@@ -184,7 +184,6 @@ public class Server implements Runnable {
 					}
 				}
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("btcpay")) {
-					//TODO: test this
 					String orderMatchId = request.queryParams("order_match_id");
 					Transaction tx = BTCPay.create(orderMatchId);
 					if (tx!=null) {
