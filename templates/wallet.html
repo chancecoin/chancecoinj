@@ -1,7 +1,7 @@
 <#import "template.html" as template>
 <@template.content>
 		<div class="row section">
-				<div class="col-md-4 segment one-third">
+				<div class="col-xs-4 segment one-third">
 						<h2>Balance</h2>
 						<#if balanceCHA??>
 						<table class="table">
@@ -24,7 +24,7 @@
 						</#if>
 						<p>See <a href="/balances">all balances</a>.</p>
 				</div>
-				<div class="col-md-4 segment one-third">
+				<div class="col-xs-4 segment one-third">
 						<h2>Import address</h2>
 						<form action="/wallet" method="post">
 								<input type="hidden" name="form" value="import">
@@ -41,7 +41,7 @@
 								</div>
 						</form>
 				</div>
-				<div class="col-md-4 segment one-third">
+				<div class="col-xs-4 segment one-third">
 						<h2>Send</h2>
 						<form action="/wallet" method="post">
 				        <input type="hidden" name="form" value="send">
@@ -66,7 +66,7 @@
 				</div>
 		</div>
 		<div class="row section">
-				<div class="col-md-4 segment one-third">
+				<div class="col-xs-4 segment one-third">
 						<h2>Buy</h2>
 						<form action="/wallet" method="post">
 								<input type="hidden" name="form" value="buy">
@@ -98,7 +98,7 @@
 								</div>
 						</form>
 				</div>
-				<div class="col-md-4 segment one-third">
+				<div class="col-xs-4 segment one-third">
 						<h2>Order book</h2>
 						<table class="table">
 						    <thead>
@@ -131,7 +131,7 @@
 						    </tbody>
 						</table>
 				</div>
-				<div class="col-md-4 segment one-third">
+				<div class="col-xs-4 segment one-third">
 						<h2>Sell</h2>
 						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
 								<input type="hidden" name="form" value="sell">
@@ -165,7 +165,7 @@
 				</div>
 		</div>
 		<div class="row section">
-				<div class="col-md-6 segment one-half">
+				<div class="col-xs-6 segment one-half">
 						<h2>My orders</h2>
 						<table class="table table-striped">
 								<thead>
@@ -205,7 +205,7 @@
 								</tbody>
 						</table>
 					</div>
-					<div class="col-md-6 segment one-half">
+					<div class="col-xs-6 segment one-half">
 						<h2>My matched orders</h2>
 						<table class="table table-striped">
 								<thead>
