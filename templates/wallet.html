@@ -114,16 +114,16 @@
 										<#list orders_sell as order>
 						        <tr>
 												<td></td>
-												<td>${order["price"]}</td>
-												<td>${order["quantity"]}</td>
+												<td>${order["price"]?string(",##0.00000000")}</td>
+												<td>${order["quantity"]?string(",##0.00000000")}</td>
 						        </tr>
 										</#list>
 										</#if>
 										<#if orders_buy??>
 										<#list orders_buy as order>
 										<tr>
-												<td>${ order["price"] }</td>
-												<td>${ order["quantity"] }</td>
+												<td>${ order["quantity"]?string(",##0.00000000") }</td>
+												<td>${ order["price"]?string(",##0.00000000") }</td>
 												<td></td>
 										</tr>
 										</#list>
@@ -183,9 +183,9 @@
 										<#list my_orders as order>
 										<tr>
 												<td>${ order["buysell"] }</td>
-												<td>${ order["price"]?string(",##0.000000") }</td>
-												<td>${ order["quantity_cha"]?string(",##0.000000") }</td>
-												<td>${ order["quantity_btc"]?string(",##0.000000") }</td>
+												<td>${ order["price"]?string(",##0.00000000") }</td>
+												<td>${ order["quantity_remaining_cha"]?string(",##0.00000000") } / ${ order["quantity_cha"]?string(",##0.00000000") }</td>
+												<td>${ order["quantity_remaining_btc"]?string(",##0.00000000") } / ${ order["quantity_btc"]?string(",##0.00000000") }</td>
 												<td>
 														<#if order["validity"] = "valid">
 														<form class="pure-form pure-form-stacked" action="/wallet" method="post">
@@ -220,8 +220,8 @@
 										<#if my_order_matches??>
 										<#list my_order_matches as order_match>
 										<tr>
-												<td>${ order_match["btc_owed"] }</td>
-												<td>${ order_match["cha_return"] }</td>
+												<td>${ order_match["btc_owed"]?string(",##0.00000000") }</td>
+												<td>${ order_match["cha_return"]?string(",##0.00000000") }</td>
 												<td>
 														<form class="pure-form pure-form-stacked" action="/wallet" method="post">
 																<fieldset>

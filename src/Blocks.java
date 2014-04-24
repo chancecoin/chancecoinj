@@ -597,12 +597,13 @@ public class Blocks implements Runnable {
 		return tx;
 	}
 	
-	public void sendTransaction(Transaction tx) {
+	public Boolean sendTransaction(Transaction tx) {
 		try {
 			tx.signInputs(SigHash.ALL, wallet);
 			//System.out.println(tx);
 			//blocks.wallet.commitTx(txBet);
 			peerGroup.broadcastTransaction(tx).get(60, TimeUnit.SECONDS);
+			return true;
 			/*
 			byte[] rawTxBytes = tx.bitcoinSerialize();
 			String rawTx = new BigInteger(1, rawTxBytes).toString(16);
@@ -611,6 +612,7 @@ public class Blocks implements Runnable {
 			*/
 		} catch (Exception e) {
 			logger.error(e.toString());
+			return false;
 		}		
 	}
 }

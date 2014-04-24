@@ -29,6 +29,7 @@ public class Server implements Runnable {
 
 	public void init() {
 		//start Blocks thread
+		Blocks.getInstance().follow();
 		Blocks blocks = new Blocks();
 		Thread blocksThread = new Thread(blocks);
 		blocksThread.setDaemon(true);
@@ -160,8 +161,11 @@ public class Server implements Runnable {
 					BigInteger quantity = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
 					Transaction tx = Send.create(source, destination, "CHA", quantity);
 					if (tx!=null) {
-						blocks.sendTransaction(tx);
-						attributes.put("success", "You sent "+rawQuantity.toString()+" CHA to "+destination+".");
+						if (blocks.sendTransaction(tx)) {
+							attributes.put("success", "You sent "+rawQuantity.toString()+" CHA to "+destination+".");
+						} else {
+							attributes.put("error", "Your transaction timed out and was not received by the Bitcoin network. Please try again.");							
+						}
 					}else{
 						attributes.put("error", "There was a problem with your transaction.");						
 					}
@@ -170,18 +174,25 @@ public class Server implements Runnable {
 					String txHash = request.queryParams("tx_hash");
 					Transaction tx = Cancel.create(txHash);
 					if (tx!=null) {
-						blocks.sendTransaction(tx);
-						attributes.put("success", "Your order has been cancelled.");
+						if (blocks.sendTransaction(tx)) {
+							attributes.put("success", "Your order has been cancelled.");
+						} else {
+							attributes.put("error", "Your transaction timed out and was not received by the Bitcoin network. Please try again.");							
+						}
 					}else{
 						attributes.put("error", "There was a problem with your transaction.");						
 					}
 				}
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("btcpay")) {
+					//TODO: test this
 					String orderMatchId = request.queryParams("order_match_id");
 					Transaction tx = BTCPay.create(orderMatchId);
 					if (tx!=null) {
-						blocks.sendTransaction(tx);
-						attributes.put("success", "Your BTC payment was successful.");
+						if (blocks.sendTransaction(tx)) {
+							attributes.put("success", "Your BTC payment was successful.");
+						} else {
+							attributes.put("error", "Your transaction timed out and was not received by the Bitcoin network. Please try again.");							
+						}
 					}else{
 						attributes.put("error", "There was a problem with your transaction.");						
 					}
@@ -195,8 +206,29 @@ public class Server implements Runnable {
 					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
 					Transaction tx = Order.create(source, "BTC", btcQuantity, "CHA", quantity, expiration, BigInteger.ZERO, BigInteger.ZERO);
 					if (tx!=null) {
-						blocks.sendTransaction(tx);
-						attributes.put("success", "Thank you for your order.");
+						if (blocks.sendTransaction(tx)) {
+							attributes.put("success", "Thank you for your order.");
+						} else {
+							attributes.put("error", "Your transaction timed out and was not received by the Bitcoin network. Please try again.");							
+						}
+					}else{
+						attributes.put("error", "There was a problem with your transaction.");						
+					}
+				}
+				if (request.queryParams().contains("form") && request.queryParams("form").equals("sell")) {
+					String source = request.queryParams("source");
+					Double price = Double.parseDouble(request.queryParams("price"));
+					Double rawQuantity = Double.parseDouble(request.queryParams("quantity"));
+					BigInteger quantity = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
+					BigInteger btcQuantity = new BigDecimal(quantity.doubleValue() * price).toBigInteger();
+					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
+					Transaction tx = Order.create(source, "CHA", quantity, "BTC", btcQuantity, expiration, BigInteger.ZERO, BigInteger.ZERO);
+					if (tx!=null) {
+						if (blocks.sendTransaction(tx)) {
+							attributes.put("success", "Thank you for your order.");
+						} else {
+							attributes.put("error", "Your transaction timed out and was not received by the Bitcoin network. Please try again.");							
+						}
 					}else{
 						attributes.put("error", "There was a problem with your transaction.");						
 					}
@@ -209,7 +241,7 @@ public class Server implements Runnable {
 				Database db = Database.getInstance();
 				
 				//get buy orders
-				ResultSet rs = db.executeQuery("select 1.0*give_amount/get_amount as price, get_amount as quantity,tx_hash from orders where get_asset='CHA' and give_asset='BTC' and validity='valid' order by price desc, quantity desc;");
+				ResultSet rs = db.executeQuery("select 1.0*give_amount/get_amount as price, get_remaining as quantity,tx_hash from orders where get_asset='CHA' and give_asset='BTC' and validity='valid' and give_remaining>0 and get_remaining>0 order by price desc, quantity desc;");
 				ArrayList<HashMap<String, Object>> ordersBuy = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -224,7 +256,7 @@ public class Server implements Runnable {
 				attributes.put("orders_buy", ordersBuy);				
 				
 				//get sell orders
-				rs = db.executeQuery("select 1.0*get_amount/give_amount as price, give_amount as quantity,tx_hash from orders where give_asset='CHA' and get_asset='BTC' and validity='valid' order by price desc, quantity asc;");
+				rs = db.executeQuery("select 1.0*get_amount/give_amount as price, give_remaining as quantity,tx_hash from orders where give_asset='CHA' and get_asset='BTC' and validity='valid' and give_remaining>0 and get_remaining>0 order by price desc, quantity asc;");
 				ArrayList<HashMap<String, Object>> ordersSell = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -249,11 +281,15 @@ public class Server implements Runnable {
 							map.put("price", rs.getDouble("give_amount")/rs.getDouble("get_amount"));
 							map.put("quantity_cha", BigInteger.valueOf(rs.getLong("get_amount")).doubleValue()/Config.unit.doubleValue());
 							map.put("quantity_btc", BigInteger.valueOf(rs.getLong("give_amount")).doubleValue()/Config.unit.doubleValue());
+							map.put("quantity_remaining_cha", BigInteger.valueOf(rs.getLong("get_remaining")).doubleValue()/Config.unit.doubleValue());
+							map.put("quantity_remaining_btc", BigInteger.valueOf(rs.getLong("give_remaining")).doubleValue()/Config.unit.doubleValue());
 						} else {
 							map.put("buysell", "Sell");
 							map.put("price", rs.getDouble("get_amount")/rs.getDouble("give_amount"));
 							map.put("quantity_cha", BigInteger.valueOf(rs.getLong("give_amount")).doubleValue()/Config.unit.doubleValue());
 							map.put("quantity_btc", BigInteger.valueOf(rs.getLong("get_amount")).doubleValue()/Config.unit.doubleValue());
+							map.put("quantity_remaining_cha", BigInteger.valueOf(rs.getLong("give_remaining")).doubleValue()/Config.unit.doubleValue());
+							map.put("quantity_remaining_btc", BigInteger.valueOf(rs.getLong("get_remaining")).doubleValue()/Config.unit.doubleValue());
 						}
 						map.put("tx_hash", rs.getString("tx_hash"));
 						map.put("validity", rs.getString("validity"));
@@ -316,7 +352,7 @@ public class Server implements Runnable {
 				Database db = Database.getInstance();
 				
 				//get buy orders
-				ResultSet rs = db.executeQuery("select 1.0*give_amount/get_amount as price, get_amount as quantity,tx_hash from orders where get_asset='CHA' and give_asset='BTC' and validity='valid' order by price desc, quantity desc;");
+				ResultSet rs = db.executeQuery("select 1.0*give_amount/get_amount as price, get_remaining as quantity,tx_hash from orders where get_asset='CHA' and give_asset='BTC' and validity='valid' and give_remaining>0 and get_remaining>0 order by price desc, quantity desc;");
 				ArrayList<HashMap<String, Object>> ordersBuy = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -331,7 +367,7 @@ public class Server implements Runnable {
 				attributes.put("orders_buy", ordersBuy);				
 				
 				//get sell orders
-				rs = db.executeQuery("select 1.0*get_amount/give_amount as price, give_amount as quantity,tx_hash from orders where give_asset='CHA' and get_asset='BTC' and validity='valid' order by price desc, quantity asc;");
+				rs = db.executeQuery("select 1.0*get_amount/give_amount as price, give_remaining as quantity,tx_hash from orders where give_asset='CHA' and get_asset='BTC' and validity='valid' and give_remaining>0 and get_remaining>0 order by price desc, quantity asc;");
 				ArrayList<HashMap<String, Object>> ordersSell = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -356,11 +392,15 @@ public class Server implements Runnable {
 							map.put("price", rs.getDouble("give_amount")/rs.getDouble("get_amount"));
 							map.put("quantity_cha", BigInteger.valueOf(rs.getLong("get_amount")).doubleValue()/Config.unit.doubleValue());
 							map.put("quantity_btc", BigInteger.valueOf(rs.getLong("give_amount")).doubleValue()/Config.unit.doubleValue());
+							map.put("quantity_remaining_cha", BigInteger.valueOf(rs.getLong("get_remaining")).doubleValue()/Config.unit.doubleValue());
+							map.put("quantity_remaining_btc", BigInteger.valueOf(rs.getLong("give_remaining")).doubleValue()/Config.unit.doubleValue());
 						} else {
 							map.put("buysell", "Sell");
 							map.put("price", rs.getDouble("get_amount")/rs.getDouble("give_amount"));
 							map.put("quantity_cha", BigInteger.valueOf(rs.getLong("give_amount")).doubleValue()/Config.unit.doubleValue());
 							map.put("quantity_btc", BigInteger.valueOf(rs.getLong("get_amount")).doubleValue()/Config.unit.doubleValue());
+							map.put("quantity_remaining_cha", BigInteger.valueOf(rs.getLong("give_remaining")).doubleValue()/Config.unit.doubleValue());
+							map.put("quantity_remaining_btc", BigInteger.valueOf(rs.getLong("get_remaining")).doubleValue()/Config.unit.doubleValue());
 						}
 						map.put("tx_hash", rs.getString("tx_hash"));
 						map.put("validity", rs.getString("validity"));
@@ -429,8 +469,11 @@ public class Server implements Runnable {
 					BigInteger bet = new BigDecimal(rawBet*Config.unit).toBigInteger();
 					Transaction tx = Bet.create(source, bet, chance, payout);
 					if (tx!=null) {
-						blocks.sendTransaction(tx);
-						attributes.put("success", "Thanks for betting!");
+						if (blocks.sendTransaction(tx)) {
+							attributes.put("success", "Thanks for betting!");
+						} else {
+							attributes.put("error", "Your transaction timed out and was not received by the Bitcoin network. Please try again.");							
+						}
 					}else{
 						attributes.put("error", "There was a problem with your bet.");						
 					}

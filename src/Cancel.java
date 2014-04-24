@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import javax.xml.bind.DatatypeConverter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,16 +73,12 @@ public class Cancel {
 			if (rsOrderMatch.next()) {
 				String orderMatchValidity = rsOrderMatch.getString("validity");
 				String orderMatchSource = rsOrderMatch.getString("source");
-				if (orderMatchValidity.equals("pending")) {
-					byte[] offerHashBytes = null;
-					try {
-						offerHashBytes = offerHash.getBytes("UTF-8");
-					} catch (UnsupportedEncodingException e1) {
-					}
+				if (orderMatchValidity.equals("valid")) {
+					byte[] offerHashBytes = DatatypeConverter.parseHexBinary(offerHash);
 					Blocks blocks = Blocks.getInstance();
 					ByteBuffer byteBuffer = ByteBuffer.allocate(length+4);
 					byteBuffer.putInt(0, id);
-					byteBuffer.put(offerHashBytes, 0+4, 32);
+					for (int i = 0; i<offerHashBytes.length; i++) byteBuffer.put(0+4+i, offerHashBytes[i]);
 					List<Byte> dataArrayList = Util.toByteArrayList(byteBuffer.array());
 					dataArrayList.addAll(0, Util.toByteArrayList(Config.prefix.getBytes()));
 					byte[] data = Util.toByteArray(dataArrayList);

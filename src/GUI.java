@@ -25,7 +25,7 @@ public class GUI extends Application {
 		// start Server
 		Server server = new Server();
 		Thread serverThread = new Thread(server);
-		serverThread.setDaemon(true); // important, otherwise JVM does not exit at end of main()
+		serverThread.setDaemon(true);
 		serverThread.start(); 
 
 		// create the scene

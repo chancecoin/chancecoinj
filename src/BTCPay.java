@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import javax.xml.bind.DatatypeConverter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +94,6 @@ public class BTCPay {
 		try {
 			if (rsOrderMatch.next()) {
 				String orderMatchValidity = rsOrderMatch.getString("validity");
-				Integer orderMatchExpireIndex = rsOrderMatch.getInt("expire_index");
 				String orderMatchTx0Address = rsOrderMatch.getString("tx0_address");
 				String orderMatchTx1Address = rsOrderMatch.getString("tx1_address");
 				String orderMatchForwardAsset = rsOrderMatch.getString("forward_asset");
@@ -100,7 +101,7 @@ public class BTCPay {
 				BigInteger orderMatchForwardAmount = BigInteger.valueOf(rsOrderMatch.getLong("forward_amount"));
 				BigInteger orderMatchBackwardAmount = BigInteger.valueOf(rsOrderMatch.getLong("backward_amount"));
 				if (orderMatchValidity.equals("pending")) {
-					if (!orderMatchBackwardAsset.equals("BTC")) {
+					if (orderMatchBackwardAsset.equals("BTC")) {
 						source = orderMatchTx1Address;
 						destination = orderMatchTx0Address;
 						btcAmount = orderMatchBackwardAmount;
@@ -109,19 +110,14 @@ public class BTCPay {
 						destination = orderMatchTx1Address;
 						btcAmount = orderMatchForwardAmount;					
 					}
-					byte[] tx0HashBytes = null;
-					byte[] tx1HashBytes = null;
-					try {
-						tx0HashBytes = tx0Hash.getBytes("UTF-8");
-						tx1HashBytes = tx1Hash.getBytes("UTF-8");
-					} catch (UnsupportedEncodingException e1) {
-					}
-					Integer timeLeft = orderMatchExpireIndex - Util.getLastBlock();
+
+					byte[] tx0HashBytes = DatatypeConverter.parseHexBinary(tx0Hash);
+					byte[] tx1HashBytes = DatatypeConverter.parseHexBinary(tx1Hash);
 					Blocks blocks = Blocks.getInstance();
 					ByteBuffer byteBuffer = ByteBuffer.allocate(length+4);
 					byteBuffer.putInt(0, id);
-					byteBuffer.put(tx0HashBytes, 0+4, 32);
-					byteBuffer.put(tx1HashBytes, 32+4, 32);
+					for (int i = 0; i<tx0HashBytes.length; i++) byteBuffer.put(0+4+i, tx0HashBytes[i]);
+					for (int i = 0; i<tx1HashBytes.length; i++) byteBuffer.put(32+4+i, tx1HashBytes[i]);
 					List<Byte> dataArrayList = Util.toByteArrayList(byteBuffer.array());
 					dataArrayList.addAll(0, Util.toByteArrayList(Config.prefix.getBytes()));
 					byte[] data = Util.toByteArray(dataArrayList);
@@ -131,7 +127,8 @@ public class BTCPay {
 						dataString = new String(data,"ISO-8859-1");
 					} catch (UnsupportedEncodingException e) {
 					}
-					Transaction tx = blocks.transaction(source, destination, BigInteger.valueOf(Config.dustSize), BigInteger.valueOf(Config.minFee), dataString);
+					btcAmount = btcAmount.max(BigInteger.valueOf(Config.dustSize)); //must sent at least dust size
+					Transaction tx = blocks.transaction(source, destination, btcAmount, BigInteger.valueOf(Config.minFee), dataString);
 					return tx;
 					
 				}
