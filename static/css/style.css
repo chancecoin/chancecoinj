@@ -182,23 +182,5 @@ blockquote p {
 }
 
 .game {
-	padding: 65px;
-}
-
-.dice {
-	background-image: url('/images/dice.png');
-	background-repeat: no-repeat;
-	background-position: center center;
-	background-size: contain;
-	height: 300px;
-	margin-top: 1em;
-}
-
-.colorwheel {
-	background-image: url('/images/color_wheel.png');
-	background-repeat: no-repeat;
-	background-position: center center;
-	background-size: contain;
-	height: 300px;
-	margin-top: 1em;
+	padding-top: 2em;
 }
