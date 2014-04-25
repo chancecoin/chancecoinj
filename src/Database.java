@@ -55,7 +55,7 @@ public class Database {
 		} catch (Exception e) {
 			logger.error(e.toString());
 			logger.error("Offending query: "+query);
-			System.exit(0);						
+			//System.exit(0);						
 		}
 	}
 	
@@ -67,7 +67,7 @@ public class Database {
 		} catch (SQLException e) {
 			logger.error(e.toString());
 			logger.error("Offending query: "+query);
-			System.exit(0);						
+			//System.exit(0);						
 		}
 		return null;
 	}

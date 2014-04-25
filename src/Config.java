@@ -25,7 +25,7 @@ public class Config {
 	public static long burnCreationTime = 1395508676-1;
 	
 	//casino
-	public static Double houseEdge = 0.02;
+	public static Double houseEdge = 0.01; //was 0.02 before block 298340
 	public static Double maxProfit = 0.01;
 	
 	//bitcoin

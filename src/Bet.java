@@ -42,6 +42,10 @@ public class Bet {
 					BigInteger bet = BigInteger.valueOf(byteBuffer.getLong(0));
 					Double chance = byteBuffer.getDouble(8);
 					Double payout = byteBuffer.getDouble(16);
+					Double houseEdge = Config.houseEdge;
+					if (blockIndex<298340) {
+						houseEdge = 0.02;
+					}
 					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-Config.houseEdge)),6)) {
 						if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
 							BigInteger chaSupply = Util.chaSupply();

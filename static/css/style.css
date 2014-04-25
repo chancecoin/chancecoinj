@@ -27,6 +27,7 @@ h6 { font-size: .75em; font-weight: bold; }
 .content {
 	padding: 0;
 	margin-top: -2em;
+	width: 100%;
 }
 
 .splash {
@@ -50,6 +51,7 @@ h6 { font-size: .75em; font-weight: bold; }
 
 .row {
 	padding-top: 0em;
+	width: 100%;
 }
 
 .half {
@@ -70,9 +72,9 @@ h6 { font-size: .75em; font-weight: bold; }
 
 .section {
 	border-bottom: 1px solid #ccc;
-	padding-top: 0em;
-	padding-bottom: 0em;
-	padding-right: 2em;
+	padding-top: 0;
+	padding-bottom: 0;
+	padding-right: 0;
 	padding-left: 2em;
 }
 
@@ -82,8 +84,8 @@ h6 { font-size: .75em; font-weight: bold; }
 
 .segment {
 	text-align: center;
-	padding-right: 1em;
-	padding-left: 1em;
+	padding-right: 0;
+	padding-left: 0;
 }
 
 .border-right {
@@ -109,10 +111,6 @@ h6 { font-size: .75em; font-weight: bold; }
 
 .one-fifth {
 	width: 19%;
-}
-
-.upper-right {
-	float: right;
 }
 
 .vert-bottom {
@@ -183,26 +181,24 @@ blockquote p {
   display: inline;
 }
 
+.game {
+	padding: 65px;
+}
 
-.front_page_container {
-	width: 1000px;
-	height: 549px;
-	margin-left: auto;
-	margin-right: auto;
-	background-image: url("/images/cubes_background.jpg");
+.dice {
+	background-image: url('/images/dice.png');
 	background-repeat: no-repeat;
+	background-position: center center;
 	background-size: contain;
+	height: 300px;
+	margin-top: 1em;
 }
 
-.front_page_bet_table {
-	width:744px;
-	height: 157px;
-	padding-top: 50px;
-	margin-left: auto;
-	margin-right: auto;
-}
-
-#roll_button {
-	width: 112px;
-	margin: 0px auto;
+.colorwheel {
+	background-image: url('/images/color_wheel.png');
+	background-repeat: no-repeat;
+	background-position: center center;
+	background-size: contain;
+	height: 300px;
+	margin-top: 1em;
 }

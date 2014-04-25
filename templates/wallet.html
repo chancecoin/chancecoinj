@@ -3,25 +3,20 @@
 		<div class="row section">
 				<div class="col-xs-4 segment one-third">
 						<h2>Balance</h2>
+						<ul class="list-group">
 						<#if balanceCHA??>
-						<table class="table">
-								<thead>
-										<tr>
-												<th>Balance</th>
-												<th>Currency</th>
-										</tr>
-								</thead>
-
-								<tbody>
-									<#if balanceCHA??>
-									<tr><td>${balanceCHA?string(",##0.00000000")}</td><td>CHA</td></tr>
-									</#if>
-									<#if balanceBTC??>
-									<tr><td>${balanceBTC?string(",##0.00000000")}</td><td>BTC</td></tr>
-									</#if>
-								</tbody>
-						</table>
+						<li class="list-group-item">
+						<span class="badge">CHA</span>
+						${balanceCHA?string(",##0.00000000")}
+						</li>
 						</#if>
+						<#if balanceBTC??>
+						<li class="list-group-item">
+						<span class="badge">BTC</span>
+						${balanceBTC?string(",##0.00000000")}
+						</li>
+						</#if>
+						</ul>
 						<p>See <a href="/balances">all balances</a>.</p>
 				</div>
 				<div class="col-xs-4 segment one-third">
