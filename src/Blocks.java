@@ -73,6 +73,8 @@ public class Blocks implements Runnable {
 			try {
 				Thread.sleep(1000*60); //once a minute, we run blocks.follow()
 			} catch (InterruptedException e) {
+				System.out.println(e.toString());
+				System.exit(0);
 			}
 		}
 	}

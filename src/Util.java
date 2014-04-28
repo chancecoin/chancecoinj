@@ -141,7 +141,7 @@ public class Util {
 		if (hasBalance(address, asset)) {
 			BigInteger existingAmount = getBalance(address,asset);
 			BigInteger newAmount = existingAmount.subtract(amount);
-			if (newAmount.compareTo(BigInteger.ZERO)>0) {
+			if (newAmount.compareTo(BigInteger.ZERO)>=0) {
 				db.executeUpdate("update balances set amount='"+newAmount.toString()+"' where address='"+address+"' and asset='"+asset+"';");
 			    db.executeUpdate("insert into debits(address, asset, amount) values('"+address+"','"+asset+"','"+amount.toString()+"');");
 			}

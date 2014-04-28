@@ -46,7 +46,7 @@ public class Bet {
 					if (blockIndex<298340) {
 						houseEdge = 0.02;
 					}
-					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-Config.houseEdge)),6)) {
+					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-houseEdge)),6)) {
 						if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
 							BigInteger chaSupply = Util.chaSupply();
 							if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
