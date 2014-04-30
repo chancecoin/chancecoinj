@@ -15,6 +15,6 @@ public class Chancecoin {
 	public static void main(String[] args) {
 		Blocks blocks = Blocks.getInstance();
 		//blocks.reDownloadBlockTransactions(297107);
-		//blocks.reparse();
+		blocks.reparse();
 	}
 }

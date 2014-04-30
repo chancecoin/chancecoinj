@@ -6,6 +6,7 @@ public class Config {
 	public static Boolean testNet = false;
 	public static String prefix = "CHANCECO";
 	public static String log = appName+".log";
+	public static String minVersionPage = "https://raw2.github.com/chancecoin/chancecoinj/master/min_version.txt";
 	
 	//version
 	public static Integer majorVersion = 1;

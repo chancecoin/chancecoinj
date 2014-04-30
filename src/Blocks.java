@@ -60,8 +60,27 @@ public class Blocks implements Runnable {
 		if(instance == null) {
 			instance = new Blocks();
 			instance.init();
+			instance.follow();			
+		} else {
+			instance.follow();			
 		}
-		instance.follow();
+		return instance;
+	}
+
+	public static Blocks getInstance(Boolean dbExists) {
+		if(instance == null) {
+			instance = new Blocks();
+			if (!dbExists) {
+				instance.createTables();
+			}
+			instance.init();
+			instance.follow();
+		} else {
+			if (!dbExists) {
+				instance.createTables();				
+			}
+			instance.follow();
+		}
 		return instance;
 	}
 

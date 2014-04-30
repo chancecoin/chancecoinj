@@ -1,6 +1,28 @@
 <#import "template.html" as template>
 <@template.content>
     <div class="row section">
+
+      <h2>Description</h2>
+      <p>Chancecoin (CHA) is a protocol, coin, and client used to bet on dice rolls and other games in a decentralized casino. Owners of the coin may gamble, with randomness provided by published NY Lottery Quick Draw numbers. Owners of the coin are automatically invested in the house bankroll. The protocol is built on top of the Bitcoin blockchain. Coins were created by burning Bitcoins during a proof of burn period.</p>
+
+      <h2>Burn information</h2>
+      <ul>
+        <li><strong>Burn status</strong>: COMPLETE</li>
+        <li><strong>Coins burned</strong>: ${ burned_CHA } CHA (${ burned_BTC } BTC)</li>
+        <li><strong>Burn period</strong>: Bitcoin blocks ${ start_block } to ${ end_block }</li>
+        <li><strong>Coins burned in first block</strong>: ${ multiplier_initial } CHA per 1 BTC</li>
+        <li><strong>Coins burned in last block</strong>: ${ multiplier } CHA per 1 BTC (coins per block scaled linearly in between these blocks)</li>
+        <li><strong>BTC burn address</strong>: <a href="http://blockchain.info/address/${ burn_address }">${ burn_address }</a></li>
+        <li><strong>Maximum coins allowed to be burned</strong>: ${ max_burn } CHA</li>
+        <li><strong>Maximum coins burned per address</strong>: unlimited</li>
+      </ul>
+
+      <h2>Casino information</h2>
+      <ul>
+        <li><strong>House edge</strong>: ${ house_edge*100 }%</li>
+        <li><strong>Maximum win</strong>: ${ max_profit*100 }% of bankroll</li>
+      </ul>
+
       <h2>Betting</h2>
         <p>Generally speaking, when you bet, you specify a bet size, a chance of winning, and a payout. The chance of winning and the payout must correspond. For example, if there were no house edge, a `50%` chance of winning would correspond to a `2`-to-`1` payout (`2x`). Because the house edge is `${ house_edge*100 }%`, this payout is adjusted to `${ 1/0.5*(1-house_edge) }x` (this is `1/0.5*(1-${ house_edge }`).</p>
         <p>Specifically, in Chancecoin, a bet is comprised of a bet amount (`b`), a chance of winning (`1/p`), and an edge-adjusted payout (`p*(1-e)`). The house edge (`e`) is `${ house_edge }` (`${ house_edge*100 }%`). The protocol enforces that the edge-adjusted payout and the chance of winning correspond exactly as described.</p>
@@ -27,5 +49,17 @@
 					<li>CHA can trade on an exchange without the exchange having to worry about its balance fluctuating due to bets being won and lost.</li>
 				<li>Accounting is cleaner. Under the standard method of payout accounting, because bets can't be resolved instantaneously, Chancecoin would have to at least partially freeze funds of all parties while waiting for bets to resolve.</li>
 				</ul>
+
+      <h2>Resources</h2>
+      <ul>
+        <li><a href="http://chancecoin.com">Home page</a></li>
+        <li><a href="http://www.reddit.com/r/chancecoin/">Subreddit</a></li>
+      </ul>
+
+      <h2>Developers</h2>
+      <p><a href="https://bitcointalk.org/index.php?action=profile;u=252066">Magician</a> and <a href="https://bitcointalk.org/index.php?action=profile;u=272243">Venetian</a></p>
+
+      <h2>Donations</h2>
+      <p>Donations to 1BckY64TE6VrjVcGMizYBE7gt22axnq6CM are welcome.</p>
     </div>
 </@template.content>

@@ -1,7 +1,13 @@
 <#import "template.html" as template>
 <@template.content>
 
-<div class="row">
+<div class="row section">
+		<h2>What is Chancecoin?</h2>
+		<p>Chancecoin is a coin made for betting in a decentralized casino. <a href="/participate">Download</a> the casino software and start playing today!</p>
+		<p><a class="btn btn-primary btn-lg" role="button" href="/participate">Download</a></p>
+</div>
+
+<div class="row section">
 		<div class="col-xs-4 segment game">
 				<img src="/images/dice.png" />
 				<form action="/casino" class="form-inline" method="post">
@@ -106,6 +112,55 @@
 					</div>
 
 			</form>
+		</div>
+</div>
+
+<div class="row section">
+		<div class="col-xs-6 segment">
+				<h2>Recent bets</h2>
+				<table class="table table-striped">
+						<thead>
+								<tr>
+										<th>Bet Size</th>
+										<th>Chance to Win</th>
+										<th>Payout Multiplier</th>
+										<th>Profit</th>
+								</tr>
+						</thead>
+
+						<tbody>
+							<#list bets as bet>
+									<tr>
+											<td>${bet["bet"]} CHA</td>
+											<td>${bet["chance"]}%</td>
+											<td>${bet["payout"]}X</td>
+											<td><#if bet["resolved"]?? && bet["resolved"]="true">${bet["profit"]} CHA<#else>Unresolved</#if></td>
+									</tr>
+							</#list>
+						</tbody>
+				</table>
+		</div>
+		<div class="col-xs-6 segment">
+				<h2>Top balances</h2>
+				<table class="table table-striped">
+						<thead>
+								<tr>
+										<th>Address</th>
+										<th>CHA balance</th>
+										<th>Market share</th>
+								</tr>
+						</thead>
+
+						<tbody>
+								<#list balances as balance>
+										<tr>
+												<td>${balance["address"]}</td>
+												<td>${balance["balance"]?string(",##0.00")}</td>
+												<td>${balance["share"]?string("##0.00")}%</td>
+										</tr>
+								</#list>
+						</tbody>
+				</table>
 		</div>
 </div>
 
