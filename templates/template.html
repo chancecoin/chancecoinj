@@ -21,7 +21,7 @@
 	  <div class="container-fluid">
 	    <!-- Brand and toggle get grouped for better mobile display -->
 	    <div class="navbar-header">
-	      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+	      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-navbar-collapse-1">
 	        <span class="sr-only">Toggle navigation</span>
 	        <span class="icon-bar"></span>
 	        <span class="icon-bar"></span>
@@ -31,15 +31,20 @@
 	    </div>
 
 	    <!-- Collect the nav links, forms, and other content for toggling -->
-	    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+	    <div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
 	      <ul class="nav navbar-nav">
 					<li <#if title?? && title=="Casino">class="active"</#if>><a href="/casino">Casino</a></li>
 					<li <#if title?? && title=="Wallet">class="active"</#if>><a href="/wallet">Wallet</a></li>
 					<li <#if title?? && title=="Participate">class="active"</#if>><a href="/participate">Participate</a></li>
 					<li <#if title?? && title=="Technical">class="active"</#if>><a href="/technical">Technical</a></li>
-					<li><a href="http://reddit.com/r/chancecoin">Subreddit</a></li>
-					<li><a href="https://github.com/chancecoin/chancecoinj">GitHub</a></li>
-					<li><a href="https://bitcointalk.org/index.php?topic=528023.0">Bitcointalk</a></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Resources <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="http://reddit.com/r/chancecoin">Subreddit</a></li>
+							<li><a href="https://github.com/chancecoin/chancecoinj">GitHub</a></li>
+							<li><a href="https://bitcointalk.org/index.php?topic=528023.0">Bitcointalk</a></li>
+						</ul>
+					</li>
 	      </ul>
 	      <ul class="nav navbar-nav navbar-right">
 					<#if addresses??>
@@ -47,7 +52,7 @@
 	          <a href="#" class="dropdown-toggle" data-toggle="dropdown">${address?substring(0,6)}... <b class="caret"></b></a>
 	          <ul class="dropdown-menu">
 								<#list addresses as addr>
-									<li><a href="?address=${addr}"><#if addr==address><strong>${addr}</strong><#else>${addr}</#if></a></li>
+									<li><a href="?address=${addr["address"]}"><#if addr["address"]==address><strong>${addr["address"]}</strong><#else>${addr["address"]}</#if> <span class="badge">${addr["balance_CHA"]} CHA</span></a></li>
 								</#list>
 	          </ul>
 	        </li>

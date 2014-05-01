@@ -5,8 +5,10 @@ import java.net.URLConnection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -101,6 +103,13 @@ public class Util {
 	
 	public static String format(Double input, String format) {
 		return (new DecimalFormat(format)).format(input);
+	}
+	
+	public static String timeFormat(Integer timestamp) {
+		Date date = new Date(timestamp*1000L); // *1000 is to convert seconds to milliseconds
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // the format of your date
+		String formattedDate = sdf.format(date);
+		return formattedDate;
 	}
 	
     static float roundOff(Double x, int position)
@@ -212,6 +221,28 @@ public class Util {
 		}
 		return BigInteger.ZERO;
 	}
+	public static BigInteger chaBurned() {
+		Database db = Database.getInstance();
+		ResultSet rs = db.executeQuery("select sum(earned) as amount from burns;");
+		try {
+			if (rs.next()) {
+				return BigInteger.valueOf(rs.getLong("amount"));
+			}
+		} catch (SQLException e) {
+		}
+		return BigInteger.ZERO;
+	}
+	public static BigInteger btcBurned() {
+		Database db = Database.getInstance();
+		ResultSet rs = db.executeQuery("select sum(burned) as amount from burns;");
+		try {
+			if (rs.next()) {
+				return BigInteger.valueOf(rs.getLong("amount"));
+			}
+		} catch (SQLException e) {
+		}
+		return BigInteger.ZERO;
+	}
 	
 	public static List<String> getAddresses() {
 		Blocks blocks = Blocks.getInstance();
@@ -260,7 +291,7 @@ public class Util {
 	}	
 	
 	public static String getMinVersion() {
-		String minVersion = getPage("https://raw2.github.com/chancecoin/chancecoinj/master/min_version.txt");
+		String minVersion = getPage(Config.minVersionPage);
 		return minVersion;
 	}
 	public static Integer getMinMinorVersion() {

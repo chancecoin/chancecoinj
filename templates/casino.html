@@ -93,10 +93,11 @@
 				    <thead>
 				        <tr>
 				            <th>Source Address</th>
+										<th>Time</th>
 				            <th>Bet Size</th>
 				            <th>Chance to Win</th>
 				            <th>Payout Multiplier</th>
-							<th>Roll</th>
+										<th>Roll</th>
 				            <th>Profit</th>
 				        </tr>
 				    </thead>
@@ -105,6 +106,7 @@
 							<#list bets as bet>
 									<tr>
 											<td><a href="http://blockchain.info/tx/${bet["tx_hash"]}">${bet["source"]}</a></td>
+											<td>${bet["block_time"]}</td>
 											<td>${bet["bet"]} CHA</td>
 											<td>${bet["chance"]}%</td>
 											<td>${bet["payout"]}X</td>
@@ -125,6 +127,7 @@
 						<thead>
 								<tr>
 										<th>Source address</th>
+										<th>Time</th>
 										<th>Bet size</th>
 										<th>Chance to win</th>
 										<th>Payout multiplier</th>
@@ -136,6 +139,7 @@
 							<#list my_bets as bet>
 									<tr>
 											<td><a href="http://blockchain.info/tx/${bet["tx_hash"]}">${bet["source"]}</a></td>
+											<td>${bet["block_time"]}</td>
 											<td>${bet["bet"]} CHA</td>
 											<td>${bet["chance"]}%</td>
 											<td>${bet["payout"]}X</td>

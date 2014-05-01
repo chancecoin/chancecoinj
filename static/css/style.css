@@ -84,8 +84,8 @@ h6 { font-size: .75em; font-weight: bold; }
 
 .segment {
 	text-align: center;
-	padding-right: 0;
-	padding-left: 0;
+	padding-right: 1em;
+	padding-left: 0em;
 }
 
 .border-right {

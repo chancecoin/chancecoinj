@@ -60,18 +60,37 @@ public class Blocks implements Runnable {
 		if(instance == null) {
 			instance = new Blocks();
 			instance.init();
+			instance.follow();			
+		} else {
+			instance.follow();			
 		}
-		instance.follow();
+		return instance;
+	}
+
+	public static Blocks getInstance(Boolean dbExists) {
+		if(instance == null) {
+			instance = new Blocks();
+			if (!dbExists) {
+				instance.createTables();
+			}
+			instance.init();
+			instance.follow();
+		} else {
+			if (!dbExists) {
+				instance.createTables();				
+			}
+			instance.follow();
+		}
 		return instance;
 	}
 
 	@Override
 	public void run() {
-		Blocks blocks = Blocks.getInstance();
 		while (true) {
-			blocks.follow();
+			Blocks.getInstance();
 			try {
-				Thread.sleep(1000*60); //once a minute, we run blocks.follow()
+				logger.info("looping Blocks");
+				Thread.sleep(1000*10); //once a minute, we run blocks.follow()
 			} catch (InterruptedException e) {
 				System.out.println(e.toString());
 				System.exit(0);

@@ -41,8 +41,7 @@ public class Database {
 			statement = connection.createStatement();
 			statement.setQueryTimeout(30);
 			if (!dbExists) {
-				Blocks blocks = Blocks.getInstance();
-				blocks.createTables();
+				Blocks.getInstance(dbExists);
 			}
 		} catch (SQLException e) {
 		}
