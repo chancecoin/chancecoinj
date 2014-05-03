@@ -1,20 +1,28 @@
-import static spark.Spark.*;
+import static spark.Spark.externalStaticFileLocation;
+import static spark.Spark.get;
+import static spark.Spark.post;
+import static spark.Spark.setPort;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URISyntaxException;
+import java.security.CodeSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import spark.ModelAndView;
+import spark.Request;
+import spark.Response;
+import spark.Spark;
+import spark.template.freemarker.FreeMarkerRoute;
+
 import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.store.BlockStoreException;
 
 import freemarker.template.Configuration;
-import spark.*;
-import spark.template.freemarker.FreeMarkerRoute;
 
 public class Server implements Runnable {
 
@@ -35,12 +43,27 @@ public class Server implements Runnable {
 		blocksThread.setDaemon(true);
 		blocksThread.start(); 
 		
+		boolean inJar = false;
+		try {
+			CodeSource cs = this.getClass().getProtectionDomain().getCodeSource();
+			inJar = cs.getLocation().toURI().getPath().endsWith(".jar");
+		}
+		catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		
 		setPort(8080);    
-		externalStaticFileLocation("./static");
+		
 
 		final Configuration configuration = new Configuration();
 		try {
-			configuration.setDirectoryForTemplateLoading(new File("./templates"));
+			if (inJar) {
+				Spark.staticFileLocation("./resources/static");
+				configuration.setClassForTemplateLoading(this.getClass(), "./resources/templates");	
+			} else {
+				Spark.externalStaticFileLocation("./resources/static");
+				configuration.setDirectoryForTemplateLoading(new File("./resources/templates"));	
+			}
 		} catch (Exception e) {
 		}
 
