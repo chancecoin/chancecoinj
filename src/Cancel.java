@@ -42,18 +42,22 @@ public class Cancel {
 				Integer blockIndex = rs.getInt("block_index");
 				String txHash = rs.getString("tx_hash");
 
+				ResultSet rsCheck = db.executeQuery("select * from cancels where tx_index='"+txIndex.toString()+"'");
+				if (rsCheck.next()) return;
+
 				if (message.size() == length) {
 					ByteBuffer byteBuffer = ByteBuffer.allocate(length);
 					String offerHash = new BigInteger(1, Util.toByteArray(message.subList(0, 32))).toString(16);
+					while (offerHash.length()<64) offerHash = "0"+offerHash;
 					ResultSet rsOrder = db.executeQuery("select * from orders where tx_hash='"+offerHash+"' and source='"+source+"' and validity='valid';");
 					String validity = "invalid";
 					if (rsOrder.next()) {
 						String orderTxHash = rsOrder.getString("tx_hash");
 						String orderGiveAsset = rsOrder.getString("give_asset");
-						BigInteger orderGiveRemaining = BigInteger.valueOf(rsOrder.getLong("get_remaining"));
+						BigInteger orderGiveRemaining = BigInteger.valueOf(rsOrder.getLong("give_remaining"));
 						db.executeUpdate("update orders set validity='cancelled' where tx_hash='"+orderTxHash+"';");
 						if (!orderGiveAsset.equals("BTC")) {
-							Util.credit(source, orderGiveAsset, orderGiveRemaining);
+							Util.credit(source, orderGiveAsset, orderGiveRemaining, "Order cancelled", txHash, blockIndex);
 						}
 						validity = "valid";
 					}

@@ -145,18 +145,18 @@ public class Util {
 		return 0;
 	}	
 	
-	public static void debit(String address, String asset, BigInteger amount) {
+	public static void debit(String address, String asset, BigInteger amount, String callingFunction, String event, Integer blockIndex) {
 		Database db = Database.getInstance();
 		if (hasBalance(address, asset)) {
 			BigInteger existingAmount = getBalance(address,asset);
 			BigInteger newAmount = existingAmount.subtract(amount);
 			if (newAmount.compareTo(BigInteger.ZERO)>=0) {
 				db.executeUpdate("update balances set amount='"+newAmount.toString()+"' where address='"+address+"' and asset='"+asset+"';");
-			    db.executeUpdate("insert into debits(address, asset, amount) values('"+address+"','"+asset+"','"+amount.toString()+"');");
+			    db.executeUpdate("insert into debits(address, asset, amount, calling_function, event, block_index) values('"+address+"','"+asset+"','"+amount.toString()+"', '"+callingFunction+"', '"+event+"', '"+blockIndex.toString()+"');");
 			}
 		}
 	}
-	public static void credit(String address, String asset, BigInteger amount) {
+	public static void credit(String address, String asset, BigInteger amount, String callingFunction, String event, Integer blockIndex) {
 		Database db = Database.getInstance();
 		if (hasBalance(address, asset)) {
 			BigInteger existingAmount = getBalance(address,asset);
@@ -165,7 +165,7 @@ public class Util {
 		} else {
 			db.executeUpdate("insert into balances(address, asset, amount) values('"+address+"','"+asset+"','"+amount.toString()+"');");				
 		}
-	    db.executeUpdate("insert into credits(address, asset, amount) values('"+address+"','"+asset+"','"+amount.toString()+"');");
+	    db.executeUpdate("insert into credits(address, asset, amount, calling_function, event, block_index) values('"+address+"','"+asset+"','"+amount.toString()+"', '"+callingFunction+"', '"+event+"', '"+blockIndex.toString()+"');");
 	}
 	public static Boolean hasBalance(String address, String asset) {
 		Database db = Database.getInstance();

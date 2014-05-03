@@ -60,177 +60,74 @@
 						</form>
 				</div>
 		</div>
+
 		<div class="row section">
 				<div class="col-xs-4 segment one-third">
-						<h2>Buy</h2>
-						<form action="/wallet" method="post">
-								<input type="hidden" name="form" value="buy">
-								<input type="hidden" name="source" value="${address}">
-
-								<div class="input-group">
-									<span class="input-group-addon">#</span>
-									<input type="text" placeholder="quantity (CHA)" name="quantity">
-								</div>
-
-								<div class="input-group">
-									<span class="input-group-addon">$</span>
-									<input type="text" placeholder="price (CHA/BTC)" name="price">
-								</div>
-
-								<div class="input-group">
-									<select name="expiration">
-										<option value="6">Good for one hour (6 blocks)</option>
-										<option value="144" selected="selected">Good for one day (144 blocks)</option>
-										<option value="1008">Good for one week (1008 blocks)</option>
-										<option value="4320">Good for one month (4320 blocks)</option>
-									</select>
-								</div>
-
-								<div class="input-group">
-									<span class="input-group-btn">
-										<button class="btn btn-default" type="submit">Buy</button>
-									</span>
-								</div>
-						</form>
-				</div>
-				<div class="col-xs-4 segment one-third">
-						<h2>Order book</h2>
-						<table class="table">
-						    <thead>
-						        <tr>
-						            <th>Buy quantity (CHA)</th>
-						            <th>Price (CHA/BTC)</th>
-						            <th>Sell quantity (CHA)</th>
-						        </tr>
-						    </thead>
-
-						    <tbody>
-										<#if orders_sell??>
-										<#list orders_sell as order>
-						        <tr>
-												<td></td>
-												<td>${order["price"]?string(",##0.00000000")}</td>
-												<td>${order["quantity"]?string(",##0.00000000")}</td>
-						        </tr>
-										</#list>
-										</#if>
-										<#if orders_buy??>
-										<#list orders_buy as order>
-										<tr>
-												<td>${ order["quantity"]?string(",##0.00000000") }</td>
-												<td>${ order["price"]?string(",##0.00000000") }</td>
-												<td></td>
-										</tr>
-										</#list>
-										</#if>
-						    </tbody>
-						</table>
-				</div>
-				<div class="col-xs-4 segment one-third">
-						<h2>Sell</h2>
-						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
-								<input type="hidden" name="form" value="sell">
-								<input type="hidden" name="source" value="${address}">
-
-								<div class="input-group">
-									<span class="input-group-addon">#</span>
-									<input type="text" placeholder="quantity (CHA)" name="quantity">
-								</div>
-
-								<div class="input-group">
-									<span class="input-group-addon">$</span>
-									<input type="text" placeholder="price (CHA/BTC)" name="price">
-								</div>
-
-								<div class="input-group">
-									<select name="expiration">
-										<option value="6">Good for one hour (6 blocks)</option>
-										<option value="144" selected="selected">Good for one day (144 blocks)</option>
-										<option value="1008">Good for one week (1008 blocks)</option>
-										<option value="4320">Good for one month (4320 blocks)</option>
-									</select>
-								</div>
-
-								<div class="input-group">
-									<span class="input-group-btn">
-										<button class="btn btn-default" type="submit">Sell</button>
-									</span>
-								</div>
-						</form>
-				</div>
-		</div>
-		<div class="row section">
-				<div class="col-xs-6 segment one-half">
-						<h2>My orders</h2>
+						<h2>Burns</h2>
 						<table class="table table-striped">
 								<thead>
 										<tr>
-												<th>Buy/sell CHA</th>
-												<th>Price (CHA/BTC)</th>
+												<th>Burned (BTC)</th>
+												<th>Earned (CHA)</th>
+										</tr>
+								</thead>
+
+								<tbody>
+										<#if my_burns??>
+										<#list my_burns as tx>
+										<tr>
+												<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["burned"]?string(",##0.00000000") }</a></td>
+												<td>${ tx["earned"]?string(",##0.00000000") }</td>
+										</tr>
+										</#list>
+										</#if>
+								</tbody>
+						</table>
+				</div>			
+				<div class="col-xs-4 segment one-third">
+						<h2>Sending transactions</h2>
+						<table class="table table-striped">
+								<thead>
+										<tr>
+												<th>Destination</th>
 												<th>Quantity (CHA)</th>
-												<th>Quantity (BTC)</th>
-												<th>Cancel</th>
 										</tr>
 								</thead>
 
 								<tbody>
-										<#if my_orders??>
-										<#list my_orders as order>
+										<#if my_sends??>
+										<#list my_sends as tx>
 										<tr>
-												<td>${ order["buysell"] }</td>
-												<td>${ order["price"]?string(",##0.00000000") }</td>
-												<td>${ order["quantity_remaining_cha"]?string(",##0.00000000") } / ${ order["quantity_cha"]?string(",##0.00000000") }</td>
-												<td>${ order["quantity_remaining_btc"]?string(",##0.00000000") } / ${ order["quantity_btc"]?string(",##0.00000000") }</td>
-												<td>
-														<#if order["validity"] = "valid">
-														<form class="pure-form pure-form-stacked" action="/wallet" method="post">
-																<fieldset>
-																		<input type="hidden" name="form" value="cancel">
-																		<input type="hidden" name="tx_hash" value="${ order["tx_hash"] }">
-																		<button type="submit" class="btn btn-default">Cancel</button>
-																</fieldset>
-														</form>
-														<#else>
-														${order["validity"]}
-														</#if>
-												</td>
+												<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["destination"] }</a></td>
+												<td>${ tx["amount"]?string(",##0.00000000") }</td>
 										</tr>
 										</#list>
 										</#if>
 								</tbody>
 						</table>
-					</div>
-					<div class="col-xs-6 segment one-half">
-						<h2>My matched orders</h2>
-						<table class="table table-striped">
-								<thead>
-										<tr>
-												<th>BTC owed</th>
-												<th>CHA in return</th>
-												<th>Pay BTC</th>
-										</tr>
-								</thead>
+			</div>
+			<div class="col-xs-4 segment one-third">
+					<h2>Receiving transactions</h2>
+					<table class="table table-striped">
+							<thead>
+									<tr>
+											<th>Source</th>
+											<th>Quantity (CHA)</th>
+									</tr>
+							</thead>
 
-								<tbody>
-										<#if my_order_matches??>
-										<#list my_order_matches as order_match>
-										<tr>
-												<td>${ order_match["btc_owed"]?string(",##0.00000000") }</td>
-												<td>${ order_match["cha_return"]?string(",##0.00000000") }</td>
-												<td>
-														<form class="pure-form pure-form-stacked" action="/wallet" method="post">
-																<fieldset>
-																		<input type="hidden" name="form" value="btcpay">
-																		<input type="hidden" name="order_match_id" value="${ order_match["order_match_id"] }">
-																		<button type="submit" class="btn btn-default">Pay BTC</button>
-																</fieldset>
-														</form>
-												</td>
-										</tr>
-										</#list>
-										</#if>
-								</tbody>
-						</table>
-				</div>
-		</div>
+							<tbody>
+									<#if my_receives??>
+									<#list my_receives as tx>
+									<tr>
+											<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["source"] }</a></td>
+											<td>${ tx["amount"]?string(",##0.00000000") }</td>
+									</tr>
+									</#list>
+									</#if>
+							</tbody>
+					</table>
+			</div>
+	</div>
+
 </@template.content>

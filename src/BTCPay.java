@@ -41,12 +41,17 @@ public class BTCPay {
 				BigInteger fee = BigInteger.valueOf(rs.getLong("fee"));
 				Integer blockIndex = rs.getInt("block_index");
 				String txHash = rs.getString("tx_hash");
+				
+				ResultSet rsCheck = db.executeQuery("select * from btcpays where tx_index='"+txIndex.toString()+"'");
+				if (rsCheck.next()) return;
 
 				if (message.size() == length) {
 					String tx0Hash = new BigInteger(1, Util.toByteArray(message.subList(0, 32))).toString(16);
 					String tx1Hash = new BigInteger(1, Util.toByteArray(message.subList(32, 64))).toString(16);
 					String orderMatchId = tx0Hash + tx1Hash;
-					ResultSet rsOrderMatch = db.executeQuery("select * from order_matches where id='"+orderMatchId+"';");
+					ResultSet rsOrderMatch = db.executeQuery("select * from order_matches where validity='pending' and id='"+orderMatchId+"';");
+					
+					String validity = "invalid";
 					if (rsOrderMatch.next()) {
 						String orderMatchValidity = rsOrderMatch.getString("validity");
 						String orderMatchTx0Address = rsOrderMatch.getString("tx0_address");
@@ -57,27 +62,26 @@ public class BTCPay {
 						BigInteger orderMatchBackwardAmount = BigInteger.valueOf(rsOrderMatch.getLong("backward_amount"));
 						if (orderMatchValidity.equals("pending")) {
 							Boolean update = false;
-							String validity = "invalid";
 							if (orderMatchTx0Address.equals(source) && btcAmount.compareTo(orderMatchForwardAmount)>=0) {
 								update = true;
 								if (!orderMatchBackwardAsset.equals("BTC")) {
-									Util.credit(source, orderMatchBackwardAsset, orderMatchBackwardAmount);
-									validity = "valid";
+									Util.credit(source, orderMatchBackwardAsset, orderMatchBackwardAmount, "BtcPay", txHash, blockIndex);
 								}
+								validity = "valid";
 							}
 							if (orderMatchTx1Address.equals(source) && btcAmount.compareTo(orderMatchBackwardAmount)>=0) {
 								update = true;
 								if (!orderMatchForwardAsset.equals("BTC")) {
-									Util.credit(source, orderMatchForwardAsset, orderMatchForwardAmount);
-									validity = "valid";
+									Util.credit(source, orderMatchForwardAsset, orderMatchForwardAmount, "BtcPay", txHash, blockIndex);
 								}
+								validity = "valid";
 							}
 							if (update) {
 								db.executeUpdate("update order_matches set validity='"+validity+"' where id='"+orderMatchId+"';");
 							}
-							db.executeUpdate("insert into btcpays(tx_index, tx_hash, block_index, source, destination, btc_amount, order_match_id, validity) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+destination+"', '"+btcAmount.toString()+"', '"+orderMatchId+"', '"+validity+"');");							
 						}
 					}
+					db.executeUpdate("insert into btcpays(tx_index, tx_hash, block_index, source, destination, btc_amount, order_match_id, validity) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+destination+"', '"+btcAmount.toString()+"', '"+orderMatchId+"', '"+validity+"');");												
 				}				
 			}
 		} catch (SQLException e) {	

@@ -169,12 +169,12 @@ public class Server implements Runnable {
 				return modelAndView(attributes, "balances.html");
 			}
 		});		
-		post(new FreeMarkerRoute("/wallet") {
+		post(new FreeMarkerRoute("/exchange") {
 			@Override
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
-				attributes.put("title", "Wallet");
+				attributes.put("title", "Exchange");
 				
 				Blocks blocks = Blocks.getInstance();
 				attributes.put("blocksBTC", blocks.getHeight());
@@ -201,28 +201,6 @@ public class Server implements Runnable {
 				attributes.put("address", address);				
 				attributes.put("addresses", addresses);				
 				
-				if (request.queryParams().contains("form") && request.queryParams("form").equals("import")) {
-					String privateKey = request.queryParams("privatekey");
-					address = Blocks.getInstance().importPrivateKey(privateKey);
-					request.session().attribute("address", address);
-					attributes.put("success", "Your private key has been imported.");
-				}
-				if (request.queryParams().contains("form") && request.queryParams("form").equals("send")) {
-					String source = request.queryParams("source");
-					String destination = request.queryParams("destination");
-					Double rawQuantity = Double.parseDouble(request.queryParams("quantity"));
-					BigInteger quantity = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
-					Transaction tx = Send.create(source, destination, "CHA", quantity);
-					if (tx!=null) {
-						if (blocks.sendTransaction(tx)) {
-							attributes.put("success", "You sent "+rawQuantity.toString()+" CHA to "+destination+".");
-						} else {
-							attributes.put("error", "Your transaction timed out and was not received by the Bitcoin network. Please try again.");							
-						}
-					}else{
-						attributes.put("error", "There was a problem with your transaction.");						
-					}
-				}
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("cancel")) {
 					String txHash = request.queryParams("tx_hash");
 					Transaction tx = Cancel.create(txHash);
@@ -322,7 +300,7 @@ public class Server implements Runnable {
 				attributes.put("orders_sell", ordersSell);				
 
 				//get my orders
-				rs = db.executeQuery("select * from orders where source='"+address+"' order by tx_index desc;");
+				rs = db.executeQuery("select * from orders where source='"+address+"' order by block_index desc, tx_index desc;");
 				ArrayList<HashMap<String, Object>> myOrders = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -351,7 +329,7 @@ public class Server implements Runnable {
 				attributes.put("my_orders", myOrders);				
 
 				//get my order matches
-				rs = db.executeQuery("select * from order_matches where (tx0_address='"+address+"' and forward_asset='BTC') or (tx1_address='"+address+"' and backward_asset='BTC') and validity='pending';");
+				rs = db.executeQuery("select * from order_matches where (tx0_address='"+address+"' and forward_asset='BTC') or (tx1_address='"+address+"' and backward_asset='BTC') and validity='pending' order by tx0_block_index desc, tx0_index desc;");
 				ArrayList<HashMap<String, Object>> myOrderMatches = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -370,15 +348,15 @@ public class Server implements Runnable {
 				}
 				attributes.put("my_order_matches", myOrderMatches);				
 				
-				return modelAndView(attributes, "wallet.html");
+				return modelAndView(attributes, "exchange.html");
 			}
 		});	
-		get(new FreeMarkerRoute("/wallet") {
+		get(new FreeMarkerRoute("/exchange") {
 			@Override
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
-				attributes.put("title", "Wallet");
+				attributes.put("title", "Exchange");
 				
 				Blocks blocks = Blocks.getInstance();
 				attributes.put("blocksBTC", blocks.getHeight());
@@ -441,7 +419,7 @@ public class Server implements Runnable {
 				attributes.put("orders_sell", ordersSell);				
 
 				//get my orders
-				rs = db.executeQuery("select * from orders where source='"+address+"' order by tx_index desc;");
+				rs = db.executeQuery("select * from orders where source='"+address+"' order by block_index desc, tx_index desc;");
 				ArrayList<HashMap<String, Object>> myOrders = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -470,7 +448,7 @@ public class Server implements Runnable {
 				attributes.put("my_orders", myOrders);				
 
 				//get my order matches
-				rs = db.executeQuery("select * from order_matches where (tx0_address='"+address+"' and forward_asset='BTC') or (tx1_address='"+address+"' and backward_asset='BTC') and validity='pending';");
+				rs = db.executeQuery("select * from order_matches where (tx0_address='"+address+"' and forward_asset='BTC') or (tx1_address='"+address+"' and backward_asset='BTC') and validity='pending' order by tx0_block_index desc, tx0_index desc;");
 				ArrayList<HashMap<String, Object>> myOrderMatches = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -488,6 +466,203 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("my_order_matches", myOrderMatches);				
+				
+				return modelAndView(attributes, "exchange.html");
+			}
+		});	
+		post(new FreeMarkerRoute("/wallet") {
+			@Override
+			public ModelAndView handle(Request request, Response response) {
+				setConfiguration(configuration);
+				Map<String, Object> attributes = new HashMap<String, Object>();
+				attributes.put("title", "Wallet");
+				
+				Blocks blocks = Blocks.getInstance();
+				attributes.put("blocksBTC", blocks.getHeight());
+				attributes.put("blocksCHA", Util.getLastBlock());
+				attributes.put("version", Config.version);
+				attributes.put("min_version", Util.getMinVersion());
+				
+				String address = Util.getAddresses().get(0);
+				request.session(true);
+				if (request.session().attributes().contains("address")) {
+					address = request.session().attribute("address");
+				}
+				if (request.queryParams().contains("address")) {
+					address = request.queryParams("address");
+					request.session().attribute("address", address);
+				}
+				ArrayList<HashMap<String, Object>> addresses = new ArrayList<HashMap<String, Object>>();
+				for (String addr : Util.getAddresses()) {
+					HashMap<String,Object> map = new HashMap<String,Object>();	
+					map.put("address", addr);
+					map.put("balance_CHA", Util.getBalance(addr, "CHA").floatValue() / Config.unit.floatValue());
+					addresses.add(map);
+				}
+				attributes.put("address", address);				
+				attributes.put("addresses", addresses);				
+				
+				if (request.queryParams().contains("form") && request.queryParams("form").equals("import")) {
+					String privateKey = request.queryParams("privatekey");
+					address = Blocks.getInstance().importPrivateKey(privateKey);
+					request.session().attribute("address", address);
+					attributes.put("success", "Your private key has been imported.");
+				}
+				if (request.queryParams().contains("form") && request.queryParams("form").equals("send")) {
+					String source = request.queryParams("source");
+					String destination = request.queryParams("destination");
+					Double rawQuantity = Double.parseDouble(request.queryParams("quantity"));
+					BigInteger quantity = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
+					Transaction tx = Send.create(source, destination, "CHA", quantity);
+					if (tx!=null) {
+						if (blocks.sendTransaction(tx)) {
+							attributes.put("success", "You sent "+rawQuantity.toString()+" CHA to "+destination+".");
+						} else {
+							attributes.put("error", "Your transaction timed out and was not received by the Bitcoin network. Please try again.");							
+						}
+					}else{
+						attributes.put("error", "There was a problem with your transaction.");						
+					}
+				}
+
+				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
+				
+				Database db = Database.getInstance();
+				
+				//get my sends
+				ResultSet rs = db.executeQuery("select * from sends where (source='"+address+"') and asset='CHA' and validity='valid' order by block_index desc, tx_index desc;");
+				ArrayList<HashMap<String, Object>> mySends = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("amount", BigInteger.valueOf(rs.getLong("amount")).doubleValue()/Config.unit.doubleValue());
+						map.put("tx_hash", rs.getString("tx_hash"));
+						map.put("source", rs.getString("source"));
+						map.put("destination", rs.getString("destination"));
+						mySends.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("my_sends", mySends);								
+
+				//get my receives
+				rs = db.executeQuery("select * from sends where (destination='"+address+"') and asset='CHA' and validity='valid' order by block_index desc, tx_index desc;");
+				ArrayList<HashMap<String, Object>> myReceives = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("amount", BigInteger.valueOf(rs.getLong("amount")).doubleValue()/Config.unit.doubleValue());
+						map.put("tx_hash", rs.getString("tx_hash"));
+						map.put("source", rs.getString("source"));
+						map.put("destination", rs.getString("destination"));
+						myReceives.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("my_receives", myReceives);								
+				
+				//get my burns
+				rs = db.executeQuery("select * from burns where source='"+address+"' and validity='valid' order by block_index desc, tx_index desc;");
+				ArrayList<HashMap<String, Object>> myBurns = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("burned", BigInteger.valueOf(rs.getLong("burned")).doubleValue()/Config.unit.doubleValue());
+						map.put("earned", BigInteger.valueOf(rs.getLong("earned")).doubleValue()/Config.unit.doubleValue());
+						map.put("tx_hash", rs.getString("tx_hash"));
+						myBurns.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("my_burns", myBurns);								
+
+				return modelAndView(attributes, "wallet.html");
+			}
+		});	
+		get(new FreeMarkerRoute("/wallet") {
+			@Override
+			public ModelAndView handle(Request request, Response response) {
+				setConfiguration(configuration);
+				Map<String, Object> attributes = new HashMap<String, Object>();
+				attributes.put("title", "Wallet");
+				
+				Blocks blocks = Blocks.getInstance();
+				attributes.put("blocksBTC", blocks.getHeight());
+				attributes.put("blocksCHA", Util.getLastBlock());
+				attributes.put("version", Config.version);
+				attributes.put("min_version", Util.getMinVersion());
+				
+				String address = Util.getAddresses().get(0);
+				request.session(true);
+				if (request.session().attributes().contains("address")) {
+					address = request.session().attribute("address");
+				}
+				if (request.queryParams().contains("address")) {
+					address = request.queryParams("address");
+					request.session().attribute("address", address);
+				}
+				ArrayList<HashMap<String, Object>> addresses = new ArrayList<HashMap<String, Object>>();
+				for (String addr : Util.getAddresses()) {
+					HashMap<String,Object> map = new HashMap<String,Object>();	
+					map.put("address", addr);
+					map.put("balance_CHA", Util.getBalance(addr, "CHA").floatValue() / Config.unit.floatValue());
+					addresses.add(map);
+				}
+				attributes.put("address", address);				
+				attributes.put("addresses", addresses);
+				
+				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
+				
+				Database db = Database.getInstance();
+
+				//get my sends
+				ResultSet rs = db.executeQuery("select * from sends where (source='"+address+"') and asset='CHA' and validity='valid' order by block_index desc, tx_index desc;");
+				ArrayList<HashMap<String, Object>> mySends = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("amount", BigInteger.valueOf(rs.getLong("amount")).doubleValue()/Config.unit.doubleValue());
+						map.put("tx_hash", rs.getString("tx_hash"));
+						map.put("source", rs.getString("source"));
+						map.put("destination", rs.getString("destination"));
+						mySends.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("my_sends", mySends);								
+
+				//get my receives
+				rs = db.executeQuery("select * from sends where (destination='"+address+"') and asset='CHA' and validity='valid' order by block_index desc, tx_index desc;");
+				ArrayList<HashMap<String, Object>> myReceives = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("amount", BigInteger.valueOf(rs.getLong("amount")).doubleValue()/Config.unit.doubleValue());
+						map.put("tx_hash", rs.getString("tx_hash"));
+						map.put("source", rs.getString("source"));
+						map.put("destination", rs.getString("destination"));
+						myReceives.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("my_receives", myReceives);								
+				
+				//get my burns
+				rs = db.executeQuery("select * from burns where source='"+address+"' and validity='valid' order by block_index desc, tx_index desc;");
+				ArrayList<HashMap<String, Object>> myBurns = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("burned", BigInteger.valueOf(rs.getLong("burned")).doubleValue()/Config.unit.doubleValue());
+						map.put("earned", BigInteger.valueOf(rs.getLong("earned")).doubleValue()/Config.unit.doubleValue());
+						map.put("tx_hash", rs.getString("tx_hash"));
+						myBurns.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("my_burns", myBurns);								
 
 				return modelAndView(attributes, "wallet.html");
 			}

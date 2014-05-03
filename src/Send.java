@@ -40,6 +40,9 @@ public class Send {
 				Integer blockIndex = rs.getInt("block_index");
 				String txHash = rs.getString("tx_hash");
 
+				ResultSet rsCheck = db.executeQuery("select * from sends where tx_index='"+txIndex.toString()+"'");
+				if (rsCheck.next()) return;
+
 				if (message.size() == length) {
 					ByteBuffer byteBuffer = ByteBuffer.allocate(length);
 					for (byte b : message) {
@@ -48,15 +51,18 @@ public class Send {
 					Integer assetId = Ints.checkedCast(byteBuffer.getLong(0));
 					BigInteger amount = BigInteger.valueOf(byteBuffer.getLong(8));
 					String asset = Util.getAssetName(assetId);
+					String validity = "invalid";
+					BigInteger amountToTransfer = BigInteger.ZERO;
 					if (!source.equals("") && !destination.equals("") && asset.equals("CHA")) {
 						BigInteger sourceBalance = Util.getBalance(source, asset);
-						BigInteger amountToTransfer = amount.min(sourceBalance);
+						amountToTransfer = amount.min(sourceBalance);
+						validity = "valid";
 						if (amountToTransfer.compareTo(BigInteger.ZERO)>0) {
-							db.executeUpdate("insert into sends(tx_index, tx_hash, block_index, source, destination, asset, amount, validity) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+destination+"','"+asset+"','"+amountToTransfer.toString()+"','valid')");
-							Util.debit(source, asset, amountToTransfer);								
-							Util.credit(destination, asset, amountToTransfer);								
+							Util.debit(source, asset, amountToTransfer, "Send", txHash, blockIndex);								
+							Util.credit(destination, asset, amountToTransfer, "Send", txHash, blockIndex);								
 						}
 					}
+					db.executeUpdate("insert into sends(tx_index, tx_hash, block_index, source, destination, asset, amount, validity) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+destination+"','"+asset+"','"+amountToTransfer.toString()+"','"+validity+"')");					
 				}				
 			}
 		} catch (SQLException e) {	

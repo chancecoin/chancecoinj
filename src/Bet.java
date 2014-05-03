@@ -34,6 +34,9 @@ public class Bet {
 				Integer blockIndex = rs.getInt("block_index");
 				String txHash = rs.getString("tx_hash");
 
+				ResultSet rsCheck = db.executeQuery("select * from bets where tx_index='"+txIndex.toString()+"'");
+				if (rsCheck.next()) return;
+
 				if (message.size() == length) {
 					ByteBuffer byteBuffer = ByteBuffer.allocate(length);
 					for (byte b : message) {
@@ -43,18 +46,37 @@ public class Bet {
 					Double chance = byteBuffer.getDouble(8);
 					Double payout = byteBuffer.getDouble(16);
 					Double houseEdge = Config.houseEdge;
-					if (blockIndex<298340) {
+					if (blockIndex<299000) {
 						houseEdge = 0.02;
 					}
+					BigInteger chaSupply = Util.chaSupply();
+					String validity = "invalid";
 					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-houseEdge)),6)) {
 						if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
-							BigInteger chaSupply = Util.chaSupply();
 							if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
-								db.executeUpdate("insert into bets(tx_index, tx_hash, block_index, source, bet, chance, payout, profit, cha_supply, validity) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+bet.toString()+"','"+chance.toString()+"','"+payout.toString()+"','0','"+chaSupply.toString()+"','valid')");
-								Util.debit(source, "CHA", bet);								
+								validity = "valid";
+								Util.debit(source, "CHA", bet, "Debit bet amount", txHash, blockIndex);								
 							}
 						}
 					}
+					//TODO: remove this
+					/*
+					if (txIndex==329){
+						if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-houseEdge)),6)) {
+							System.out.println("ok1");
+						}
+						System.out.println(bet.toString());
+						System.out.println(Util.getBalance(source, "CHA").toString());
+						if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
+							System.out.println("ok2");
+						}
+						if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
+							System.out.println("ok3");
+						}
+						System.exit(0);
+					}
+					*/
+					db.executeUpdate("insert into bets(tx_index, tx_hash, block_index, source, bet, chance, payout, profit, cha_supply, validity) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+bet.toString()+"','"+chance.toString()+"','"+payout.toString()+"','0','"+chaSupply.toString()+"','"+validity+"')");					
 				}				
 			}
 		} catch (SQLException e) {	
@@ -115,7 +137,8 @@ public class Bet {
 	public static void resolve() {
 		//resolve bets
 		Database db = Database.getInstance();
-		ResultSet rs = db.executeQuery("select block_time,tx_index,tx_hash,source,bet,payout,chance,cha_supply from bets,blocks where bets.block_index=blocks.block_index and resolved IS NOT 'true';");
+		ResultSet rs = db.executeQuery("select block_time,blocks.block_index as block_index,tx_index,tx_hash,source,bet,payout,chance,cha_supply from bets,blocks where bets.block_index=blocks.block_index and validity='valid' and resolved IS NOT 'true';");
+		//if (true) return;
 
 		SimpleDateFormat dateFormatStandard = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
 		SimpleDateFormat dateFormatDateTimeLotto = new SimpleDateFormat("MM/dd/yyyy HH:mm");
@@ -135,6 +158,7 @@ public class Bet {
 				String source = rs.getString("source");
 				String txHash = rs.getString("tx_hash");
 				Integer txIndex = rs.getInt("tx_index");
+				Integer blockIndex = rs.getInt("block_index");
 				BigInteger bet = BigInteger.valueOf(rs.getLong("bet"));
 				Double payout = rs.getDouble("payout");
 				Double chance = rs.getDouble("chance");
@@ -174,7 +198,7 @@ public class Bet {
 								//win
 								profit = new BigDecimal(bet.doubleValue()*(payout.doubleValue()-1.0)*chaSupply.doubleValue()/(chaSupply.doubleValue()-bet.doubleValue()*payout.doubleValue())).toBigInteger();
 								BigInteger credit = profit.add(bet);
-								Util.credit(source, "CHA", credit);
+								Util.credit(source, "CHA", credit, "Bet won", txHash, blockIndex);
 							} else {
 								//lose
 								profit = bet.multiply(BigInteger.valueOf(-1));
