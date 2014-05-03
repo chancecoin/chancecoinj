@@ -62,16 +62,6 @@ public class Order {
 						BigInteger sourceBalance = Util.getBalance(source, giveAsset);
 						Double price = getAmount.doubleValue() / giveAmount.doubleValue();
 						if (!giveAsset.equals("BTC")) {
-							//TODO: remove
-							/*
-							if (giveAmount.compareTo(sourceBalance)>0) {
-								System.out.println(txIndex);
-								System.out.println(source);
-								System.out.println(giveAmount.toString());
-								System.out.println(sourceBalance.toString());
-								System.exit(0);
-							}
-							*/
 							giveAmount = giveAmount.min(sourceBalance);
 							getAmount = new BigDecimal(price * giveAmount.doubleValue()).toBigInteger();
 						}

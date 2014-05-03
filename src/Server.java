@@ -147,6 +147,7 @@ public class Server implements Runnable {
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Participate");
 				attributes.put("version", Config.version);
+				attributes.put("min_version", Util.getMinVersion());				
 				return modelAndView(attributes, "participate.html");
 			}
 		});
@@ -156,6 +157,8 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Technical");
+				attributes.put("version", Config.version);
+				attributes.put("min_version", Util.getMinVersion());				
 				attributes.put("house_edge", Config.houseEdge);
 				attributes.put("max_profit", Config.maxProfit);
 				attributes.put("burn_address", Config.burnAddress);
@@ -175,6 +178,8 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Balances");
+				attributes.put("version", Config.version);
+				attributes.put("min_version", Util.getMinVersion());				
 				Database db = Database.getInstance();
 				ResultSet rs = db.executeQuery("select address,amount as balance,amount*100.0/(select sum(amount) from balances) as share from balances where asset='CHA' group by address order by amount desc;");
 				ArrayList<HashMap<String, Object>> balances = new ArrayList<HashMap<String, Object>>();

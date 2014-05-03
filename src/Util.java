@@ -291,7 +291,7 @@ public class Util {
 	}	
 	
 	public static String getMinVersion() {
-		String minVersion = getPage(Config.minVersionPage);
+		String minVersion = getPage(Config.minVersionPage).trim();
 		return minVersion;
 	}
 	public static Integer getMinMinorVersion() {
