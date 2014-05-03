@@ -1,3 +1,4 @@
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,6 +22,9 @@ public class Burn {
 				Integer blockIndex = rs.getInt("block_index");
 				String txHash = rs.getString("tx_hash");
 				
+				ResultSet rsCheck = db.executeQuery("select * from burns where tx_index='"+txIndex.toString()+"'");
+				if (rsCheck.next()) return;
+
 				ResultSet rsBurns = db.executeQuery("select sum(earned) as earned from burns where validity='valid';");
 				BigInteger totalBurns = BigInteger.ZERO;
 				BigInteger maxBurns = BigInteger.ZERO;
@@ -31,11 +35,11 @@ public class Burn {
 				Integer totalTime = Config.endBlock - Config.startBlock;
 				Integer partialTime = Config.endBlock - blockIndex;
 				Double multiplier = Config.multiplier.doubleValue() + (partialTime.doubleValue()/totalTime.doubleValue())*(Config.multiplierInitial.doubleValue() - Config.multiplier.doubleValue());
-				Double earnedUnrounded = btcAmount.floatValue() * multiplier;
-				BigInteger earned = BigInteger.valueOf(earnedUnrounded.longValue());
+				Double earnedUnrounded = btcAmount.doubleValue() * multiplier;
+				BigInteger earned = new BigDecimal(earnedUnrounded).toBigInteger();
 				if (!source.equals("") && blockIndex>=Config.startBlock && blockIndex<=Config.endBlock && totalBurns.add(earned).compareTo(maxBurns)<0) {
 					db.executeUpdate("insert into burns(tx_index, tx_hash, block_index, source, burned, earned, validity) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+btcAmount.toString()+"','"+earned+"','valid')");
-					Util.credit(source, "CHA", earned);
+					Util.credit(source, "CHA", earned, "BTC burned", txHash, blockIndex);
 				}
 			}
 		} catch (SQLException e) {

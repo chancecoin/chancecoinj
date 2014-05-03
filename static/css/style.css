@@ -97,16 +97,15 @@ h6 { font-size: .75em; font-weight: bold; }
 }
 
 .one-fourth {
-	width: 25%;
+	width: 24%;
 }
 
 .one-half {
-	width: 48%;
-	clear: none;
+	width: 49%;
 }
 
 .two-thirds {
-	width: 64%;
+	width: 65%;
 }
 
 .one-fifth {
@@ -183,4 +182,8 @@ blockquote p {
 
 .game {
 	padding-top: 2em;
+}
+
+table {
+	text-align: left;
 }

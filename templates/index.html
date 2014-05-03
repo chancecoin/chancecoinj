@@ -7,6 +7,113 @@
 		<p><a class="btn btn-primary btn-lg" role="button" href="/participate">Download</a></p>
 </div>
 
+<div class="row section">
+		<div class="col-xs-4 segment game">
+				<img src="/images/dice.png" />
+				<form action="/casino" class="form-inline" method="post">
+
+						<input type="hidden" name="form" value="roll">
+						<input type="hidden" name="source" value="${address}">
+
+						<div class="form-group">
+							<div class="input-group">
+								<span class="input-group-addon">#</span>
+								<input type="text" placeholder="bet size (CHA)" name="bet">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="input-group">
+								<span class="input-group-addon">%</span>
+								<input type="text" placeholder="chance to win" name="chance" onchange="document.getElementsByName('payout')[0].value=100/document.getElementsByName('chance')[0].value*(${1-house_edge});">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="input-group">
+								<span class="input-group-addon">X</span>
+								<input type="text" placeholder="payout" name="payout" onchange="document.getElementsByName('chance')[0].value=100/(document.getElementsByName('payout')[0].value/(${1-house_edge}));">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="input-group">
+								<span class="input-group-btn">
+									<button class="btn btn-default" type="submit">Roll dice</button>
+								</span>
+							</div>
+						</div>
+
+				</form>
+		</div>
+		<div class="col-xs-4 segment game">
+				<img src="/images/color_wheel.png" />
+				<form action="/casino" class="form-inline" method="post">
+
+						<input type="hidden" name="form" value="roll">
+						<input type="hidden" name="source" value="${address}">
+
+						<div class="form-group">
+							<div class="input-group">
+								<span class="input-group-addon">#</span>
+								<input type="text" placeholder="bet size (CHA)" name="bet">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="input-group">
+								<span class="input-group-addon">%</span>
+								<input type="text" placeholder="chance to win" name="chance" onchange="document.getElementsByName('payout')[0].value=100/document.getElementsByName('chance')[0].value*(${1-house_edge});">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="input-group">
+								<span class="input-group-addon">X</span>
+								<input type="text" placeholder="payout" name="payout" onchange="document.getElementsByName('chance')[0].value=100/(document.getElementsByName('payout')[0].value/(${1-house_edge}));">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="input-group">
+								<span class="input-group-btn">
+									<button class="btn btn-default" type="submit">Roll dice</button>
+								</span>
+							</div>
+						</div>
+
+				</form>
+		</div>
+		<div class="col-xs-4 segment game">
+				<img src="/images/roulette.png" />
+				<form action="/casino" class="form-inline" method="post">
+
+					<input type="hidden" name="form" value="roll">
+					<input type="hidden" name="source" value="${address}">
+
+					<div class="form-group">
+						<div class="input-group">
+							<span class="input-group-addon">#</span>
+							<input type="text" placeholder="bet size (CHA)" name="bet">
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="input-group">
+							<span class="input-group-addon">%</span>
+							<input type="text" placeholder="chance to win" name="chance" onchange="document.getElementsByName('payout')[0].value=100/document.getElementsByName('chance')[0].value*(${1-house_edge});">
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="input-group">
+							<span class="input-group-addon">X</span>
+							<input type="text" placeholder="payout" name="payout" onchange="document.getElementsByName('chance')[0].value=100/(document.getElementsByName('payout')[0].value/(${1-house_edge}));">
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="input-group">
+							<span class="input-group-btn">
+								<button class="btn btn-default" type="submit">Roll dice</button>
+							</span>
+						</div>
+					</div>
+
+			</form>
+		</div>
+</div>
 
 <div class="row section">
 		<div class="col-xs-6 segment">

@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.AbstractMap;
@@ -90,7 +91,7 @@ public class Blocks implements Runnable {
 			Blocks.getInstance();
 			try {
 				logger.info("looping Blocks");
-				Thread.sleep(1000*10); //once a minute, we run blocks.follow()
+				Thread.sleep(1000*60); //once a minute, we run blocks.follow()
 			} catch (InterruptedException e) {
 				System.out.println(e.toString());
 				System.exit(0);
@@ -172,7 +173,6 @@ public class Blocks implements Runnable {
 		}		
 	}
 
-	/*
 	public void reDownloadBlockTransactions(Integer blockHeight) {
 		Database db = Database.getInstance();
 		ResultSet rs = db.executeQuery("select * from blocks where block_index='"+blockHeight.toString()+"';");
@@ -183,14 +183,11 @@ public class Blocks implements Runnable {
 				for (Transaction tx : block.getTransactions()) {
 					importTransaction(tx, block, blockHeight);
 				}
-				Bet.resolve();
-				Order.expire();
 			}
 		} catch (Exception e) {
 			
 		}
 	}
-	*/
 	
 	public void importBlock(Block block, Integer blockHeight) {
 		logger.info("Block height: "+blockHeight);
@@ -293,12 +290,19 @@ public class Blocks implements Runnable {
 			try {
 				if (!rs.next()) {
 					if (block!=null) {
-						db.executeUpdate("INSERT INTO transactions(tx_index, tx_hash, block_index, block_time, source, destination, btc_amount, fee, data) VALUES('"+(Util.getLastTxIndex()+1)+"','"+tx.getHashAsString()+"','"+blockHeight+"','"+block.getTimeSeconds()+"','"+source+"','"+destination+"','"+btcAmount.toString()+"','"+fee.toString()+"','"+dataString+"')");
+						PreparedStatement ps = db.connection.prepareStatement("INSERT INTO transactions(tx_index, tx_hash, block_index, block_time, source, destination, btc_amount, fee, data) VALUES('"+(Util.getLastTxIndex()+1)+"','"+tx.getHashAsString()+"','"+blockHeight+"','"+block.getTimeSeconds()+"','"+source+"','"+destination+"','"+btcAmount.toString()+"','"+fee.toString()+"',?)");
+						ps.setString(1, dataString);
+						ps.execute();
+						//db.executeUpdate("INSERT INTO transactions(tx_index, tx_hash, block_index, block_time, source, destination, btc_amount, fee, data) VALUES('"+(Util.getLastTxIndex()+1)+"','"+tx.getHashAsString()+"','"+blockHeight+"','"+block.getTimeSeconds()+"','"+source+"','"+destination+"','"+btcAmount.toString()+"','"+fee.toString()+"','"+dataString+"')");
 					}else{
-						db.executeUpdate("INSERT INTO transactions(tx_index, tx_hash, block_index, block_time, source, destination, btc_amount, fee, data) VALUES('"+(Util.getLastTxIndex()+1)+"','"+tx.getHashAsString()+"','"+blockHeight+"','','"+source+"','"+destination+"','"+btcAmount.toString()+"','"+fee.toString()+"','"+dataString+"')");						
+						PreparedStatement ps = db.connection.prepareStatement("INSERT INTO transactions(tx_index, tx_hash, block_index, block_time, source, destination, btc_amount, fee, data) VALUES('"+(Util.getLastTxIndex()+1)+"','"+tx.getHashAsString()+"','"+blockHeight+"','','"+source+"','"+destination+"','"+btcAmount.toString()+"','"+fee.toString()+"',?)");
+						ps.setString(1, dataString);
+						ps.execute();
+						//db.executeUpdate("INSERT INTO transactions(tx_index, tx_hash, block_index, block_time, source, destination, btc_amount, fee, data) VALUES('"+(Util.getLastTxIndex()+1)+"','"+tx.getHashAsString()+"','"+blockHeight+"','','"+source+"','"+destination+"','"+btcAmount.toString()+"','"+fee.toString()+"','"+dataString+"')");						
 					}
 				}
 			} catch (SQLException e) {
+				logger.error(e.toString());
 			}
 		}
 	}
