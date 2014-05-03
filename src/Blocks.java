@@ -363,9 +363,9 @@ public class Blocks implements Runnable {
 						}						
 					}
 				}
+				Bet.resolve();
+				Order.expire(blockIndex);
 			}
-			Bet.resolve();
-			Order.expire();
 		} catch (SQLException e) {
 			logger.error(e.toString());
 		} catch (UnsupportedEncodingException e) {
