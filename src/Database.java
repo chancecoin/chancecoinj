@@ -13,7 +13,7 @@ public class Database {
     static Logger logger = LoggerFactory.getLogger(Database.class);
 	Connection connection = null;
 	Statement statement = null;
-	String dbFile = Config.appName.toLowerCase()+"-"+Config.majorVersionDB.toString()+".db";	
+	String dbFile = "./resources/db/" + Config.appName.toLowerCase()+"-"+Config.majorVersionDB.toString()+".db";	
     private static Database instance = null;
     
     public static Database getInstance() {

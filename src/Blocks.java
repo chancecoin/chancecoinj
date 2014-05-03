@@ -53,9 +53,11 @@ public class Blocks implements Runnable {
 	public Logger logger = LoggerFactory.getLogger(Blocks.class);
 	private static Blocks instance = null;
 	public Wallet wallet;
+	public String walletFile = "resources/db/wallet";
 	public PeerGroup peerGroup;
 	public BlockChain blockChain;
 	public BlockStore blockStore;
+	
 	
 	public static Blocks getInstance() {
 		if(instance == null) {
@@ -102,9 +104,9 @@ public class Blocks implements Runnable {
 	public void init() {
 		params = MainNetParams.get();
 		try {
-			if ((new File("wallet")).exists()) {
+			if ((new File(walletFile)).exists()) {
 				logger.info("Found wallet file");
-				wallet = Wallet.loadFromFile(new File("wallet"));
+				wallet = Wallet.loadFromFile(new File(walletFile));
 			} else {
 				wallet = new Wallet(params);
 				ECKey newKey = new ECKey();
@@ -112,12 +114,12 @@ public class Blocks implements Runnable {
 				wallet.addKey(newKey);
 				//wallet.addWatchedAddress(burnAddress, Config.burnCreationTime);
 			}
-			blockStore = new H2FullPrunedBlockStore(params, Config.appName.toLowerCase(), 2000);
+			blockStore = new H2FullPrunedBlockStore(params, Config.dbPath+Config.appName.toLowerCase(), 2000);
 			blockChain = new BlockChain(params, wallet, blockStore);
 			peerGroup = new PeerGroup(params, blockChain);
 			peerGroup.addWallet(wallet);
 			peerGroup.setFastCatchupTimeSecs(Config.burnCreationTime);
-			wallet.autosaveToFile(new File("wallet"), 1, TimeUnit.MINUTES, null);
+			wallet.autosaveToFile(new File(walletFile), 1, TimeUnit.MINUTES, null);
 			peerGroup.addPeerDiscovery(new DnsDiscovery(params));
 			peerGroup.startAndWait();
 			peerGroup.addEventListener(new ChancecoinPeerEventListener());
@@ -404,7 +406,7 @@ public class Blocks implements Runnable {
 		} catch (SQLException e) {
 		}
 		File dbFile = new File(db.dbFile);
-		dbFile.renameTo(new File(Config.appName.toLowerCase()+"-"+Config.majorVersionDB.toString()+(Long.toString(System.currentTimeMillis()))+".db"));		
+		dbFile.renameTo(new File("resources/db/" + Config.appName.toLowerCase()+"-"+Config.majorVersionDB.toString()+(Long.toString(System.currentTimeMillis()))+".db"));		
 		db.init();
 		createTables();
 	}

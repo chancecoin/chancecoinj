@@ -30,7 +30,7 @@ public class GUI extends Application {
 
 		// create the scene
 		stage.setTitle("Chancecoin");
-		stage.getIcons().add(new Image("file:./static/images/logo.png"));
+		stage.getIcons().add(new Image("file:./resources/static/images/logo.png"));
 		scene = new Scene(new Browser(),1000,690, Color.web("#EEEEEE"));
 		stage.setResizable(false);
 		stage.setScene(scene);

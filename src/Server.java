@@ -44,11 +44,9 @@ public class Server implements Runnable {
 		blocksThread.start(); 
 		
 		boolean inJar = false;
-		String directory = "";
 		try {
 			CodeSource cs = this.getClass().getProtectionDomain().getCodeSource();
 			inJar = cs.getLocation().toURI().getPath().endsWith(".jar");
-			directory = cs.getLocation().toURI().getPath();
 		}
 		catch (URISyntaxException e) {
 			e.printStackTrace();
@@ -60,13 +58,11 @@ public class Server implements Runnable {
 		final Configuration configuration = new Configuration();
 		try {
 			if (inJar) {
-				System.out.println("I'm in a jar");
-				Spark.staticFileLocation("./static");
-				configuration.setClassForTemplateLoading(this.getClass(), "./templates");	
+				Spark.staticFileLocation("./resources/static");
+				configuration.setClassForTemplateLoading(this.getClass(), "./resources/templates");	
 			} else {
-				System.out.println("I'm not in a jar");
-				Spark.externalStaticFileLocation("./static");
-				configuration.setDirectoryForTemplateLoading(new File("./templates"));	
+				Spark.externalStaticFileLocation("./resources/static");
+				configuration.setDirectoryForTemplateLoading(new File("./resources/templates"));	
 			}
 		} catch (Exception e) {
 		}
