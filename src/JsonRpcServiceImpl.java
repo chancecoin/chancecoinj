@@ -29,11 +29,12 @@ public class JsonRpcServiceImpl implements JsonRpcService {
 	
 	public Transaction sendChancecoin(String source, String destination, BigInteger amount) {
 		String asset = "CHA";
+		Transaction tx = null;
+		Blocks blocks = Blocks.getInstance();
 		if (!source.equals("") && !destination.equals("")) {
 			BigInteger sourceBalance = Util.getBalance(source, asset);
 			Integer assetId = Util.getAssetId(asset);
 			if (sourceBalance.compareTo(amount)>=0) {
-				Blocks blocks = Blocks.getInstance();
 				ByteBuffer byteBuffer = ByteBuffer.allocate(20);
 				byteBuffer.putInt(0, 0);
 				byteBuffer.putLong(0+4, assetId);
@@ -47,10 +48,23 @@ public class JsonRpcServiceImpl implements JsonRpcService {
 					dataString = new String(data,"ISO-8859-1");
 				} catch (UnsupportedEncodingException e) {
 				}
-				Transaction tx = blocks.transaction(source, destination, BigInteger.valueOf(Config.dustSize), BigInteger.valueOf(Config.minFee), dataString);
+				tx = blocks.transaction(source, destination, BigInteger.valueOf(Config.dustSize), BigInteger.valueOf(Config.minFee), dataString);
 				return tx;
 			}
 		}
+		
+		if (tx!=null) {
+			if (blocks.sendTransaction(tx)) {
+				System.out.println("Success! You sent "+amount+" CHA to "+destination+".");
+			} else {
+				System.out.println("Error! Your transaction timed out and was not received by the Bitcoin network. Please try again.");							
+			}
+		}else{
+			System.out.println("Error! There was a problem with your transaction.");						
+		}
 		return null;
 	}
+	
+	
+	
 }

@@ -20,13 +20,9 @@ public class JsonRpcTest {
 				JsonRpcService.class.getClassLoader(), JsonRpcService.class,
 				jsonRpcHttpClient);
 
-		for (int i = 0; i < 5; i++) {
-			System.out.println(service.getName());
-		}
 		
-		for (int i = 0; i < 5; i++) {
-			System.out.println(service.getChancecoinBalance("1Nbxq7n5fKife6NYeMKfSGgCqiyd84ewA8"));
-		}
+		System.out.println(service.getName());
+		System.out.println(service.getChancecoinBalance("1Nbxq7n5fKife6NYeMKfSGgCqiyd84ewA8"));
 		
 	}
 
