@@ -59,23 +59,6 @@ public class Bet {
 							}
 						}
 					}
-					//TODO: remove this
-					/*
-					if (txIndex==329){
-						if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-houseEdge)),6)) {
-							System.out.println("ok1");
-						}
-						System.out.println(bet.toString());
-						System.out.println(Util.getBalance(source, "CHA").toString());
-						if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
-							System.out.println("ok2");
-						}
-						if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
-							System.out.println("ok3");
-						}
-						System.exit(0);
-					}
-					*/
 					db.executeUpdate("insert into bets(tx_index, tx_hash, block_index, source, bet, chance, payout, profit, cha_supply, validity) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+bet.toString()+"','"+chance.toString()+"','"+payout.toString()+"','0','"+chaSupply.toString()+"','"+validity+"')");					
 				}				
 			}
@@ -137,7 +120,7 @@ public class Bet {
 	public static void resolve() {
 		//resolve bets
 		Database db = Database.getInstance();
-		ResultSet rs = db.executeQuery("select block_time,blocks.block_index as block_index,tx_index,tx_hash,source,bet,payout,chance,cha_supply from bets,blocks where bets.block_index=blocks.block_index and validity='valid' and resolved IS NOT 'true';");
+		ResultSet rs = db.executeQuery("select block_time,blocks.block_index as block_index,tx_index,tx_hash,source,bet,payout,chance,cha_supply from bets,blocks where bets.block_index=blocks.block_index and bets.validity='valid' and bets.resolved IS NOT 'true';");
 		//if (true) return;
 
 		SimpleDateFormat dateFormatStandard = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
@@ -204,6 +187,9 @@ public class Bet {
 								profit = bet.multiply(BigInteger.valueOf(-1));
 							}
 							db.executeUpdate("update bets set profit='"+profit.toString()+"', rolla='"+(rollA*100.0)+"', rollb='"+(rollB*100.0)+"', roll='"+roll+"', resolved='true' where tx_index='"+txIndex+"';");
+							if (txIndex==156) {
+								
+							}
 							break;
 						}
 					}

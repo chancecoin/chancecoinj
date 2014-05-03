@@ -49,7 +49,7 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
-				attributes.put("title", "A coin for decentralized betting");
+				attributes.put("title", "A coin for betting in a decentralized casino");
 				
 				Blocks blocks = Blocks.getInstance();
 				attributes.put("blocksBTC", blocks.getHeight());
