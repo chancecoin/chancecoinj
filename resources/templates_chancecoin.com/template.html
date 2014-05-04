@@ -47,39 +47,6 @@
 						</ul>
 					</li>
 	      </ul>
-	      <ul class="nav navbar-nav navbar-right">
-					<#if addresses??>
-	        <li class="dropdown">
-	          <a href="#" class="dropdown-toggle" data-toggle="dropdown">${address?substring(0,6)}... <b class="caret"></b></a>
-	          <ul class="dropdown-menu">
-								<#list addresses as addr>
-									<li><a href="?address=${addr["address"]}"><#if addr["address"]==address><strong>${addr["address"]}</strong><#else>${addr["address"]}</#if> <span class="badge">${addr["balance_CHA"]} CHA</span></a></li>
-								</#list>
-	          </ul>
-	        </li>
-					</#if>
-					<#if blocksBTC?? && blocksCHA?? && version??>
-					<li class="dropdown">
-						<#if parsing??>
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown">${parsing} / ${blocksBTC} <b class="caret"></b></a>
-						<#else>
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown">${blocksCHA} / ${blocksBTC} <b class="caret"></b></a>
-						</#if>
-						<ul class="dropdown-menu">
-							<#if parsing??>
-							<li><a href="#">CHA blocks <span class="badge">${parsing}</span></a></li>
-							<#else>
-							<li><a href="#">CHA blocks <span class="badge">${blocksCHA}</span></a></li>
-							</#if>
-							<li><a href="#">BTC blocks <span class="badge">${blocksBTC}</span></a></li>
-							<li><a href="#">Version <span class="badge">${version}</span></a></li>
-							<#if !parsing??>
-							<li><a href="/?reparse">Reparse transactions</a></li>
-							</#if>
-						</ul>
-					</li>
-					</#if>
-	      </ul>
 	    </div>
 	  </div>
 	</nav>
@@ -87,23 +54,8 @@
 	<div class="container-fluid content">
 		<#if info?? || error?? || success?? || warning?? || (version?? && min_version?? && (version?number<min_version?number)) || parsing??>
 		<div class="row">
-			<#if info??>
-			<div class="alert alert-info">${info}</div>
-			</#if>
-			<#if error??>
-			<div class="alert alert-danger">${error}</div>
-			</#if>
-			<#if success??>
-			<div class="alert alert-success">${success}</div>
-			</#if>
-			<#if warning??>
-			<div class="alert alert-warning">${warning}</div>
-			</#if>
-			<#if version?? && min_version?? && (version?number<min_version?number)>
-			<div class="alert alert-danger">You must update to the latest version of Chancecoin. Your version is out of date.</div>
-			</#if>
-			<#if parsing??>
-			<div class="alert alert-warning">Chancecoin is parsing transactions. You can still use the software, but the information you see will be out of date.</div>
+			<#if title?? && (title=="Casino" || title=="Exchange")??>
+			<div class="alert alert-warning">The forms on this page do not actually work, and the information may be out of date. To use Chancecoin, <a href="/participate">download the casino software</a>.</div>
 			</#if>
 		</div>
 		</#if>

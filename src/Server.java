@@ -614,7 +614,39 @@ public class Server implements Runnable {
 					}
 				} catch (SQLException e) {
 				}
-				attributes.put("my_burns", myBurns);								
+				attributes.put("my_burns", myBurns);
+				
+				//get sends
+				rs = db.executeQuery("select * from sends where asset='CHA' and validity='valid' order by block_index desc, tx_index desc limit 20;");
+				ArrayList<HashMap<String, Object>> sends = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("amount", BigInteger.valueOf(rs.getLong("amount")).doubleValue()/Config.unit.doubleValue());
+						map.put("tx_hash", rs.getString("tx_hash"));
+						map.put("source", rs.getString("source"));
+						map.put("destination", rs.getString("destination"));
+						sends.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("sends", sends);			
+				
+				//get burns
+				rs = db.executeQuery("select * from burns where validity='valid' order by earned desc limit 20;");
+				ArrayList<HashMap<String, Object>> burns = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("burned", BigInteger.valueOf(rs.getLong("burned")).doubleValue()/Config.unit.doubleValue());
+						map.put("earned", BigInteger.valueOf(rs.getLong("earned")).doubleValue()/Config.unit.doubleValue());
+						map.put("tx_hash", rs.getString("tx_hash"));
+						map.put("source", rs.getString("source"));
+						burns.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("burns", burns);				
 
 				return modelAndView(attributes, "wallet.html");
 			}
@@ -702,7 +734,39 @@ public class Server implements Runnable {
 					}
 				} catch (SQLException e) {
 				}
-				attributes.put("my_burns", myBurns);								
+				attributes.put("my_burns", myBurns);	
+				
+				//get sends
+				rs = db.executeQuery("select * from sends where asset='CHA' and validity='valid' order by block_index desc, tx_index desc limit 20;");
+				ArrayList<HashMap<String, Object>> sends = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("amount", BigInteger.valueOf(rs.getLong("amount")).doubleValue()/Config.unit.doubleValue());
+						map.put("tx_hash", rs.getString("tx_hash"));
+						map.put("source", rs.getString("source"));
+						map.put("destination", rs.getString("destination"));
+						sends.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("sends", sends);			
+				
+				//get burns
+				rs = db.executeQuery("select * from burns where validity='valid' order by earned desc limit 20;");
+				ArrayList<HashMap<String, Object>> burns = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("burned", BigInteger.valueOf(rs.getLong("burned")).doubleValue()/Config.unit.doubleValue());
+						map.put("earned", BigInteger.valueOf(rs.getLong("earned")).doubleValue()/Config.unit.doubleValue());
+						map.put("tx_hash", rs.getString("tx_hash"));
+						map.put("source", rs.getString("source"));
+						burns.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("burns", burns);					
 
 				return modelAndView(attributes, "wallet.html");
 			}

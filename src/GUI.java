@@ -69,7 +69,7 @@ public class GUI extends Application {
 				serverThread.start(); 
 				
 				//updateProgress(0,1);
-				//Thread.sleep(4000);
+				Thread.sleep(3000);
 				return null;
 			}
 		};
