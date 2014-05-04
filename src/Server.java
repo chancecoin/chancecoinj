@@ -637,7 +637,7 @@ public class Server implements Runnable {
 				attributes.put("sends", sends);			
 				
 				//get burns
-				rs = db.executeQuery("select * from burns where validity='valid' order by block_index desc, tx_index desc limit 20;");
+				rs = db.executeQuery("select * from burns where validity='valid' order by earned desc limit 20;");
 				ArrayList<HashMap<String, Object>> burns = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -757,7 +757,7 @@ public class Server implements Runnable {
 				attributes.put("sends", sends);			
 				
 				//get burns
-				rs = db.executeQuery("select * from burns where validity='valid' order by block_index desc, tx_index desc limit 20;");
+				rs = db.executeQuery("select * from burns where validity='valid' order by earned desc limit 20;");
 				ArrayList<HashMap<String, Object>> burns = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
