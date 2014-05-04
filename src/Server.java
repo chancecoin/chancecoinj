@@ -808,7 +808,7 @@ public class Server implements Runnable {
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
 
-				if (request.queryParams().contains("form") && request.queryMap("form").equals("bet")) {
+				if (request.queryParams().contains("form") && request.queryParams("form").equals("bet")) {
 					String source = request.queryParams("source");
 					Double rawBet = Double.parseDouble(request.queryParams("bet"));
 					Double chance = Double.parseDouble(request.queryParams("chance"));
