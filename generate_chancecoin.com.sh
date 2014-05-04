@@ -6,6 +6,9 @@ mkdir chancecoin.com
 cp -r resources/static/* chancecoin.com/
 cp .htaccess chancecoin.com/
 mkdir chancecoin.com/downloads
+cp build/* chancecoin.com/downloads
+cp resources/db/chancecoin-1.db chancecoin.com/downloads
+cp resources/db/chancecoin.h2.db chancecoin.com/downloads
 wget -O chancecoin.com/index.html http://0.0.0.0:8080/
 wget -O chancecoin.com/participate.html http://0.0.0.0:8080/participate
 wget -O chancecoin.com/technical.html http://0.0.0.0:8080/technical
