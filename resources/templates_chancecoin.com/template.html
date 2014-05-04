@@ -52,11 +52,9 @@
 	</nav>
 
 	<div class="container-fluid content">
-		<#if info?? || error?? || success?? || warning?? || (version?? && min_version?? && (version?number<min_version?number)) || parsing??>
+		<#if title?? && (title=="Casino" || title=="Exchange")>
 		<div class="row">
-			<#if title?? && (title=="Casino" || title=="Exchange")??>
 			<div class="alert alert-warning">The forms on this page do not actually work, and the information may be out of date. To use Chancecoin, <a href="/participate">download the casino software</a>.</div>
-			</#if>
 		</div>
 		</#if>
 
