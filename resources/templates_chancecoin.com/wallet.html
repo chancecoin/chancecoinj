@@ -1,0 +1,133 @@
+<#import "template.html" as template>
+<@template.content>
+		<div class="row section">
+				<div class="col-xs-4 segment one-third">
+						<h2>Balance</h2>
+						<ul class="list-group">
+						<#if balanceCHA??>
+						<li class="list-group-item">
+						<span class="badge">CHA</span>
+						${balanceCHA?string(",##0.00000000")}
+						</li>
+						</#if>
+						<#if balanceBTC??>
+						<li class="list-group-item">
+						<span class="badge">BTC</span>
+						${balanceBTC?string(",##0.00000000")}
+						</li>
+						</#if>
+						</ul>
+						<p>See <a href="/balances">all balances</a>.</p>
+				</div>
+				<div class="col-xs-4 segment one-third">
+						<h2>Import address</h2>
+						<form action="/wallet" method="post">
+								<input type="hidden" name="form" value="import">
+
+								<div class="input-group">
+									<span class="input-group-addon">PK</span>
+									<input type="text" placeholder="private key" name="privatekey">
+								</div>
+
+								<div class="input-group">
+									<span class="input-group-btn">
+										<button class="btn btn-default" type="submit">Import address</button>
+									</span>
+								</div>
+						</form>
+				</div>
+				<div class="col-xs-4 segment one-third">
+						<h2>Send</h2>
+						<form action="/wallet" method="post">
+				        <input type="hidden" name="form" value="send">
+								<input type="hidden" name="source" value="${address}">
+
+								<div class="input-group">
+									<span class="input-group-addon">@</span>
+				        	<input type="text" placeholder="destination address" name="destination">
+								</div>
+
+								<div class="input-group">
+								  <span class="input-group-addon">#</span>
+				        	<input type="text" placeholder="quantity (CHA)" name="quantity">
+								</div>
+
+								<div class="input-group">
+						      <span class="input-group-btn">
+						        <button class="btn btn-default" type="submit">Send</button>
+						      </span>
+						    </div>
+						</form>
+				</div>
+		</div>
+
+		<div class="row section">
+				<div class="col-xs-4 segment one-third">
+						<h2>Burns</h2>
+						<table class="table table-striped">
+								<thead>
+										<tr>
+												<th>Burned (BTC)</th>
+												<th>Earned (CHA)</th>
+										</tr>
+								</thead>
+
+								<tbody>
+										<#if my_burns??>
+										<#list my_burns as tx>
+										<tr>
+												<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["burned"]?string(",##0.00000000") }</a></td>
+												<td>${ tx["earned"]?string(",##0.00000000") }</td>
+										</tr>
+										</#list>
+										</#if>
+								</tbody>
+						</table>
+				</div>			
+				<div class="col-xs-4 segment one-third">
+						<h2>Sending transactions</h2>
+						<table class="table table-striped">
+								<thead>
+										<tr>
+												<th>Destination</th>
+												<th>Quantity (CHA)</th>
+										</tr>
+								</thead>
+
+								<tbody>
+										<#if my_sends??>
+										<#list my_sends as tx>
+										<tr>
+												<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["destination"] }</a></td>
+												<td>${ tx["amount"]?string(",##0.00000000") }</td>
+										</tr>
+										</#list>
+										</#if>
+								</tbody>
+						</table>
+			</div>
+			<div class="col-xs-4 segment one-third">
+					<h2>Receiving transactions</h2>
+					<table class="table table-striped">
+							<thead>
+									<tr>
+											<th>Source</th>
+											<th>Quantity (CHA)</th>
+									</tr>
+							</thead>
+
+							<tbody>
+									<#if my_receives??>
+									<#list my_receives as tx>
+									<tr>
+											<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["source"] }</a></td>
+											<td>${ tx["amount"]?string(",##0.00000000") }</td>
+									</tr>
+									</#list>
+									</#if>
+							</tbody>
+					</table>
+			</div>
+	</div>
+
+</@template.content>

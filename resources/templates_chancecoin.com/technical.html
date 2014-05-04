@@ -1,0 +1,65 @@
+<#import "template.html" as template>
+<@template.content>
+    <div class="row section">
+
+      <h2>Description</h2>
+      <p>Chancecoin (CHA) is a protocol, coin, and client used to bet on dice rolls and other games in a decentralized casino. Owners of the coin may gamble, with randomness provided by published NY Lottery Quick Draw numbers. Owners of the coin are automatically invested in the house bankroll. The protocol is built on top of the Bitcoin blockchain. Coins were created by burning Bitcoins during a proof of burn period.</p>
+
+      <h2>Burn information</h2>
+      <ul>
+        <li><strong>Burn status</strong>: COMPLETE</li>
+        <li><strong>Coins burned</strong>: ${ burned_CHA } CHA (${ burned_BTC } BTC)</li>
+        <li><strong>Burn period</strong>: Bitcoin blocks ${ start_block } to ${ end_block }</li>
+        <li><strong>Coins burned in first block</strong>: ${ multiplier_initial } CHA per 1 BTC</li>
+        <li><strong>Coins burned in last block</strong>: ${ multiplier } CHA per 1 BTC (coins per block scaled linearly in between these blocks)</li>
+        <li><strong>BTC burn address</strong>: <a href="http://blockchain.info/address/${ burn_address }">${ burn_address }</a></li>
+        <li><strong>Maximum coins allowed to be burned</strong>: ${ max_burn } CHA</li>
+        <li><strong>Maximum coins burned per address</strong>: unlimited</li>
+      </ul>
+
+      <h2>Casino information</h2>
+      <ul>
+        <li><strong>House edge</strong>: ${ house_edge*100 }%</li>
+        <li><strong>Maximum win</strong>: ${ max_profit*100 }% of bankroll</li>
+      </ul>
+
+      <h2>Betting</h2>
+        <p>Generally speaking, when you bet, you specify a bet size, a chance of winning, and a payout. The chance of winning and the payout must correspond. For example, if there were no house edge, a `50%` chance of winning would correspond to a `2`-to-`1` payout (`2x`). Because the house edge is `${ house_edge*100 }%`, this payout is adjusted to `${ 1/0.5*(1-house_edge) }x` (this is `1/0.5*(1-${ house_edge }`).</p>
+        <p>Specifically, in Chancecoin, a bet is comprised of a bet amount (`b`), a chance of winning (`1/p`), and an edge-adjusted payout (`p*(1-e)`). The house edge (`e`) is `${ house_edge }` (`${ house_edge*100 }%`). The protocol enforces that the edge-adjusted payout and the chance of winning correspond exactly as described.</p>
+      <h2>Randomness</h2>
+        <p>Chancecoin uses <a href="http://nylottery.ny.gov/wps/portal?PC_7_SPTFTVI4188AC0IKIA9Q6K0QS0_WCM_CONTEXT=/wps/wcm/connect/NYSL+Content+Library/NYSL+Internet+Site/Home/Daily+Games/QUICK+DRAW/">New York Lottery Quick Draw</a> numbers to resolve bets. Quick Draw numbers are drawn every four minutes, every day of the week (with the exception of 3:25am to 4:00am EST daily). The numbers are published online shortly after they are drawn. The drawing selects `20` numbers randomly from a pool of numbers `1` through `80`, without replacement. A bet seen in the blockchain will be resolved with the next available set of Quick Draw numbers. Since Chancecoin uses the next available set of Quick Draw numbers after a block has been mined to resolve any bets in the block, it is impossible for Bitcoin miners or anyone else to control the outcomes of bets.</p>
+        <p>When it sees a bet, Chancecoin uses <a href="http://en.wikipedia.org/wiki/Combinatorial_number_system">combinadics</a> to convert a set of Quick Draw numbers into a standard uniform random variable, and uses it to resolve the bet. The Quick Draw numbers come in as an ordered list of 20 numbers drawn from `1` through `80`. To convert this into a standard uniform random variable, Chancecoin uses:</p>
+        <p>$$r_A=\frac{\sum_{i=1}^{20}  \binom{number-1}{i}}{\binom{80}{20}-1}$$</p>
+        <p>In order to avoid bets in the same block being correlated, there is an additional adjustment. The last ten hexadecimal digits of a bet's transaction hash is converted into another standard uniform random variable, `r_B` by converting the last ten digits of the hash to an integer, modulus `1000000000` divided by `1000000000`. The final standard uniform random variable is `(r_A+r_B)%1`.</p>
+        <p>If the final standard uniform random variable is less than `1/p`, then the gambler wins the bet. Otherwise, he loses the bet. (Since the chance of winning is stored in percentage terms, the standard uniform random variable is multiplied by `100` before making this comparison.)</p>
+      <h2>Payout accounting</h2>
+        <p>One might assume that when a Chancecoin gambler wins or loses a bet, CHA is transferred between his wallet and the wallets of the other CHA holders. In fact, this is not the way Chancecoin's payout system works. When a Chancecoin gambler wins or loses a bet, his balance is the only balance that changes, but the effect is still the same as in the standard payout system. To illustrate this, let's go through the two cases, where the gambler wins and the gambler loses.</p>
+        <p>Suppose the initial amount of CHA is `c`. The exchange rate is `x` (`1` CHA = `x` USD). The total market cap is `c*x` USD. Suppose a gambler bets `b` CHA with payout `p*(1-e)` (the house edge is `e*100` percent).</p>
+        <p>If the gambler loses, he must lose `b*x` USD, and the remaining CHA owners must gain the same amount. In order for the remaining CHA owners to gain `b*x` USD on their original `(c-b)*x` USD while still owning `c-b` CHA, the new exchange rate must be `((c-b)*x+b*x)/(c-b)` = `x*c/(c-b)`. The gambler loses `b` CHA, so he now has `0` CHA = `0` USD. There are now `c-b` CHA in existence, and the total market cap is still `c*x` USD.</p>
+        <p>If the gambler wins, he must win `b*(p*(1-e)-1)*x` USD (the payout is `b*p*(1-e)*x` USD), and the remaining CHA owners must lose the same amount. In order for the remaining CHA owners to lose `b*(p*(1-e)-1)*x` USD on their original `(c-b)*x` USD while still owning `c-b` CHA, the new exchange rate must be `((c-b)*x-b*(p*(1-e)-1)*x)/(c-b)` = `x*(c-b*p*(1-e))/(c-b)`. In order for the gambler to win `b*(p*(1-e)-1)*x` USD on his original `b*x` USD, his balance must now be worth `b*p*(1-e)*x` USD, so he must now have `b*p*(1-e)*x/(x*(c-b*p*(1-e))/(c-b))` CHA = `b*p*(1-e)*(c-b)/(c-b*p*(1-e))` CHA, or `b*(p*(1-e)-1)*c/(c-b*p*(1-e))` CHA more than his original `b` CHA. There are now `c+b*(p*(1-e)-1)*c/(c-b*p*(1-e))` CHA in existence, and the total market cap is still `c*x` USD.</p>
+				<p>Chancecoin always fixes the amount of CHA held by the remaining CHA owners who are not gambling and adjusts the amount of CHA held by the gambler, depending on whether he wins or loses. The assumption is that the exchange rate will adjust so that the USD market values of the gambler and the remaining CHA holders match what they would be under the standard payout system after the bet is resolved.</p>
+			<h2>Exchange rate</h2>
+				<p>Chancecoin's payout system suggests that the exchange rate needs to fluctuate with every bet, and indeed, it does. But these fluctuations are small. The exchange rate should be stable enough that CHA can trade on cryptocurrency exchanges without a problem.</p>
+				<p>It is important to note that because of the way Chancecoin's payout system works, the gains investors accumulate in the long run due to the house edge show up in the exchange rate rather than in the quantity of holdings. To illustrate this, consider the expected change in the exchange rate per bet:</p>
+				<p>E(change in exchange rate) = `(p-1)/p*(c/(c-b))+1/p*(c-b*p*(1-e))/(c-b)` = `1+e*b/(c-b)`.</p>
+				<p>Over the long run, the expected change in the exchange rate is approximately equal to `1+e*(sum b)/c`.</p>
+		  <h2>Benefits of Chancecoin's payout accounting</h2>
+				<p>There are some major benefits of Chancecoin's payout system versus the standard method of payout accounting.<p>
+				<ul>
+					<li>CHA can trade on an exchange without the exchange having to worry about its balance fluctuating due to bets being won and lost.</li>
+				<li>Accounting is cleaner. Under the standard method of payout accounting, because bets can't be resolved instantaneously, Chancecoin would have to at least partially freeze funds of all parties while waiting for bets to resolve.</li>
+				</ul>
+
+      <h2>Resources</h2>
+      <ul>
+        <li><a href="http://chancecoin.com">Home page</a></li>
+        <li><a href="http://www.reddit.com/r/chancecoin/">Subreddit</a></li>
+      </ul>
+
+      <h2>Developers</h2>
+      <p><a href="https://bitcointalk.org/index.php?action=profile;u=252066">Magician</a> and <a href="https://bitcointalk.org/index.php?action=profile;u=272243">Venetian</a></p>
+
+      <h2>Donations</h2>
+      <p>Donations to 1BckY64TE6VrjVcGMizYBE7gt22axnq6CM are welcome.</p>
+    </div>
+</@template.content>

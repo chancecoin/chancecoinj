@@ -65,31 +65,21 @@ public class Blocks implements Runnable {
 	public Boolean parsing = false;
 	public Integer parsingBlock = 0;
 	
+	public static Blocks getInstanceAndWait() {
+		if(instance == null) {
+			instance = new Blocks();
+			instance.init();
+		} 
+		instance.follow();
+		return instance;
+	}
+
 	public static Blocks getInstance() {
 		if(instance == null) {
 			instance = new Blocks();
 			instance.init();
-			new Thread() { public void run() {instance.follow();}}.start();
-		} else {
-			new Thread() { public void run() {instance.follow();}}.start();
-		}
-		return instance;
-	}
-
-	public static Blocks getInstance(Boolean dbExists) {
-		if(instance == null) {
-			instance = new Blocks();
-			if (!dbExists) {
-				instance.createTables();
-			}
-			instance.init();
-			new Thread() { public void run() {instance.follow();}}.start();
-		} else {
-			if (!dbExists) {
-				instance.createTables();				
-			}
-			new Thread() { public void run() {instance.follow();}}.start();
-		}
+		} 
+		new Thread() { public void run() {instance.follow();}}.start();
 		return instance;
 	}
 

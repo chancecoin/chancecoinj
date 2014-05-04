@@ -1,4 +1,6 @@
-chancecoinj
+chancecoin
 ===========
 
-Decentralized dice betting
+A coin for betting in a decentralized casino
+
+See http://chancecoin.com
