@@ -46,7 +46,8 @@ public class Bet {
 					Double chance = byteBuffer.getDouble(8);
 					Double payout = byteBuffer.getDouble(16);
 					Double houseEdge = Config.houseEdge;
-					if (blockIndex<299000) {
+					//PROTOCOL CHANGE
+					if (blockIndex<299200) {
 						houseEdge = 0.02;
 					}
 					BigInteger chaSupply = Util.chaSupply();

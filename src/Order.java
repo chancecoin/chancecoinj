@@ -151,7 +151,13 @@ public class Order {
 						Double tx1Price = tx1GetAmount.doubleValue() / tx1GiveAmount.doubleValue();
 						Double tx1InversePrice = tx1GiveAmount.doubleValue() / tx1GetAmount.doubleValue();
 						if (tx0Price.compareTo(tx1InversePrice)<=0) {
-							BigInteger forwardAmount = tx0GiveRemaining.min(new BigDecimal(tx1GiveRemaining).divideToIntegralValue(new BigDecimal(tx0Price)).toBigInteger());
+							BigInteger forwardAmount = BigInteger.ZERO;
+							//PROTOCOL CHANGE
+							if (tx0BlockIndex.compareTo(BigInteger.valueOf(299200))<0) {
+								forwardAmount = tx0GiveRemaining.min(new BigDecimal(tx1GiveRemaining).divideToIntegralValue(new BigDecimal(tx0Price)).toBigInteger());								
+							}else{
+								forwardAmount = tx0GiveRemaining.min(new BigDecimal(tx1GiveRemaining.doubleValue() / tx0Price.doubleValue()).toBigInteger());																
+							}
 							BigInteger backwardAmount = new BigDecimal(forwardAmount.doubleValue() * tx0Price).toBigInteger();
 							BigInteger fee = BigInteger.ZERO;
 							if (tx1GetAsset.equals("BTC")) {
