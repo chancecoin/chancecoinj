@@ -30,9 +30,9 @@ public class JsonRpcTest {
 	public static void main(String args[]) {
 		JsonRpcTest test = new JsonRpcTest();
 		try {
-			test.setup();
+			//test.setup();
 			test.runJsonRpcHttpClient();
-			test.teardown();
+			//test.teardown();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
