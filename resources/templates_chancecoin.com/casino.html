@@ -5,7 +5,6 @@
 				<form action="/casino" class="form-inline" method="post">
 
 						<input type="hidden" name="form" value="roll">
-						<input type="hidden" name="source" value="${address}">
 
 					  <div class="form-group">
 							<div class="input-group">
@@ -87,7 +86,7 @@
 
 	<div class="row section">
 
-				<h2>All bets</h2>
+				<h2>Recent bets</h2>
 
 				<table class="table table-striped">
 				    <thead>
@@ -117,38 +116,5 @@
 				    </tbody>
 				</table>
 
-		</div>
-
-		<div class="row section">
-
-				<h2>My bets</h2>
-				<#if my_bets??>
-				<table class="table table-striped">
-						<thead>
-								<tr>
-										<th>Source address</th>
-										<th>Time</th>
-										<th>Bet size</th>
-										<th>Chance to win</th>
-										<th>Payout multiplier</th>
-										<th>Roll</th>
-										<th>Profit</th>
-								</tr>
-						</thead>
-						<tbody>
-							<#list my_bets as bet>
-									<tr>
-											<td><a href="http://blockchain.info/tx/${bet["tx_hash"]}">${bet["source"]}</a></td>
-											<td>${bet["block_time"]}</td>
-											<td>${bet["bet"]} CHA</td>
-											<td>${bet["chance"]}%</td>
-											<td>${bet["payout"]}X</td>
-											<td><#if bet["resolved"]??>${bet["roll"]}<#else>?</#if></td>
-											<td><#if bet["resolved"]?? && bet["resolved"]="true">${bet["profit"]} CHA<#else>Unresolved</#if></td>
-									</tr>
-							</#list>
-						</tbody>
-				</table>
-				</#if>
 		</div>
 </@template.content>

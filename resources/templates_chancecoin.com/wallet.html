@@ -39,65 +39,68 @@
 				<div class="col-xs-4 segment one-third">
 						<h2>Send</h2>
 						<form action="/wallet" method="post">
-				        <input type="hidden" name="form" value="send">
-								<input type="hidden" name="source" value="${address}">
+								<input type="hidden" name="form" value="send">
 
 								<div class="input-group">
 									<span class="input-group-addon">@</span>
-				        	<input type="text" placeholder="destination address" name="destination">
+									<input type="text" placeholder="destination address" name="destination">
 								</div>
 
 								<div class="input-group">
-								  <span class="input-group-addon">#</span>
-				        	<input type="text" placeholder="quantity (CHA)" name="quantity">
+									<span class="input-group-addon">#</span>
+									<input type="text" placeholder="quantity (CHA)" name="quantity">
 								</div>
 
 								<div class="input-group">
-						      <span class="input-group-btn">
-						        <button class="btn btn-default" type="submit">Send</button>
-						      </span>
-						    </div>
+									<span class="input-group-btn">
+										<button class="btn btn-default" type="submit">Send</button>
+									</span>
+								</div>
 						</form>
 				</div>
 		</div>
 
 		<div class="row section">
-				<div class="col-xs-4 segment one-third">
-						<h2>Burns</h2>
+				<div class="col-xs-6 segment one-third">
+						<h2>Biggest burns</h2>
 						<table class="table table-striped">
 								<thead>
 										<tr>
+												<th>Source</th>
 												<th>Burned (BTC)</th>
 												<th>Earned (CHA)</th>
 										</tr>
 								</thead>
 
 								<tbody>
-										<#if my_burns??>
-										<#list my_burns as tx>
+										<#if burns??>
+										<#list burns as tx>
 										<tr>
-												<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["burned"]?string(",##0.00000000") }</a></td>
+												<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["source"] }</a></td>
+												<td>${ tx["burned"]?string(",##0.00000000") }</td>
 												<td>${ tx["earned"]?string(",##0.00000000") }</td>
 										</tr>
 										</#list>
 										</#if>
 								</tbody>
 						</table>
-				</div>			
-				<div class="col-xs-4 segment one-third">
-						<h2>Sending transactions</h2>
+				</div>
+				<div class="col-xs-6 segment one-third">
+						<h2>Recent transactions</h2>
 						<table class="table table-striped">
 								<thead>
 										<tr>
+												<th>Source</th>
 												<th>Destination</th>
 												<th>Quantity (CHA)</th>
 										</tr>
 								</thead>
 
 								<tbody>
-										<#if my_sends??>
-										<#list my_sends as tx>
+										<#if sends??>
+										<#list sends as tx>
 										<tr>
+												<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["source"] }</a></td>
 												<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["destination"] }</a></td>
 												<td>${ tx["amount"]?string(",##0.00000000") }</td>
 										</tr>
@@ -105,28 +108,6 @@
 										</#if>
 								</tbody>
 						</table>
-			</div>
-			<div class="col-xs-4 segment one-third">
-					<h2>Receiving transactions</h2>
-					<table class="table table-striped">
-							<thead>
-									<tr>
-											<th>Source</th>
-											<th>Quantity (CHA)</th>
-									</tr>
-							</thead>
-
-							<tbody>
-									<#if my_receives??>
-									<#list my_receives as tx>
-									<tr>
-											<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["source"] }</a></td>
-											<td>${ tx["amount"]?string(",##0.00000000") }</td>
-									</tr>
-									</#list>
-									</#if>
-							</tbody>
-					</table>
 			</div>
 	</div>
 

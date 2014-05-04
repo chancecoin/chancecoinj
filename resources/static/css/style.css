@@ -30,25 +30,6 @@ h6 { font-size: .75em; font-weight: bold; }
 	width: 100%;
 }
 
-.splash {
-	margin-top: 0em;
-	background: #eee;
-}
-.splash .splash-head {
-	font-size: 3em;
-	line-height: 1em;
-}
-.splash .splash-subhead {
-	color: #999;
-	font-size: 1.5em;
-	line-height: 1em;
-}
-.splash .splash-image {
-	float: left;
-	padding-right: 1em;
-	padding-top: 1em;
-}
-
 .row {
 	padding-top: 0em;
 	width: 100%;
@@ -66,8 +47,10 @@ h6 { font-size: .75em; font-weight: bold; }
 	font-size: 1em;
 }
 
-.status {
+.float_right {
 	float: right;
+	padding-left: 1em;
+	padding-bottom: 1em;
 }
 
 .section {
