@@ -59,9 +59,9 @@ public class Server implements Runnable {
 		try {
 			if (inJar) {
 				System.out.println(this.getClass() + " in jar");
-				Spark.staticFileLocation("./resources/static/");
-				//configuration.setClassForTemplateLoading(this.getClass(), "./resources/templates/");
-				configuration.setDirectoryForTemplateLoading(new File("./resources/templates/"));
+				Spark.externalStaticFileLocation("resources/static/");
+				configuration.setClassForTemplateLoading(this.getClass(), "resources/templates/");
+				//configuration.setDirectoryForTemplateLoading(new File("./resources/templates/"));
 			} else {
 				System.out.println(this.getClass() + " not in jar");
 				Spark.externalStaticFileLocation("./resources/static/");
