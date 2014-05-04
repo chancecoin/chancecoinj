@@ -15,9 +15,6 @@ public class Chancecoin {
 	public static void main(String[] args) {
 		//TODO: be able to buy CHA to bet easily
 		//TODO: prepare to handle different bet types
-		//TODO: web site generation
-		//TODO: make home page description/download better
-		//TODO: remove stuff we don't want in this release
 		Blocks blocks = Blocks.getInstance();
 		//blocks.reparse();
 	}
