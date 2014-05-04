@@ -47,12 +47,11 @@ public class Bet {
 					Double payout = byteBuffer.getDouble(16);
 					Double houseEdge = Config.houseEdge;
 					//PROTOCOL CHANGE
-					if (blockIndex<299200) {
-						houseEdge = 0.02;
-					}
+					Double oldHouseEdge = 0.02;
+					Boolean payoutChanceCongruent = Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-houseEdge)),6) || Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-oldHouseEdge)),6);
 					BigInteger chaSupply = Util.chaSupply();
 					String validity = "invalid";
-					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-houseEdge)),6)) {
+					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
 						if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
 							if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
 								validity = "valid";
