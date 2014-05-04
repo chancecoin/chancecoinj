@@ -1,0 +1,26 @@
+<#import "template.html" as template>
+<@template.content>
+    <div class="row section padding-bottom">
+      <h2>All balances</h2>
+
+      <table class="table table-striped">
+          <thead>
+              <tr>
+                  <th>Address</th>
+                  <th>CHA balance</th>
+                  <th>Market share</th>
+              </tr>
+          </thead>
+
+          <tbody>
+              <#list balances as balance>
+                  <tr>
+                      <td><a href="/wallet?address=${balance["address"]}">${balance["address"]}</a></td>
+                      <td>${balance["balance"]?string(",##0.00")}</td>
+                      <td>${balance["share"]?string("##0.00")}%</td>
+                  </tr>
+              </#list>
+          </tbody>
+      </table>
+    </div>
+</@template.content>
