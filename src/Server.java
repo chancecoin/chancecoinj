@@ -54,16 +54,12 @@ public class Server implements Runnable {
 		
 		setPort(8080);    
 		
-
 		final Configuration configuration = new Configuration();
 		try {
 			if (inJar) {
-				System.out.println(this.getClass() + " in jar");
 				Spark.externalStaticFileLocation("resources/static/");
 				configuration.setClassForTemplateLoading(this.getClass(), "resources/templates/");
-				//configuration.setDirectoryForTemplateLoading(new File("./resources/templates/"));
 			} else {
-				System.out.println(this.getClass() + " not in jar");
 				Spark.externalStaticFileLocation("./resources/static/");
 				configuration.setDirectoryForTemplateLoading(new File("./resources/templates/"));	
 			}
