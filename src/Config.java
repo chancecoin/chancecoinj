@@ -8,7 +8,7 @@ public class Config {
 	public static String log = appName+".log";
 	public static String minVersionPage = "https://raw2.github.com/chancecoin/chancecoinj/master/min_version.txt";
 	public static String dbPath = "resources/db/";
-	public static String downloadUrl = "http://chancecoin.com/download/";
+	public static String downloadUrl = "http://chancecoin.com/downloads/";
 	
 	//version
 	public static Integer majorVersion = 1;

@@ -1,6 +1,10 @@
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.math.BigInteger;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -110,17 +114,22 @@ public class Blocks implements Runnable {
 				logger.info("Found wallet file");
 				wallet = Wallet.loadFromFile(new File(walletFile));
 			} else {
+				logger.info("Creating new wallet file");
 				wallet = new Wallet(params);
 				ECKey newKey = new ECKey();
 				newKey.setCreationTimeSeconds(Config.burnCreationTime);
 				wallet.addKey(newKey);
 			}
-			if (!(new File(Config.dbPath+Config.appName.toLowerCase()+".h2.db").exists())) {
-				new File(Config.dbPath+Config.appName.toLowerCase()+".h2.db")
+			String fileBTCdb = Config.dbPath+Config.appName.toLowerCase()+".h2.db";
+			if (!new File(fileBTCdb).exists()) {
+				logger.info("Downloading BTC db");
+				Util.downloadToFile(Config.downloadUrl+Config.appName.toLowerCase()+".h2.db", fileBTCdb);
 			}
-			if (!(new File(Database.dbFile).exists())) {
-				
-			}
+			String fileCHAdb = Database.dbFile;
+			if (!new File(fileCHAdb).exists()) {
+				logger.info("Downloading CHA db");
+				Util.downloadToFile(Config.downloadUrl+Config.appName.toLowerCase()+"-"+Config.majorVersionDB.toString()+".db", fileCHAdb);
+		    }
 			blockStore = new H2FullPrunedBlockStore(params, Config.dbPath+Config.appName.toLowerCase(), 2000);
 			blockChain = new BlockChain(params, wallet, blockStore);
 			peerGroup = new PeerGroup(params, blockChain);
