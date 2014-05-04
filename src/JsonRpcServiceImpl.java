@@ -9,10 +9,6 @@ import com.google.bitcoin.core.Transaction;
 
 
 public class JsonRpcServiceImpl implements JsonRpcService {
-
-	public String getName() {
-		return "BLAH";
-	}
 	
 	public Double getChancecoinBalance(String address) {
 		Database db = Database.getInstance();		

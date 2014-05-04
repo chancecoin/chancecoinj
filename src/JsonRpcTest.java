@@ -20,10 +20,7 @@ public class JsonRpcTest {
 				JsonRpcService.class.getClassLoader(), JsonRpcService.class,
 				jsonRpcHttpClient);
 
-		
-		System.out.println(service.getName());
 		System.out.println(service.getChancecoinBalance("1Nbxq7n5fKife6NYeMKfSGgCqiyd84ewA8"));
-		
 	}
 
 	public void teardown() throws Exception {

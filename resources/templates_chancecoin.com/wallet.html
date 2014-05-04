@@ -61,7 +61,7 @@
 		</div>
 
 		<div class="row section">
-				<div class="col-xs-4 segment one-third">
+				<div class="col-xs-6 segment one-half">
 						<h2>Biggest burns</h2>
 						<table class="table table-striped">
 								<thead>
@@ -85,7 +85,7 @@
 								</tbody>
 						</table>
 				</div>
-				<div class="col-xs-8 segment one-third">
+				<div class="col-xs-6 segment one-half">
 						<h2>Recent transactions</h2>
 						<table class="table table-striped">
 								<thead>
@@ -100,8 +100,8 @@
 										<#if sends??>
 										<#list sends as tx>
 										<tr>
-												<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["source"] }</a></td>
-												<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["destination"] }</a></td>
+												<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["source"]?substring(0,10) }...</a></td>
+												<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["destination"]?substring(0,10) }...</a></td>
 												<td>${ tx["amount"]?string(",##0.00000000") }</td>
 										</tr>
 										</#list>
