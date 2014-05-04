@@ -57,15 +57,17 @@ public class Blocks implements Runnable {
 	public PeerGroup peerGroup;
 	public BlockChain blockChain;
 	public BlockStore blockStore;
-	
+	public Boolean working = false;
+	public Boolean parsing = false;
+	public Integer parsingBlock = 0;
 	
 	public static Blocks getInstance() {
 		if(instance == null) {
 			instance = new Blocks();
 			instance.init();
-			instance.follow();			
+			new Thread() { public void run() {instance.follow();}}.start();
 		} else {
-			instance.follow();			
+			new Thread() { public void run() {instance.follow();}}.start();
 		}
 		return instance;
 	}
@@ -77,12 +79,12 @@ public class Blocks implements Runnable {
 				instance.createTables();
 			}
 			instance.init();
-			instance.follow();
+			new Thread() { public void run() {instance.follow();}}.start();
 		} else {
 			if (!dbExists) {
 				instance.createTables();				
 			}
-			instance.follow();
+			new Thread() { public void run() {instance.follow();}}.start();
 		}
 		return instance;
 	}
@@ -112,7 +114,12 @@ public class Blocks implements Runnable {
 				ECKey newKey = new ECKey();
 				newKey.setCreationTimeSeconds(Config.burnCreationTime);
 				wallet.addKey(newKey);
-				//wallet.addWatchedAddress(burnAddress, Config.burnCreationTime);
+			}
+			if (!(new File(Config.dbPath+Config.appName.toLowerCase()+".h2.db").exists())) {
+				new File(Config.dbPath+Config.appName.toLowerCase()+".h2.db")
+			}
+			if (!(new File(Database.dbFile).exists())) {
+				
 			}
 			blockStore = new H2FullPrunedBlockStore(params, Config.dbPath+Config.appName.toLowerCase(), 2000);
 			blockChain = new BlockChain(params, wallet, blockStore);
@@ -131,48 +138,52 @@ public class Blocks implements Runnable {
 	}
 	
 	public void follow() {
-		try {
-			Integer blockHeight = blockStore.getChainHead().getHeight();
-			Integer lastBlock = Util.getLastBlock();
-			if (lastBlock == 0) {
-				lastBlock = Config.firstBlock - 1;
-			}
-			Integer nextBlock = lastBlock + 1;
-			
-			if (lastBlock < blockHeight) {
-				//traverse new blocks
-				Database db = Database.getInstance();
-				logger.info("Bitcoin block height: "+blockHeight);	
-				logger.info("Chancecoin block height: "+lastBlock);	
-				Integer blocksToScan = blockHeight - lastBlock;
-				List<Sha256Hash> blockHashes = new ArrayList<Sha256Hash>();
-				
-				Block block = peerGroup.getDownloadPeer().getBlock(blockStore.getChainHead().getHeader().getHash()).get();
-				while (blockStore.get(block.getHash()).getHeight()>lastBlock) {
-					blockHashes.add(block.getHash());
-					block = blockStore.get(block.getPrevBlockHash()).getHeader();
+		if (!working) {
+			working = true;
+			try {
+				Integer blockHeight = blockStore.getChainHead().getHeight();
+				Integer lastBlock = Util.getLastBlock();
+				if (lastBlock == 0) {
+					lastBlock = Config.firstBlock - 1;
 				}
+				Integer nextBlock = lastBlock + 1;
 				
-				for (int i = blockHashes.size()-1; i>=0; i--) { //traverse blocks in reverse order
-					block = peerGroup.getDownloadPeer().getBlock(blockHashes.get(i)).get();
-					blockHeight = blockStore.get(block.getHash()).getHeight();
-					logger.info("Catching Chancecoin up to Bitcoin (block "+blockHeight.toString()+"): "+Util.format((blockHashes.size() - i)/((double) blockHashes.size())*100.0)+"%");	
-					importBlock(block, blockHeight);
+				if (lastBlock < blockHeight) {
+					//traverse new blocks
+					Database db = Database.getInstance();
+					logger.info("Bitcoin block height: "+blockHeight);	
+					logger.info("Chancecoin block height: "+lastBlock);	
+					Integer blocksToScan = blockHeight - lastBlock;
+					List<Sha256Hash> blockHashes = new ArrayList<Sha256Hash>();
+					
+					Block block = peerGroup.getDownloadPeer().getBlock(blockStore.getChainHead().getHeader().getHash()).get();
+					while (blockStore.get(block.getHash()).getHeight()>lastBlock) {
+						blockHashes.add(block.getHash());
+						block = blockStore.get(block.getPrevBlockHash()).getHeader();
+					}
+					
+					for (int i = blockHashes.size()-1; i>=0; i--) { //traverse blocks in reverse order
+						block = peerGroup.getDownloadPeer().getBlock(blockHashes.get(i)).get();
+						blockHeight = blockStore.get(block.getHash()).getHeight();
+						logger.info("Catching Chancecoin up to Bitcoin (block "+blockHeight.toString()+"): "+Util.format((blockHashes.size() - i)/((double) blockHashes.size())*100.0)+"%");	
+						importBlock(block, blockHeight);
+					}
+					
+					if (getDBMinorVersion()<Config.minorVersionDB){
+						reparse();
+						updateMinorVersion();		    	
+					}else{
+						parseFrom(nextBlock);
+					}
+					Bet.resolve();
+					Order.expire();
 				}
-				
-				if (getDBMinorVersion()<Config.minorVersionDB){
-					reparse();
-					updateMinorVersion();		    	
-				}else{
-					parseFrom(nextBlock);
-				}
-				Bet.resolve();
-				Order.expire();
-			}
-		} catch (Exception e) {
-			logger.error(e.toString());
-			System.exit(0);
-		}		
+			} catch (Exception e) {
+				logger.error(e.toString());
+				System.exit(0);
+			}	
+			working = false;
+		}
 	}
 
 	public void reDownloadBlockTransactions(Integer blockHeight) {
@@ -324,81 +335,61 @@ public class Blocks implements Runnable {
 		db.executeUpdate("delete from order_expirations;");
 		db.executeUpdate("delete from order_match_expirations;");
 		db.executeUpdate("delete from messages;");
-		parseFrom(0);
+		new Thread() { public void run() {parseFrom(0);}}.start();
 	}
 
 	public void parseFrom(Integer blockNumber) {
-		Database db = Database.getInstance();
-		ResultSet rs = db.executeQuery("select * from blocks where block_index>="+blockNumber.toString()+" order by block_index asc;");
-		try {
-			while (rs.next()) {
-				Integer blockIndex = rs.getInt("block_index");
-				ResultSet rsTx = db.executeQuery("select * from transactions where block_index="+blockIndex.toString()+" order by tx_index asc;");
-				while (rsTx.next()) {
-					Integer txIndex = rsTx.getInt("tx_index");
-					String source = rsTx.getString("source");
-					String destination = rsTx.getString("destination");
-					BigInteger btcAmount = BigInteger.valueOf(rsTx.getInt("btc_amount"));
-					byte[] data = rsTx.getString("data").getBytes("ISO-8859-1");
-
-					if (destination.equals(Config.burnAddress)) {
-						//parse Burn
-						Burn.parse(txIndex);
-					} else {
-						List<Byte> dataArrayList = Util.toByteArrayList(data);
-
-						List<Byte> messageType = dataArrayList.subList(0, 4);
-						List<Byte> message = dataArrayList.subList(4, dataArrayList.size());
-
-						if (messageType.get(3)==Bet.id.byteValue()) {
-							Bet.parse(txIndex, message);
-						} else if (messageType.get(3)==Send.id.byteValue()) {
-							Send.parse(txIndex, message);
-						} else if (messageType.get(3)==Order.id.byteValue()) {
-							Order.parse(txIndex, message);
-						} else if (messageType.get(3)==Cancel.id.byteValue()) {
-							Cancel.parse(txIndex, message);
-						} else if (messageType.get(3)==BTCPay.id.byteValue()) {
-							BTCPay.parse(txIndex, message);
-						}						
+		if (!working) {
+			working = true;
+			parsing = true;
+			Database db = Database.getInstance();
+			ResultSet rs = db.executeQuery("select * from blocks where block_index>="+blockNumber.toString()+" order by block_index asc;");
+			try {
+				while (rs.next()) {
+					Integer blockIndex = rs.getInt("block_index");
+					ResultSet rsTx = db.executeQuery("select * from transactions where block_index="+blockIndex.toString()+" order by tx_index asc;");
+					parsingBlock = blockIndex;
+					while (rsTx.next()) {
+						Integer txIndex = rsTx.getInt("tx_index");
+						String source = rsTx.getString("source");
+						String destination = rsTx.getString("destination");
+						BigInteger btcAmount = BigInteger.valueOf(rsTx.getInt("btc_amount"));
+						byte[] data = rsTx.getString("data").getBytes("ISO-8859-1");
+	
+						if (destination.equals(Config.burnAddress)) {
+							//parse Burn
+							Burn.parse(txIndex);
+						} else {
+							List<Byte> dataArrayList = Util.toByteArrayList(data);
+	
+							List<Byte> messageType = dataArrayList.subList(0, 4);
+							List<Byte> message = dataArrayList.subList(4, dataArrayList.size());
+	
+							if (messageType.get(3)==Bet.id.byteValue()) {
+								Bet.parse(txIndex, message);
+							} else if (messageType.get(3)==Send.id.byteValue()) {
+								Send.parse(txIndex, message);
+							} else if (messageType.get(3)==Order.id.byteValue()) {
+								Order.parse(txIndex, message);
+							} else if (messageType.get(3)==Cancel.id.byteValue()) {
+								Cancel.parse(txIndex, message);
+							} else if (messageType.get(3)==BTCPay.id.byteValue()) {
+								BTCPay.parse(txIndex, message);
+							}						
+						}
 					}
+					Bet.resolve();
+					Order.expire(blockIndex);
 				}
-				Bet.resolve();
-				Order.expire(blockIndex);
+			} catch (SQLException e) {
+				logger.error(e.toString());
+			} catch (UnsupportedEncodingException e) {
 			}
-		} catch (SQLException e) {
-			logger.error(e.toString());
-		} catch (UnsupportedEncodingException e) {
+			parsing = false;
+			working = false;
 		}
 	}
-	
-	public void recreateBlockchainDatabase() {
-		/*
-		try {
-			blockStore.close();
-		} catch (BlockStoreException e) {
-			System.out.println(e.toString());
-		}
-		peerGroup.stop();
-		File h2Store = new File(Config.appName.toLowerCase()+".h2.db");
-		h2Store.delete();
-		//h2Store.renameTo(new File(Config.appName.toLowerCase()+(Long.toString(System.currentTimeMillis()))+".h2.db"));		
-		File h2Store2 = new File(Config.appName.toLowerCase()+".trace.db");
-		h2Store2.delete();
-		instance = null;
-		Blocks blocks = Blocks.getInstance();
-		try {
-			Block block = blockStore.getChainHead().getHeader();
-			while (blockStore.get(block.getHash()).getHeight()>0) {
-				System.out.println("a");
-				block = blockStore.get(block.getPrevBlockHash()).getHeader();
-				System.out.println(blockStore.get(block.getHash()).getHeight());
-			}
-		} catch (BlockStoreException e) {
-		}
-		*/
-	}
-	
+		
 	public void recreateDatabase() {
 		Database db = Database.getInstance();
 		try {

@@ -75,11 +75,17 @@ public class Server implements Runnable {
 				attributes.put("title", "A coin for betting in a decentralized casino");
 				
 				Blocks blocks = Blocks.getInstance();
+				
+				if (request.queryParams().contains("reparse")) {
+					blocks.reparse();
+				}
+				
 				attributes.put("blocksBTC", blocks.getHeight());
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
-				
+				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
+					
 				String address = Util.getAddresses().get(0);
 				request.session(true);
 				if (request.session().attributes().contains("address")) {
@@ -133,7 +139,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("bets", bets);
-				
+								
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
@@ -147,7 +153,8 @@ public class Server implements Runnable {
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Participate");
 				attributes.put("version", Config.version);
-				attributes.put("min_version", Util.getMinVersion());				
+				attributes.put("min_version", Util.getMinVersion());
+				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				return modelAndView(attributes, "participate.html");
 			}
 		});
@@ -158,7 +165,8 @@ public class Server implements Runnable {
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Technical");
 				attributes.put("version", Config.version);
-				attributes.put("min_version", Util.getMinVersion());				
+				attributes.put("min_version", Util.getMinVersion());	
+				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				attributes.put("house_edge", Config.houseEdge);
 				attributes.put("max_profit", Config.maxProfit);
 				attributes.put("burn_address", Config.burnAddress);
@@ -179,7 +187,8 @@ public class Server implements Runnable {
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Balances");
 				attributes.put("version", Config.version);
-				attributes.put("min_version", Util.getMinVersion());				
+				attributes.put("min_version", Util.getMinVersion());
+				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				Database db = Database.getInstance();
 				ResultSet rs = db.executeQuery("select address,amount as balance,amount*100.0/(select sum(amount) from balances) as share from balances where asset='CHA' group by address order by amount desc;");
 				ArrayList<HashMap<String, Object>> balances = new ArrayList<HashMap<String, Object>>();
@@ -209,6 +218,7 @@ public class Server implements Runnable {
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
+				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				String address = Util.getAddresses().get(0);
 				request.session(true);
@@ -391,6 +401,7 @@ public class Server implements Runnable {
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
+				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				String address = Util.getAddresses().get(0);
 				request.session(true);
@@ -510,6 +521,7 @@ public class Server implements Runnable {
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
+				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				String address = Util.getAddresses().get(0);
 				request.session(true);
@@ -620,6 +632,7 @@ public class Server implements Runnable {
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
+				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				String address = Util.getAddresses().get(0);
 				request.session(true);
@@ -707,6 +720,7 @@ public class Server implements Runnable {
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
+				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 
 				String address = Util.getAddresses().get(0);
 				request.session(true);
@@ -824,6 +838,7 @@ public class Server implements Runnable {
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
+				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				String address = Util.getAddresses().get(0);
 				request.session(true);

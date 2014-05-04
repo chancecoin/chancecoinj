@@ -60,11 +60,22 @@
 					</#if>
 					<#if blocksBTC?? && blocksCHA?? && version??>
 					<li class="dropdown">
+						<#if parsing??>
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">${parsing} / ${blocksBTC} <b class="caret"></b></a>
+						<#else>
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">${blocksCHA} / ${blocksBTC} <b class="caret"></b></a>
+						</#if>
 						<ul class="dropdown-menu">
-							<li><a href="#">CHA blocks <span class="badge">${blocksCHA}</span></a></li>
+							<#if parsing??>
+							<li><a href="#">CHA blocks <span class="badge">${parsing}</span></a></li>
+							<#else>
+							<li><a href="#">CHA blocks <span class="badge">${blocksCHA}!</span></a></li>
+							</#if>
 							<li><a href="#">BTC blocks <span class="badge">${blocksBTC}</span></a></li>
 							<li><a href="#">Version <span class="badge">${version}</span></a></li>
+							<#if !parsing??>
+							<li><a href="/?reparse">Reparse transactions</a></li>
+							</#if>
 						</ul>
 					</li>
 					</#if>
@@ -74,7 +85,7 @@
 	</nav>
 
 	<div class="container-fluid content">
-		<#if info?? || error?? || success?? || warning?? || (version?? && min_version?? && (version?number<min_version?number))>
+		<#if info?? || error?? || success?? || warning?? || (version?? && min_version?? && (version?number<min_version?number)) || parsing??>
 		<div class="row">
 			<#if info??>
 			<div class="alert alert-info">${info}</div>
@@ -90,6 +101,9 @@
 			</#if>
 			<#if version?? && min_version?? && (version?number<min_version?number)>
 			<div class="alert alert-danger">You must update to the latest version of Chancecoin. Your version is out of date.</div>
+			</#if>
+			<#if parsing??>
+			<div class="alert alert-warning">Chancecoin is parsing transactions. You can still use the software, but the information you see will be out of date.</div>
 			</#if>
 		</div>
 		</#if>
