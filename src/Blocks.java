@@ -137,8 +137,13 @@ public class Blocks implements Runnable {
 	}
 	
 	public void follow() {
-		if (!working) {
-			working = true;
+		follow(false);
+	}
+	public void follow(Boolean force) {
+		if (!working || force) {
+			if (!force) {
+				working = true;
+			}
 			try {
 				Integer blockHeight = blockStore.getChainHead().getHeight();
 				Integer lastBlock = Util.getLastBlock();
@@ -169,10 +174,10 @@ public class Blocks implements Runnable {
 					}
 					
 					if (getDBMinorVersion()<Config.minorVersionDB){
-						reparse();
+						reparse(true);
 						updateMinorVersion();		    	
 					}else{
-						parseFrom(nextBlock);
+						parseFrom(nextBlock, true);
 					}
 					Bet.resolve();
 					Order.expire();
@@ -181,7 +186,9 @@ public class Blocks implements Runnable {
 				logger.error(e.toString());
 				System.exit(0);
 			}	
-			working = false;
+			if (!force) {
+				working = false;
+			}
 		}
 	}
 
@@ -320,6 +327,9 @@ public class Blocks implements Runnable {
 	}
 
 	public void reparse() {
+		reparse(false);
+	}
+	public void reparse(final Boolean force) {
 		Database db = Database.getInstance();
 		db.executeUpdate("delete from debits;");
 		db.executeUpdate("delete from credits;");
@@ -334,13 +344,18 @@ public class Blocks implements Runnable {
 		db.executeUpdate("delete from order_expirations;");
 		db.executeUpdate("delete from order_match_expirations;");
 		db.executeUpdate("delete from messages;");
-		new Thread() { public void run() {parseFrom(0);}}.start();
+		new Thread() { public void run() {parseFrom(0, force);}}.start();
 	}
 
 	public void parseFrom(Integer blockNumber) {
-		if (!working) {
-			working = true;
-			parsing = true;
+		parseFrom(blockNumber, false);
+	}
+	public void parseFrom(Integer blockNumber, Boolean force) {
+		if (!working || force) {
+			if (!force) {
+				working = true;
+				parsing = true;
+			}
 			Database db = Database.getInstance();
 			ResultSet rs = db.executeQuery("select * from blocks where block_index>="+blockNumber.toString()+" order by block_index asc;");
 			try {
@@ -384,8 +399,10 @@ public class Blocks implements Runnable {
 				logger.error(e.toString());
 			} catch (UnsupportedEncodingException e) {
 			}
-			parsing = false;
-			working = false;
+			if (!force) {
+				parsing = false;
+				working = false;
+			}
 		}
 	}
 		
