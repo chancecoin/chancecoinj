@@ -119,6 +119,9 @@ public class Bet {
     }
 	public static void resolve() {
 		//resolve bets
+		
+		logger.info("Resolving bets");
+		
 		Database db = Database.getInstance();
 		ResultSet rs = db.executeQuery("select block_time,blocks.block_index as block_index,tx_index,tx_hash,source,bet,payout,chance,cha_supply from bets,blocks where bets.block_index=blocks.block_index and bets.validity='valid' and bets.resolved IS NOT 'true';");
 		//if (true) return;
@@ -148,6 +151,8 @@ public class Bet {
 				BigInteger chaSupply = BigInteger.valueOf(rs.getLong("cha_supply"));
 				Date blockTime = new Date((long)rs.getLong("block_time")*1000);
 				
+				logger.info("Attempting to resolve bet "+txHash);
+				
 				String lottoDate = dateFormatDateLotto.format(blockTime);
 				Integer hour = Integer.parseInt(dateFormatHour.format(blockTime));
 				Integer minute = Integer.parseInt(dateFormatMinute.format(blockTime));
@@ -156,6 +161,7 @@ public class Bet {
 				}
 				String lottoUrl = "http://nylottery.ny.gov/wps/PA_NYSLNumberCruncher/NumbersServlet?game=quick&action=winningnumbers&startSearchDate="+lottoDate+"&endSearchDate=&pageNo=&last=&perPage=999&sort=";
 				String lottoPage = Util.getPage(lottoUrl);
+				logger.info("Getting lottery numbers "+lottoUrl);
 				try {
 					ObjectMapper objectMapper = new ObjectMapper();
 					objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -164,6 +170,7 @@ public class Bet {
 					for (LottoDraw draw : lottoMap.draw) {
 						Date time = dateFormatDateTimeLotto.parse(draw.date);
 						if (time.after(blockTime)) {
+							logger.info("Found lottery numbers we can use to resolve bet");
 							BigInteger denominator = combinations(BigInteger.valueOf(80),BigInteger.valueOf(20)).subtract(BigInteger.ONE);
 							BigInteger n = BigInteger.ZERO;
 							BigInteger i = BigInteger.ONE;
@@ -176,20 +183,21 @@ public class Bet {
 							Double roll = (rollA + rollB) % 1.0;
 							roll = roll * 100.0;
 							
+							logger.info("Roll = "+roll.toString()+", chance = "+chance.toString());
+							
 							BigInteger profit = BigInteger.ZERO;
 							if (roll<chance) {
+								logger.info("The bet is a winner");
 								//win
 								profit = new BigDecimal(bet.doubleValue()*(payout.doubleValue()-1.0)*chaSupply.doubleValue()/(chaSupply.doubleValue()-bet.doubleValue()*payout.doubleValue())).toBigInteger();
 								BigInteger credit = profit.add(bet);
 								Util.credit(source, "CHA", credit, "Bet won", txHash, blockIndex);
 							} else {
+								logger.info("The bet is a loser");
 								//lose
 								profit = bet.multiply(BigInteger.valueOf(-1));
 							}
 							db.executeUpdate("update bets set profit='"+profit.toString()+"', rolla='"+(rollA*100.0)+"', rollb='"+(rollB*100.0)+"', roll='"+roll+"', resolved='true' where tx_index='"+txIndex+"';");
-							if (txIndex==156) {
-								
-							}
 							break;
 						}
 					}

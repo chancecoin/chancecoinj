@@ -24,7 +24,7 @@ import com.google.bitcoin.core.Transaction;
 import com.google.common.primitives.Ints;
 
 public class Order {
-    static Logger logger = LoggerFactory.getLogger(Bet.class);
+    static Logger logger = LoggerFactory.getLogger(Order.class);
 	public static Integer length = 8+8+8+8+2+8;
 	public static Integer id = 10;
 	
@@ -114,6 +114,8 @@ public class Order {
 		return null;
 	}
 	public static void match(Integer txIndex) {
+		logger.info("Matching orders");
+		
 		Database db = Database.getInstance();
 		ResultSet rstx1 = db.executeQuery("select * from orders where validity='valid' and tx_index="+txIndex.toString());
 		try {
@@ -205,6 +207,8 @@ public class Order {
 	}
 	
 	public static void expire(Integer lastBlock) {
+		logger.info("Expiring orders");
+
 		Database db = Database.getInstance();
 		ResultSet rs = db.executeQuery("select * from orders where validity='valid' and expire_index<"+lastBlock.toString());
 		try {

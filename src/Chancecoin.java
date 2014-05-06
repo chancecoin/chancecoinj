@@ -1,4 +1,6 @@
-
+//TODO: encrypt wallet
+//TODO: easier upgrade process
+//TODO: finish RPC calls
 public class Chancecoin {
 	public static void main(String[] args) {
 		Blocks blocks = Blocks.getInstance();
@@ -9,6 +11,5 @@ public class Chancecoin {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 	}
 }

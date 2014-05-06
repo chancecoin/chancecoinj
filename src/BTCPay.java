@@ -131,7 +131,7 @@ public class BTCPay {
 						dataString = new String(data,"ISO-8859-1");
 					} catch (UnsupportedEncodingException e) {
 					}
-					btcAmount = btcAmount.max(BigInteger.valueOf(Config.dustSize)); //must sent at least dust size
+					btcAmount = btcAmount.max(BigInteger.valueOf(Config.dustSize)); //must send at least dust size
 					Transaction tx = blocks.transaction(source, destination, btcAmount, BigInteger.valueOf(Config.minFee), dataString);
 					return tx;
 					

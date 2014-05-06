@@ -363,6 +363,7 @@ public class Blocks implements Runnable {
 					Integer blockIndex = rs.getInt("block_index");
 					ResultSet rsTx = db.executeQuery("select * from transactions where block_index="+blockIndex.toString()+" order by tx_index asc;");
 					parsingBlock = blockIndex;
+					logger.info("Parsing block "+blockIndex.toString());
 					while (rsTx.next()) {
 						Integer txIndex = rsTx.getInt("tx_index");
 						String source = rsTx.getString("source");
@@ -527,8 +528,8 @@ public class Blocks implements Runnable {
 			ECKey key = dumpedPrivateKey.getKey();
 			String address = key.toAddress(params).toString();
 			logger.info("Importing address "+address);
+			wallet.removeKey(key);
 			wallet.addKey(key);
-			//recreateBlockchainDatabase();
 			List<Map.Entry<String,String>> txsInfo = Util.infoGetTransactions(address);
 			BigInteger balance = BigInteger.ZERO;
 			BigInteger balanceSent = BigInteger.ZERO;
@@ -617,6 +618,7 @@ public class Blocks implements Runnable {
 				}
 			}
 			if (totalInput.compareTo(totalOutput)<0) {
+				logger.info("Not enough inputs. Output: "+totalOutput.toString()+", input: "+totalInput.toString());
 				return null; //not enough inputs
 			}
 			BigInteger totalChange = totalInput.subtract(totalOutput);

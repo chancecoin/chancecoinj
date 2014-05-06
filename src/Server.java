@@ -14,17 +14,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
 import spark.template.freemarker.FreeMarkerRoute;
 
+import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.Transaction;
 
 import freemarker.template.Configuration;
 
 public class Server implements Runnable {
+	public Logger logger = LoggerFactory.getLogger(Server.class);
 
 	public static void main(String[] args){
 		Server server = new Server();
@@ -83,6 +88,10 @@ public class Server implements Runnable {
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
+				attributes.put("min_version_major", Util.getMinMajorVersion());
+				attributes.put("min_version_minor", Util.getMinMinorVersion());
+				attributes.put("version_major", Config.majorVersion);
+				attributes.put("version_minor", Config.minorVersion);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 					
 				String address = Util.getAddresses().get(0);
@@ -153,6 +162,10 @@ public class Server implements Runnable {
 				attributes.put("title", "Participate");
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
+				attributes.put("min_version_major", Util.getMinMajorVersion());
+				attributes.put("min_version_minor", Util.getMinMinorVersion());
+				attributes.put("version_major", Config.majorVersion);
+				attributes.put("version_minor", Config.minorVersion);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				return modelAndView(attributes, "participate.html");
 			}
@@ -165,6 +178,10 @@ public class Server implements Runnable {
 				attributes.put("title", "Technical");
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());	
+				attributes.put("min_version_major", Util.getMinMajorVersion());
+				attributes.put("min_version_minor", Util.getMinMinorVersion());
+				attributes.put("version_major", Config.majorVersion);
+				attributes.put("version_minor", Config.minorVersion);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				attributes.put("house_edge", Config.houseEdge);
 				attributes.put("max_profit", Config.maxProfit);
@@ -187,6 +204,10 @@ public class Server implements Runnable {
 				attributes.put("title", "Balances");
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
+				attributes.put("min_version_major", Util.getMinMajorVersion());
+				attributes.put("min_version_minor", Util.getMinMinorVersion());
+				attributes.put("version_major", Config.majorVersion);
+				attributes.put("version_minor", Config.minorVersion);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				Database db = Database.getInstance();
 				ResultSet rs = db.executeQuery("select address,amount as balance,amount*100.0/(select sum(amount) from balances) as share from balances where asset='CHA' group by address order by amount desc;");
@@ -217,6 +238,10 @@ public class Server implements Runnable {
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
+				attributes.put("min_version_major", Util.getMinMajorVersion());
+				attributes.put("min_version_minor", Util.getMinMinorVersion());
+				attributes.put("version_major", Config.majorVersion);
+				attributes.put("version_minor", Config.minorVersion);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				String address = Util.getAddresses().get(0);
@@ -400,6 +425,10 @@ public class Server implements Runnable {
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
+				attributes.put("min_version_major", Util.getMinMajorVersion());
+				attributes.put("min_version_minor", Util.getMinMinorVersion());
+				attributes.put("version_major", Config.majorVersion);
+				attributes.put("version_minor", Config.minorVersion);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				String address = Util.getAddresses().get(0);
@@ -520,7 +549,26 @@ public class Server implements Runnable {
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
+				attributes.put("min_version_major", Util.getMinMajorVersion());
+				attributes.put("min_version_minor", Util.getMinMinorVersion());
+				attributes.put("version_major", Config.majorVersion);
+				attributes.put("version_minor", Config.minorVersion);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
+				
+				if (request.queryParams().contains("form") && request.queryParams("form").equals("delete")) {
+					ECKey deleteKey = null;
+					String deleteAddress = request.queryParams("address");
+					for (ECKey key : blocks.wallet.getKeys()) {
+						if (key.toAddress(blocks.params).toString().equals(deleteAddress)) {
+							deleteKey = key;
+						}
+					}
+					if (deleteKey != null) {
+						logger.info("Deleting private key");
+						blocks.wallet.removeKey(deleteKey);
+					}
+					attributes.put("success", "Your private key has been deleted. You can no longer transact from this address.");
+				}
 				
 				String address = Util.getAddresses().get(0);
 				request.session(true);
@@ -663,6 +711,10 @@ public class Server implements Runnable {
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
+				attributes.put("min_version_major", Util.getMinMajorVersion());
+				attributes.put("min_version_minor", Util.getMinMinorVersion());
+				attributes.put("version_major", Config.majorVersion);
+				attributes.put("version_minor", Config.minorVersion);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				String address = Util.getAddresses().get(0);
@@ -783,6 +835,10 @@ public class Server implements Runnable {
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
+				attributes.put("min_version_major", Util.getMinMajorVersion());
+				attributes.put("min_version_minor", Util.getMinMinorVersion());
+				attributes.put("version_major", Config.majorVersion);
+				attributes.put("version_minor", Config.minorVersion);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 
 				String address = Util.getAddresses().get(0);
@@ -901,6 +957,10 @@ public class Server implements Runnable {
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
+				attributes.put("min_version_major", Util.getMinMajorVersion());
+				attributes.put("min_version_minor", Util.getMinMinorVersion());
+				attributes.put("version_major", Config.majorVersion);
+				attributes.put("version_minor", Config.minorVersion);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				String address = Util.getAddresses().get(0);
