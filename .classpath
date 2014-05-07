@@ -24,5 +24,6 @@
 	<classpathentry kind="lib" path="./resources/jars/freemarker.jar"/>
 	<classpathentry kind="lib" path="./resources/jars/jsonrpc4j-1.0.jar"/>
 	<classpathentry kind="lib" path="./resources/jars/portlet-api-2.0-r12.jar"/>
+	<classpathentry kind="lib" path="./resources/jars/java-json.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -21,6 +21,8 @@ public class JsonRpcTest {
 				jsonRpcHttpClient);
 
 		System.out.println(service.getChancecoinBalance("1BckY64TE6VrjVcGMizYBE7gt22axnq6CM"));
+		System.out.println(service.getSends("15QN22d2nzNM2FE9dyPrwAdLfxUkgavSUY"));
+		System.out.println(service.getReceives("15QN22d2nzNM2FE9dyPrwAdLfxUkgavSUY"));
 	}
 
 	public void teardown() throws Exception {
@@ -30,9 +32,9 @@ public class JsonRpcTest {
 	public static void main(String args[]) {
 		JsonRpcTest test = new JsonRpcTest();
 		try {
-			test.setup();
+			//test.setup();
 			test.runJsonRpcHttpClient();
-			test.teardown();
+			//test.teardown();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
