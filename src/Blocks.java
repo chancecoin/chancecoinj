@@ -64,12 +64,14 @@ public class Blocks implements Runnable {
 	public Boolean working = false;
 	public Boolean parsing = false;
 	public Integer parsingBlock = 0;
+	public Integer versionCheck = 0;
 	
 	public static Blocks getInstanceAndWait() {
 		if(instance == null) {
 			instance = new Blocks();
 			instance.init();
 		} 
+		instance.versionCheck();
 		instance.follow();
 		return instance;
 	}
@@ -79,16 +81,37 @@ public class Blocks implements Runnable {
 			instance = new Blocks();
 			instance.init();
 		} 
+		instance.versionCheck();
 		new Thread() { public void run() {instance.follow();}}.start();
 		return instance;
 	}
 
+	public void versionCheck() {
+		versionCheck(false);
+	}
+	public void versionCheck(Boolean force) {
+		if (versionCheck--<0 || force) {
+			versionCheck = 100;
+			Integer minMajorVersion = Util.getMinMajorVersion();
+			Integer minMinorVersion = Util.getMinMinorVersion();
+			if (Config.majorVersion<minMajorVersion || (Config.majorVersion.equals(minMajorVersion) && Config.minorVersion<minMinorVersion)) {
+				logger.info("Version is out of date, updating now");
+		        try {
+		            Runtime.getRuntime().exec("java -jar update/update.jar");
+		        } catch (Exception ex) {
+		            ex.printStackTrace();
+		        }
+		        System.exit(0);
+			}
+		}
+	}
+	
 	@Override
 	public void run() {
 		while (true) {
 			Blocks.getInstance();
 			try {
-				logger.info("looping Blocks");
+				logger.info("Looping Blocks");
 				Thread.sleep(1000*60); //once a minute, we run blocks.follow()
 			} catch (InterruptedException e) {
 				System.out.println(e.toString());
@@ -140,7 +163,9 @@ public class Blocks implements Runnable {
 		follow(false);
 	}
 	public void follow(Boolean force) {
+		logger.info("Working status: "+working);
 		if (!working || force) {
+			logger.info("Following new blocks");
 			if (!force) {
 				working = true;
 			}
@@ -209,7 +234,7 @@ public class Blocks implements Runnable {
 	}
 	
 	public void importBlock(Block block, Integer blockHeight) {
-		logger.info("Block height: "+blockHeight);
+		logger.info("Importing block "+blockHeight);
 		Database db = Database.getInstance();
 		ResultSet rs = db.executeQuery("select * from blocks where block_hash='"+block.getHashAsString()+"';");
 		try {
@@ -406,19 +431,7 @@ public class Blocks implements Runnable {
 			}
 		}
 	}
-		
-	public void recreateDatabase() {
-		Database db = Database.getInstance();
-		try {
-			db.connection.close();
-		} catch (SQLException e) {
-		}
-		File dbFile = new File(db.dbFile);
-		dbFile.renameTo(new File("resources/db/" + Config.appName.toLowerCase()+"-"+Config.majorVersionDB.toString()+(Long.toString(System.currentTimeMillis()))+".db"));		
-		db.init();
-		createTables();
-	}
-	
+			
 	public void createTables() {
 		Database db = Database.getInstance();
 		try {

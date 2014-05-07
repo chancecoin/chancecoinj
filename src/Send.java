@@ -24,7 +24,7 @@ import com.google.bitcoin.core.Transaction;
 import com.google.common.primitives.Ints;
 
 public class Send {
-    static Logger logger = LoggerFactory.getLogger(Bet.class);
+    static Logger logger = LoggerFactory.getLogger(Send.class);
 	public static Integer length = 8+8;
 	public static Integer id = 0;
 	

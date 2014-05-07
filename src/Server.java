@@ -42,7 +42,6 @@ public class Server implements Runnable {
 
 	public void init() {
 		//start Blocks thread
-		Blocks.getInstance().follow();
 		Blocks blocks = new Blocks();
 		Thread blocksThread = new Thread(blocks);
 		blocksThread.setDaemon(true);
@@ -92,6 +91,7 @@ public class Server implements Runnable {
 				attributes.put("min_version_minor", Util.getMinMinorVersion());
 				attributes.put("version_major", Config.majorVersion);
 				attributes.put("version_minor", Config.minorVersion);
+				blocks.versionCheck(true);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 					
 				String address = Util.getAddresses().get(0);
@@ -166,6 +166,7 @@ public class Server implements Runnable {
 				attributes.put("min_version_minor", Util.getMinMinorVersion());
 				attributes.put("version_major", Config.majorVersion);
 				attributes.put("version_minor", Config.minorVersion);
+				Blocks.getInstance().versionCheck(true);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				return modelAndView(attributes, "participate.html");
 			}
@@ -182,6 +183,7 @@ public class Server implements Runnable {
 				attributes.put("min_version_minor", Util.getMinMinorVersion());
 				attributes.put("version_major", Config.majorVersion);
 				attributes.put("version_minor", Config.minorVersion);
+				Blocks.getInstance().versionCheck(true);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				attributes.put("house_edge", Config.houseEdge);
 				attributes.put("max_profit", Config.maxProfit);
@@ -208,6 +210,7 @@ public class Server implements Runnable {
 				attributes.put("min_version_minor", Util.getMinMinorVersion());
 				attributes.put("version_major", Config.majorVersion);
 				attributes.put("version_minor", Config.minorVersion);
+				Blocks.getInstance().versionCheck(true);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				Database db = Database.getInstance();
 				ResultSet rs = db.executeQuery("select address,amount as balance,amount*100.0/(select sum(amount) from balances) as share from balances where asset='CHA' group by address order by amount desc;");
@@ -242,6 +245,7 @@ public class Server implements Runnable {
 				attributes.put("min_version_minor", Util.getMinMinorVersion());
 				attributes.put("version_major", Config.majorVersion);
 				attributes.put("version_minor", Config.minorVersion);
+				Blocks.getInstance().versionCheck(true);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				String address = Util.getAddresses().get(0);
@@ -429,6 +433,7 @@ public class Server implements Runnable {
 				attributes.put("min_version_minor", Util.getMinMinorVersion());
 				attributes.put("version_major", Config.majorVersion);
 				attributes.put("version_minor", Config.minorVersion);
+				Blocks.getInstance().versionCheck(true);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				String address = Util.getAddresses().get(0);
@@ -553,6 +558,7 @@ public class Server implements Runnable {
 				attributes.put("min_version_minor", Util.getMinMinorVersion());
 				attributes.put("version_major", Config.majorVersion);
 				attributes.put("version_minor", Config.minorVersion);
+				Blocks.getInstance().versionCheck(true);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("delete")) {
@@ -715,6 +721,7 @@ public class Server implements Runnable {
 				attributes.put("min_version_minor", Util.getMinMinorVersion());
 				attributes.put("version_major", Config.majorVersion);
 				attributes.put("version_minor", Config.minorVersion);
+				Blocks.getInstance().versionCheck(true);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				String address = Util.getAddresses().get(0);
@@ -839,6 +846,7 @@ public class Server implements Runnable {
 				attributes.put("min_version_minor", Util.getMinMinorVersion());
 				attributes.put("version_major", Config.majorVersion);
 				attributes.put("version_minor", Config.minorVersion);
+				Blocks.getInstance().versionCheck(true);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 
 				String address = Util.getAddresses().get(0);
@@ -961,6 +969,7 @@ public class Server implements Runnable {
 				attributes.put("min_version_minor", Util.getMinMinorVersion());
 				attributes.put("version_major", Config.majorVersion);
 				attributes.put("version_minor", Config.minorVersion);
+				Blocks.getInstance().versionCheck(true);
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				String address = Util.getAddresses().get(0);

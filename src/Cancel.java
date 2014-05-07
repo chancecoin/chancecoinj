@@ -26,7 +26,7 @@ import com.google.bitcoin.core.Transaction;
 import com.google.common.primitives.Ints;
 
 public class Cancel {
-    static Logger logger = LoggerFactory.getLogger(Bet.class);
+    static Logger logger = LoggerFactory.getLogger(Cancel.class);
 	public static Integer length = 32;
 	public static Integer id = 70;
 	
