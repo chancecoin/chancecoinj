@@ -6,6 +6,8 @@
 //TODO: better error messages for transactions
 //TODO: make transactions keep retrying
 //TODO: more information on fees
+//TODO: every address should be a link to a chancecoin wallet
+//TODO: chancecoin wallet should list all types of transactions maybe?
 public class Chancecoin {
 	public static void main(String[] args) {
 		Blocks blocks = Blocks.getInstance();
