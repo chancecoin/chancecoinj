@@ -24,6 +24,13 @@
 										<button type="submit" class="btn btn-default">Delete this address</button>
 								</div>
 						</form>
+						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
+								<div class="input-group">
+										<input type="hidden" name="form" value="reimport">
+										<input type="hidden" name="address" value="${address}">
+										<button type="submit" class="btn btn-default">Reimport transactions</button>
+								</div>
+						</form>
 				</div>
 				<div class="col-xs-4 segment one-third">
 						<h2>Import address</h2>

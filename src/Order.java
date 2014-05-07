@@ -256,7 +256,7 @@ public class Order {
 						Util.credit(tx0Address, forwardAsset, forwardAmount, "Expired order credit", "", tx1BlockIndex);
 					}
 				}
-				ResultSet rstx1Order = db.executeQuery("select * from orders where validity='valid' and tx_index='"+tx1Index+"';");
+				ResultSet rstx1Order = db.executeQuery("select * from orders where tx_index='"+tx1Index+"';");
 				if (rstx1Order.next()) {
 					Integer tx1OrderTimeLeft = rstx1Order.getInt("expire_index") - Util.getLastBlock();
 					BigInteger tx1OrderGiveRemaining = BigInteger.valueOf(rstx1Order.getLong("give_remaining"));

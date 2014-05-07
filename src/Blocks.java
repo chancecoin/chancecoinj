@@ -70,8 +70,8 @@ public class Blocks implements Runnable {
 		if(instance == null) {
 			instance = new Blocks();
 			instance.init();
+			instance.versionCheck();
 		} 
-		instance.versionCheck();
 		instance.follow();
 		return instance;
 	}
@@ -80,29 +80,23 @@ public class Blocks implements Runnable {
 		if(instance == null) {
 			instance = new Blocks();
 			instance.init();
+			instance.versionCheck();
 		} 
-		instance.versionCheck();
 		new Thread() { public void run() {instance.follow();}}.start();
 		return instance;
 	}
 
 	public void versionCheck() {
-		versionCheck(false);
-	}
-	public void versionCheck(Boolean force) {
-		if (versionCheck--<0 || force) {
-			versionCheck = 100;
-			Integer minMajorVersion = Util.getMinMajorVersion();
-			Integer minMinorVersion = Util.getMinMinorVersion();
-			if (Config.majorVersion<minMajorVersion || (Config.majorVersion.equals(minMajorVersion) && Config.minorVersion<minMinorVersion)) {
-				logger.info("Version is out of date, updating now");
-		        try {
-		            Runtime.getRuntime().exec("java -jar update/update.jar");
-		        } catch (Exception ex) {
-		            ex.printStackTrace();
-		        }
-		        System.exit(0);
-			}
+		Integer minMajorVersion = Util.getMinMajorVersion();
+		Integer minMinorVersion = Util.getMinMinorVersion();
+		if (Config.majorVersion<minMajorVersion || (Config.majorVersion.equals(minMajorVersion) && Config.minorVersion<minMinorVersion)) {
+			logger.info("Version is out of date, updating now");
+	        try {
+	            Runtime.getRuntime().exec("java -jar update/update.jar");
+	        } catch (Exception ex) {
+	            ex.printStackTrace();
+	        }
+	        System.exit(0);
 		}
 	}
 	
