@@ -646,14 +646,16 @@ public class Blocks implements Runnable {
 		try {
 			tx.signInputs(SigHash.ALL, wallet);
 			//System.out.println(tx);
+			Blocks blocks = Blocks.getInstance();
 			//blocks.wallet.commitTx(txBet);
-			ListenableFuture<Transaction> future = peerGroup.broadcastTransaction(tx);
+			ListenableFuture<Transaction> future = null;
 			try {
-				future.get(60, TimeUnit.SECONDS);
+				future = peerGroup.broadcastTransaction(tx);
+				//future.get(60, TimeUnit.SECONDS);
 				return true;
-			} catch (TimeoutException e) {
-				logger.error(e.toString());
-				future.cancel(true);
+			//} catch (TimeoutException e) {
+			//	logger.error(e.toString());
+			//	future.cancel(true);
 			} catch (Exception e) {
 				logger.error(e.toString());
 			}
