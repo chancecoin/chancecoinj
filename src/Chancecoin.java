@@ -5,6 +5,7 @@
 //TODO: make it so when you make a transaction, it automatically shows the pending transaction like blockchain.info
 //TODO: better error messages for transactions
 //TODO: make transactions keep retrying
+//TODO: more information on fees
 public class Chancecoin {
 	public static void main(String[] args) {
 		Blocks blocks = Blocks.getInstance();

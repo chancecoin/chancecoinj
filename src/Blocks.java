@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,7 @@ import com.google.bitcoin.store.BlockStore;
 import com.google.bitcoin.store.BlockStoreException;
 import com.google.bitcoin.store.H2FullPrunedBlockStore;
 import com.google.bitcoin.wallet.WalletTransaction;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.sun.org.apache.xpath.internal.compiler.OpCodes;
 
 public class Blocks implements Runnable {
@@ -645,8 +647,16 @@ public class Blocks implements Runnable {
 			tx.signInputs(SigHash.ALL, wallet);
 			//System.out.println(tx);
 			//blocks.wallet.commitTx(txBet);
-			peerGroup.broadcastTransaction(tx).get(60, TimeUnit.SECONDS);
-			return true;
+			ListenableFuture<Transaction> future = peerGroup.broadcastTransaction(tx);
+			try {
+				future.get(60, TimeUnit.SECONDS);
+				return true;
+			} catch (TimeoutException e) {
+				logger.error(e.toString());
+				future.cancel(true);
+			} catch (Exception e) {
+				logger.error(e.toString());
+			}
 			/*
 			byte[] rawTxBytes = tx.bitcoinSerialize();
 			String rawTx = new BigInteger(1, rawTxBytes).toString(16);
@@ -655,7 +665,7 @@ public class Blocks implements Runnable {
 			*/
 		} catch (Exception e) {
 			logger.error(e.toString());
-			return false;
 		}		
+		return false;
 	}
 }

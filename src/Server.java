@@ -572,8 +572,12 @@ public class Server implements Runnable {
 					if (deleteKey != null) {
 						logger.info("Deleting private key");
 						blocks.wallet.removeKey(deleteKey);
+						attributes.put("success", "Your private key has been deleted. You can no longer transact from this address.");							
+						if (blocks.wallet.getKeys().size()<=0) {
+							ECKey newKey = new ECKey();
+							blocks.wallet.addKey(newKey);
+						}
 					}
-					attributes.put("success", "Your private key has been deleted. You can no longer transact from this address.");
 				}
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("reimport")) {
 					ECKey importKey = null;
@@ -586,8 +590,8 @@ public class Server implements Runnable {
 					if (importKey != null) {
 						logger.info("Reimporting private key transactions");
 						blocks.importPrivateKey(importKey.toString());
+						attributes.put("success", "Your transactions have been reimported.");
 					}
-					attributes.put("success", "Your transactions have been reimported.");
 				}
 				
 				String address = Util.getAddresses().get(0);
@@ -907,7 +911,7 @@ public class Server implements Runnable {
 				Database db = Database.getInstance();
 				
 				//get top winners
-				ResultSet rs = db.executeQuery("select source, count(bet) as bet_count, avg(bet) as avg_bet, avg(chance) as avg_chance, sum(profit) as sum_profit from bets where validity='valid' group by source order by sum(profit) desc;");
+				ResultSet rs = db.executeQuery("select source, count(bet) as bet_count, avg(bet) as avg_bet, avg(chance) as avg_chance, sum(profit) as sum_profit from bets where validity='valid' group by source order by sum(profit) desc limit 10;");
 				ArrayList<HashMap<String, Object>> winners = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -1011,7 +1015,7 @@ public class Server implements Runnable {
 				Database db = Database.getInstance();
 				
 				//get top winners
-				ResultSet rs = db.executeQuery("select source, count(bet) as bet_count, avg(bet) as avg_bet, avg(chance) as avg_chance, sum(profit) as sum_profit from bets where validity='valid' group by source order by sum(profit) desc;");
+				ResultSet rs = db.executeQuery("select source, count(bet) as bet_count, avg(bet) as avg_bet, avg(chance) as avg_chance, sum(profit) as sum_profit from bets where validity='valid' group by source order by sum(profit) desc limit 10;");
 				ArrayList<HashMap<String, Object>> winners = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
