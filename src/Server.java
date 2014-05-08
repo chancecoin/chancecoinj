@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
+import spark.Route;
 import spark.Spark;
 import spark.template.freemarker.FreeMarkerRoute;
 
@@ -70,6 +71,12 @@ public class Server implements Runnable {
 		} catch (Exception e) {
 		}
 
+		get(new Route("/supply") {
+			@Override
+			public Object handle(Request request, Response response) {
+				return Util.chaSupply().toString();
+			}
+		});
 		get(new FreeMarkerRoute("/") {
 			@Override
 			public ModelAndView handle(Request request, Response response) {

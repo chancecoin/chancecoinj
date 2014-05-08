@@ -20,7 +20,8 @@
 						<p>See <a href="/balances">all balances</a>.</p>
 				</div>
 				<div class="col-xs-4 segment one-third">
-						<h2>Import address</h2>
+						<h2>Import private key</h2>
+						<p>Your private key should be in WIF format. For more information about where to find this, see the <a href="/participate">Participate</a> page.</p>
 						<form action="/wallet" method="post">
 								<input type="hidden" name="form" value="import">
 
@@ -31,7 +32,7 @@
 
 								<div class="input-group">
 									<span class="input-group-btn">
-										<button class="btn btn-default" type="submit">Import address</button>
+										<button class="btn btn-default" type="submit">Import private key</button>
 									</span>
 								</div>
 						</form>
@@ -76,7 +77,7 @@
 										<#if burns??>
 										<#list burns as tx>
 										<tr>
-												<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["source"] }</a></td>
+												<td>${ tx["source"] }</td>
 												<td>${ tx["burned"]?string(",##0.00000000") }</td>
 												<td>${ tx["earned"]?string(",##0.00000000") }</td>
 										</tr>
@@ -100,8 +101,8 @@
 										<#if sends??>
 										<#list sends as tx>
 										<tr>
-												<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["source"]?substring(0,10) }...</a></td>
-												<td><a href="http://blockchain.info/tx/${tx["tx_hash"]}">${ tx["destination"]?substring(0,10) }...</a></td>
+												<td>${ tx["source"]?substring(0,10) }...</td>
+												<td>${ tx["destination"]?substring(0,10) }...</td>
 												<td>${ tx["amount"]?string(",##0.00000000") }</td>
 										</tr>
 										</#list>

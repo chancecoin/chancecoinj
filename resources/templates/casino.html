@@ -71,7 +71,7 @@
 				    </thead>
 						<#list winners as winner>
 								<tr>
-										<td><a href="http://blockchain.info/address/${winner["source"]}">${winner["source"]}</a></td>
+										<td><a href="/wallet?address=${winner["source"]}">${winner["source"]}</a></td>
 										<td>${winner["bet_count"]}</td>
 										<td>${winner["avg_bet"]} CHA</td>
 										<td>${winner["avg_chance"]}%</td>
@@ -105,7 +105,7 @@
 				    <tbody>
 							<#list bets as bet>
 									<tr>
-											<td><a href="http://blockchain.info/tx/${bet["tx_hash"]}">${bet["source"]}</a></td>
+											<td><a href="/wallet?address=${bet["source"]}">${bet["source"]}</a></td>
 											<td>${bet["block_time"]}</td>
 											<td>${bet["bet"]} CHA</td>
 											<td>${bet["chance"]}%</td>
