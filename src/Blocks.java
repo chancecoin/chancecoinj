@@ -561,42 +561,49 @@ public class Blocks implements Runnable {
 
 	public String importPrivateKey(String privateKey) {
 		DumpedPrivateKey dumpedPrivateKey;
+		String address = "";
+		ECKey key = null;
+		logger.info("Importing private key");
 		try {
 			dumpedPrivateKey = new DumpedPrivateKey(params, privateKey);
-			ECKey key = dumpedPrivateKey.getKey();
-			String address = key.toAddress(params).toString();
-			logger.info("Importing address "+address);
+			key = dumpedPrivateKey.getKey();
+			address = key.toAddress(params).toString();
+		} catch (AddressFormatException e) {
+			//If it's not a private key, maybe it's an address
+			address = privateKey;
+		}
+		logger.info("Importing address "+address);
+		if (key!=null) {
 			wallet.removeKey(key);
 			wallet.addKey(key);
-			List<Map.Entry<String,String>> txsInfo = Util.infoGetTransactions(address);
-			BigInteger balance = BigInteger.ZERO;
-			BigInteger balanceSent = BigInteger.ZERO;
-			BigInteger balanceReceived = BigInteger.ZERO;
-			Integer transactionCount = 0;
-			for (Map.Entry<String,String> txHashBlockHash : txsInfo) {
-				String txHash = txHashBlockHash.getKey();
-				String blockHash = txHashBlockHash.getValue();
-				try {
-					Block block = peerGroup.getDownloadPeer().getBlock(new Sha256Hash(blockHash)).get();
-					List<Transaction> txs = block.getTransactions();
-					for (Transaction tx : txs) {
-						if (tx.getHashAsString().equals(txHash)){// && wallet.isPendingTransactionRelevant(tx)) {
-							transactionCount ++;
-							wallet.receivePending(tx, peerGroup.getDownloadPeer().downloadDependencies(tx).get());
-							balanceReceived = balanceReceived.add(tx.getValueSentToMe(wallet));
-							balanceSent = balanceSent.add(tx.getValueSentFromMe(wallet));
-							balance = balance.add(tx.getValueSentToMe(wallet));
-							balance = balance.subtract(tx.getValueSentFromMe(wallet));
-						}
-					}
-				} catch (InterruptedException e) {
-				} catch (ExecutionException e) {				
-				}
-			}	
-			return address;
-		} catch (AddressFormatException e) {
 		}
-		return null;
+		List<Map.Entry<String,String>> txsInfo = Util.infoGetTransactions(address);
+		BigInteger balance = BigInteger.ZERO;
+		BigInteger balanceSent = BigInteger.ZERO;
+		BigInteger balanceReceived = BigInteger.ZERO;
+		Integer transactionCount = 0;
+		for (Map.Entry<String,String> txHashBlockHash : txsInfo) {
+			String txHash = txHashBlockHash.getKey();
+			String blockHash = txHashBlockHash.getValue();
+			try {
+				Block block = peerGroup.getDownloadPeer().getBlock(new Sha256Hash(blockHash)).get();
+				List<Transaction> txs = block.getTransactions();
+				for (Transaction tx : txs) {
+					if (tx.getHashAsString().equals(txHash)){// && wallet.isPendingTransactionRelevant(tx)) {
+						transactionCount ++;
+						wallet.receivePending(tx, peerGroup.getDownloadPeer().downloadDependencies(tx).get());
+						balanceReceived = balanceReceived.add(tx.getValueSentToMe(wallet));
+						balanceSent = balanceSent.add(tx.getValueSentFromMe(wallet));
+						balance = balance.add(tx.getValueSentToMe(wallet));
+						balance = balance.subtract(tx.getValueSentFromMe(wallet));
+					}
+				}
+			} catch (InterruptedException e) {
+			} catch (ExecutionException e) {				
+			}
+		}
+		logger.info("Address balance: "+balance);
+		return address;
 	}
 	
 	public Transaction transaction(String source, String destination, BigInteger btcAmount, BigInteger fee, String dataString) {

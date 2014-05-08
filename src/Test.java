@@ -10,7 +10,7 @@
 //TODO: automatically buy CHA at best price and bet
 //TODO: test betting with 0 bet size
 //TODO: other games
-
+//TODO: easy function to allow you to get escrow back easily
 public class Test {
 
 	public static void main(String[] args) {

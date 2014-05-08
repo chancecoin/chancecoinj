@@ -65,6 +65,30 @@ public class Bet {
 		} catch (SQLException e) {	
 		}
 	}
+	public static String validity(String source, BigInteger bet, Double chance, Double payout) {
+		if (!source.equals("")) {
+			if (bet.compareTo(BigInteger.ZERO)>0) {
+				if (chance>0.0 && chance<100.0) {
+					
+				} else {
+					return "Please specify a chance between 0 and 100";
+				}
+			} else {
+				return "Please bet more than zero.";
+			}
+		} else {
+			return "Please specify a source address";			
+		}
+		if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-Config.houseEdge)),6)) {
+			if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
+				BigInteger chaSupply = Util.chaSupply();
+				if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
+					return "valid";
+				}
+			}
+		}
+		return "invalid";
+	}
 	public static Transaction create(String source, BigInteger bet, Double chance, Double payout) {
 		if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-Config.houseEdge)),6)) {
 			if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {

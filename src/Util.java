@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -19,8 +20,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +38,7 @@ import com.google.bitcoin.wallet.WalletTransaction;
 
 
 public class Util {
+    static Logger logger = LoggerFactory.getLogger(Util.class);
 
 	public static String getPage(String url_string) {
 		return getPage(url_string, 1);
@@ -101,6 +108,7 @@ public class Util {
 
 	public static List<Map.Entry<String,String>> infoGetTransactions(String address) {
 		List<Map.Entry<String,String>> txs = new ArrayList<Map.Entry<String,String>>();
+		/*
 		String result = getPage("https://blockexplorer.com/q/mytransactions/"+address);
 		try {
 			Map<String, Object> map = (new ObjectMapper()).readValue(result, new TypeReference<Map<String,Object>>() { });
@@ -110,6 +118,17 @@ public class Util {
 			}
 		} catch (Exception e) {
 		}
+		*/
+		String result = getPage("https://blockexplorer.com/address/"+address);
+		Pattern p = Pattern.compile("href=\"/tx/(.*?)#.*?/block/(.*?)\"", Pattern.DOTALL);
+		Matcher m = p.matcher(result);
+		while (m.find()) {
+			logger.info(m.group(1));
+			SimpleEntry tx = new AbstractMap.SimpleEntry(m.group(1), m.group(2));
+			if (!txs.contains(tx)) {
+				txs.add(tx);		
+			}
+		}		
 		return txs;
 	}
 
