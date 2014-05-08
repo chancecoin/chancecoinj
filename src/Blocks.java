@@ -551,6 +551,10 @@ public class Blocks implements Runnable {
 		} catch (AddressFormatException e) {
 			//If it's not a private key, maybe it's an address
 			address = privateKey;
+			try {
+				wallet.addWatchedAddress(new Address(params, address));
+			} catch (AddressFormatException e1) {
+			}
 		}
 		logger.info("Importing address "+address);
 		if (key!=null) {
