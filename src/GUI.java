@@ -60,8 +60,30 @@ public class GUI extends Application {
 				updateMessage("Loading Chancecoin");
 				
 				// start Blocks
-				Blocks.getInstanceAndWait();
-
+				final Blocks blocks = Blocks.getInstanceFresh();
+				
+				new Thread(blocks) { 
+					public void run() {
+						while(blocks.chancecoinBlock == 0 || blocks.chancecoinBlock < blocks.bitcoinBlock) {
+							if (blocks.chancecoinBlock > 0) {
+								updateMessage("Downloaded block " + blocks.chancecoinBlock + " out of " + blocks.bitcoinBlock);
+							} else {
+								updateMessage(blocks.statusMessage);		
+							}
+							try {
+								Thread.sleep(1000);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						
+					}
+				}.start();
+				blocks.init();
+				blocks.versionCheck();
+				blocks.follow();
+				
 				// start Server
 				Server server = new Server();
 				Thread serverThread = new Thread(server);
