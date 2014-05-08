@@ -67,6 +67,16 @@ public class Blocks implements Runnable {
 	public Boolean parsing = false;
 	public Integer parsingBlock = 0;
 	public Integer versionCheck = 0;
+	public Integer bitcoinBlock = 0;
+	public Integer chancecoinBlock = 0;
+	public String statusMessage = "";
+	
+	public static Blocks getInstanceFresh() {
+		if(instance == null) {
+			instance = new Blocks();
+		} 
+		return instance;
+	}
 	
 	public static Blocks getInstanceAndWait() {
 		if(instance == null) {
@@ -92,7 +102,8 @@ public class Blocks implements Runnable {
 		Integer minMajorVersion = Util.getMinMajorVersion();
 		Integer minMinorVersion = Util.getMinMinorVersion();
 		if (Config.majorVersion<minMajorVersion || (Config.majorVersion.equals(minMajorVersion) && Config.minorVersion<minMinorVersion)) {
-			logger.info("Version is out of date, updating now");
+			statusMessage = "Version is out of date, updating now"; 
+			logger.info(statusMessage);
 	        try {
 	            Runtime.getRuntime().exec("java -jar update/update.jar");
 	        } catch (Exception ex) {
@@ -120,10 +131,12 @@ public class Blocks implements Runnable {
 		params = MainNetParams.get();
 		try {
 			if ((new File(walletFile)).exists()) {
-				logger.info("Found wallet file");
+				statusMessage = "Found wallet file"; 
+				logger.info(statusMessage);
 				wallet = Wallet.loadFromFile(new File(walletFile));
 			} else {
-				logger.info("Creating new wallet file");
+				statusMessage = "Creating new wallet file"; 
+				logger.info(statusMessage);
 				wallet = new Wallet(params);
 				ECKey newKey = new ECKey();
 				newKey.setCreationTimeSeconds(Config.burnCreationTime);
@@ -131,12 +144,14 @@ public class Blocks implements Runnable {
 			}
 			String fileBTCdb = Config.dbPath+Config.appName.toLowerCase()+".h2.db";
 			if (!new File(fileBTCdb).exists()) {
-				logger.info("Downloading BTC db");
+				statusMessage = "Downloading Bitcoin Database"; 
+				logger.info(statusMessage);
 				Util.downloadToFile(Config.downloadUrl+Config.appName.toLowerCase()+".h2.db", fileBTCdb);
 			}
 			String fileCHAdb = Database.dbFile;
 			if (!new File(fileCHAdb).exists()) {
-				logger.info("Downloading CHA db");
+				statusMessage = "Downloading CHA db"; 
+				logger.info(statusMessage);
 				Util.downloadToFile(Config.downloadUrl+Config.appName.toLowerCase()+"-"+Config.majorVersionDB.toString()+".db", fileCHAdb);
 		    }
 			blockStore = new H2FullPrunedBlockStore(params, Config.dbPath+Config.appName.toLowerCase(), 2000);
@@ -161,7 +176,8 @@ public class Blocks implements Runnable {
 	public void follow(Boolean force) {
 		logger.info("Working status: "+working);
 		if (!working || force) {
-			logger.info("Following new blocks");
+			statusMessage = "Downloading new blocks";
+			logger.info(statusMessage);
 			if (!force) {
 				working = true;
 			}
@@ -177,7 +193,9 @@ public class Blocks implements Runnable {
 					//traverse new blocks
 					Database db = Database.getInstance();
 					logger.info("Bitcoin block height: "+blockHeight);	
-					logger.info("Chancecoin block height: "+lastBlock);	
+					logger.info("Chancecoin block height: "+lastBlock);
+					bitcoinBlock = blockHeight;
+					chancecoinBlock = lastBlock;
 					Integer blocksToScan = blockHeight - lastBlock;
 					List<Sha256Hash> blockHashes = new ArrayList<Sha256Hash>();
 					
@@ -230,7 +248,8 @@ public class Blocks implements Runnable {
 	}
 	
 	public void importBlock(Block block, Integer blockHeight) {
-		logger.info("Importing block "+blockHeight);
+		statusMessage = "Importing block "+blockHeight;
+		logger.info(statusMessage);
 		Database db = Database.getInstance();
 		ResultSet rs = db.executeQuery("select * from blocks where block_hash='"+block.getHashAsString()+"';");
 		try {
@@ -400,7 +419,8 @@ public class Blocks implements Runnable {
 		Database db = Database.getInstance();
 		ResultSet rsTx = db.executeQuery("select * from transactions where block_index="+blockIndex.toString()+" order by tx_index asc;");
 		parsingBlock = blockIndex;
-		logger.info("Parsing block "+blockIndex.toString());
+		statusMessage = "Parsing block "+blockIndex.toString();
+		logger.info(statusMessage);
 		try {
 			while (rsTx.next()) {
 				Integer txIndex = rsTx.getInt("tx_index");
