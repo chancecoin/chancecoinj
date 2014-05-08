@@ -144,13 +144,13 @@ public class Blocks implements Runnable {
 			}
 			String fileBTCdb = Config.dbPath+Config.appName.toLowerCase()+".h2.db";
 			if (!new File(fileBTCdb).exists()) {
-				statusMessage = "Downloading Bitcoin Database"; 
+				statusMessage = "Downloading BTC database"; 
 				logger.info(statusMessage);
 				Util.downloadToFile(Config.downloadUrl+Config.appName.toLowerCase()+".h2.db", fileBTCdb);
 			}
 			String fileCHAdb = Database.dbFile;
 			if (!new File(fileCHAdb).exists()) {
-				statusMessage = "Downloading CHA db"; 
+				statusMessage = "Downloading CHA database"; 
 				logger.info(statusMessage);
 				Util.downloadToFile(Config.downloadUrl+Config.appName.toLowerCase()+"-"+Config.majorVersionDB.toString()+".db", fileCHAdb);
 		    }
@@ -208,6 +208,7 @@ public class Blocks implements Runnable {
 					for (int i = blockHashes.size()-1; i>=0; i--) { //traverse blocks in reverse order
 						block = peerGroup.getDownloadPeer().getBlock(blockHashes.get(i)).get(30, TimeUnit.SECONDS);
 						blockHeight = blockStore.get(block.getHash()).getHeight();
+						chancecoinBlock = blockHeight;
 						logger.info("Catching Chancecoin up to Bitcoin (block "+blockHeight.toString()+"): "+Util.format((blockHashes.size() - i)/((double) blockHashes.size())*100.0)+"%");	
 						importBlock(block, blockHeight);
 					}

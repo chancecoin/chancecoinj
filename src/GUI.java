@@ -62,11 +62,11 @@ public class GUI extends Application {
 				// start Blocks
 				final Blocks blocks = Blocks.getInstanceFresh();
 				
-				new Thread(blocks) { 
+				Thread progressUpdateThread = new Thread(blocks) { 
 					public void run() {
-						while(blocks.chancecoinBlock == 0 || blocks.chancecoinBlock < blocks.bitcoinBlock) {
+						while(blocks.chancecoinBlock == 0 || blocks.working || blocks.parsing) {
 							if (blocks.chancecoinBlock > 0) {
-								updateMessage("Downloaded block " + blocks.chancecoinBlock + " out of " + blocks.bitcoinBlock);
+								updateMessage("Block " + blocks.chancecoinBlock + "/" + blocks.bitcoinBlock);
 							} else {
 								updateMessage(blocks.statusMessage);		
 							}
@@ -79,7 +79,8 @@ public class GUI extends Application {
 						}
 						
 					}
-				}.start();
+				};
+				progressUpdateThread.start();
 				blocks.init();
 				blocks.versionCheck();
 				blocks.follow();
@@ -92,6 +93,7 @@ public class GUI extends Application {
 				
 				//updateProgress(0,1);
 				Thread.sleep(3000);
+				
 				return null;
 			}
 		};
