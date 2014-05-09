@@ -110,9 +110,9 @@
 
 		<#nested/>
 
-		<div style="position: fixed; bottom: 1em; right: 1em;">
-		<p id="hide_chat"><a href="#" onclick="document.getElementById('CHATBUTTON_CHATBOX').style.display='none'; document.getElementById('hide_chat').style.display='none'; document.getElementById('show_chat').style.display='block';">Hide chat</a></p>
-		<p id="show_chat" style="display: none;"><a href="#" onclick="document.getElementById('CHATBUTTON_CHATBOX').style.display='block'; document.getElementById('show_chat').style.display='none'; document.getElementById('hide_chat').style.display='block';">Show chat</a></p>
+		<div style="position: fixed; bottom: 0em; right: 0em;">
+		<div id="hide_chat" onclick="document.getElementById('is_chat_open').innerHTML='0'; document.getElementById('CHATBUTTON_CHATBOX').style.display='none'; document.getElementById('hide_chat').style.display='none'; document.getElementById('show_chat').style.display='block';"></div>
+		<p id="show_chat" style="display: none;"><a href="#" onclick="document.getElementById('is_chat_open').innerHTML='1'; document.getElementById('CHATBUTTON_CHATBOX').style.display='block'; document.getElementById('show_chat').style.display='none'; document.getElementById('hide_chat').style.display='block';">Show chat</a></p>
 		<iframe name="CHATBUTTON_CHATBOX" id="CHATBUTTON_CHATBOX" src="https://www.chatbutton.com/chatroom/18347632/" width="300" height="300" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no"><a href="https://www.chatbutton.com/chatroom/18347632/">Enter Chat Room</a></iframe>
 		<script type="text/javascript">
 		CHBT_channel="18347632";
@@ -122,7 +122,17 @@
 		<script type="text/javascript" src="https://www.chatbutton.com/c.js">
 		</script>
 		</div>
-
+		<div id="is_chat_open">1</div>
+		<script type="text/javascript">
+			window.onload = function() {
+				if (document.getElementById('is_chat_open').innerHTML == '0') {
+					alert('chat closed');
+					document.getElementById('CHATBUTTON_CHATBOX').style.display='none'; 
+					document.getElementById('hide_chat').style.display='none'; 
+					document.getElementById('show_chat').style.display='block';
+				}
+			}
+		</script>
 	</div>
 
 	<div class="container-fluid footer">

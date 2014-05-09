@@ -170,3 +170,18 @@ blockquote p {
 table {
 	text-align: left;
 }
+
+#hide_chat {
+	width: 17px;
+	height: 17px;
+	top: 5px;
+	left: -2px;
+	position: absolute; 
+	z-index: 100000000; 
+	cursor: pointer;
+	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";       /* IE 8 */
+	filter: alpha(opacity=0);  /* IE 5-7 */
+	-moz-opacity: 0;          /* Netscape */
+	-khtml-opacity: 0;        /* Safari 1.x */
+	opacity: 0;               /* Good browsers */
+}
