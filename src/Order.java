@@ -80,7 +80,7 @@ public class Order {
 		} catch (SQLException e) {	
 		}
 	}
-	public static Transaction create(String source, String giveAsset, BigInteger giveAmount, String getAsset, BigInteger getAmount, BigInteger expiration, BigInteger feeRequired, BigInteger feeProvided) {
+	public static Transaction create(String source, String giveAsset, BigInteger giveAmount, String getAsset, BigInteger getAmount, BigInteger expiration, BigInteger feeRequired, BigInteger feeProvided) throws Exception {
 		if (!source.equals("")) {
 			BigInteger sourceBalance = Util.getBalance(source, giveAsset);
 			Integer giveId = Util.getAssetId(giveAsset);
@@ -109,9 +109,12 @@ public class Order {
 				}
 				Transaction tx = blocks.transaction(source, "", BigInteger.ZERO, feeProvided, dataString);
 				return tx;
+			} else {
+				throw new Exception("Please make your order smaller than your balance.");
 			}
+		} else {
+			throw new Exception("Please specify a source address.");
 		}
-		return null;
 	}
 	public static void match(Integer txIndex) {
 		logger.info("Matching orders");

@@ -276,28 +276,22 @@ public class Server implements Runnable {
 				
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("cancel")) {
 					String txHash = request.queryParams("tx_hash");
-					Transaction tx = Cancel.create(txHash);
-					if (tx!=null) {
-						if (blocks.sendTransaction(tx)) {
-							attributes.put("success", "Your order has been cancelled.");
-						} else {
-							attributes.put("error", "Your transaction timed out and was not received by the Bitcoin network. Please try again.");							
-						}
-					}else{
-						attributes.put("error", "There was a problem with your transaction.");						
+					try {
+						Transaction tx = Cancel.create(txHash);
+						blocks.sendTransaction(tx);
+						attributes.put("success", "Your order has been cancelled.");
+					} catch (Exception e) {
+						attributes.put("error", e.getMessage());
 					}
 				}
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("btcpay")) {
 					String orderMatchId = request.queryParams("order_match_id");
-					Transaction tx = BTCPay.create(orderMatchId);
-					if (tx!=null) {
-						if (blocks.sendTransaction(tx)) {
-							attributes.put("success", "Your BTC payment was successful.");
-						} else {
-							attributes.put("error", "Your transaction timed out and was not received by the Bitcoin network. Please try again.");							
-						}
-					}else{
-						attributes.put("error", "There was a problem with your transaction.");						
+					try {
+						Transaction tx = BTCPay.create(orderMatchId);
+						blocks.sendTransaction(tx);
+						attributes.put("success", "Your payment was successful.");
+					} catch (Exception e) {
+						attributes.put("error", e.getMessage());
 					}
 				}
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("buy")) {
@@ -307,16 +301,13 @@ public class Server implements Runnable {
 					BigInteger quantity = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
 					BigInteger btcQuantity = new BigDecimal(quantity.doubleValue() * price).toBigInteger();
 					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
-					Transaction tx = Order.create(source, "BTC", btcQuantity, "CHA", quantity, expiration, BigInteger.ZERO, BigInteger.ZERO);
-					if (tx!=null) {
-						if (blocks.sendTransaction(tx)) {
-							attributes.put("success", "Thank you for your order.");
-						} else {
-							attributes.put("error", "Your transaction timed out and was not received by the Bitcoin network. Please try again.");							
-						}
-					}else{
-						attributes.put("error", "There was a problem with your transaction.");						
-					}
+					try {
+						Transaction tx = Order.create(source, "BTC", btcQuantity, "CHA", quantity, expiration, BigInteger.ZERO, BigInteger.ZERO);
+						blocks.sendTransaction(tx);
+						attributes.put("success", "Your order was successful.");
+					} catch (Exception e) {
+						attributes.put("error", e.getMessage());
+					}					
 				}
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("sell")) {
 					String source = request.queryParams("source");
@@ -325,15 +316,12 @@ public class Server implements Runnable {
 					BigInteger quantity = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
 					BigInteger btcQuantity = new BigDecimal(quantity.doubleValue() * price).toBigInteger();
 					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
-					Transaction tx = Order.create(source, "CHA", quantity, "BTC", btcQuantity, expiration, BigInteger.ZERO, BigInteger.ZERO);
-					if (tx!=null) {
-						if (blocks.sendTransaction(tx)) {
-							attributes.put("success", "Thank you for your order.");
-						} else {
-							attributes.put("error", "Your transaction timed out and was not received by the Bitcoin network. Please try again.");							
-						}
-					}else{
-						attributes.put("error", "There was a problem with your transaction.");						
+					try {
+						Transaction tx = Order.create(source, "CHA", quantity, "BTC", btcQuantity, expiration, BigInteger.ZERO, BigInteger.ZERO);
+						blocks.sendTransaction(tx);
+						attributes.put("success", "Your order was successful.");
+					} catch (Exception e) {
+						attributes.put("error", e.getMessage());
 					}
 				}
 
@@ -631,15 +619,12 @@ public class Server implements Runnable {
 					String destination = request.queryParams("destination");
 					Double rawQuantity = Double.parseDouble(request.queryParams("quantity"));
 					BigInteger quantity = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
-					Transaction tx = Send.create(source, destination, "CHA", quantity);
-					if (tx!=null) {
-						if (blocks.sendTransaction(tx)) {
-							attributes.put("success", "You sent "+rawQuantity.toString()+" CHA to "+destination+".");
-						} else {
-							attributes.put("error", "Your transaction timed out and was not received by the Bitcoin network. Please try again.");							
-						}
-					}else{
-						attributes.put("error", "There was a problem with your transaction.");						
+					try {
+						Transaction tx = Send.create(source, destination, "CHA", quantity);
+						blocks.sendTransaction(tx);
+						attributes.put("success", "You sent CHA successfully.");
+					} catch (Exception e) {
+						attributes.put("error", e.getMessage());
 					}
 				}
 
@@ -903,15 +888,12 @@ public class Server implements Runnable {
 					Double chance = Double.parseDouble(request.queryParams("chance"));
 					Double payout = Double.parseDouble(request.queryParams("payout"));
 					BigInteger bet = new BigDecimal(rawBet*Config.unit).toBigInteger();
-					Transaction tx = Bet.create(source, bet, chance, payout);
-					if (tx!=null) {
-						if (blocks.sendTransaction(tx)) {
-							attributes.put("success", "Thanks for betting!");
-						} else {
-							attributes.put("error", "Your transaction timed out and was not received by the Bitcoin network. Please try again.");							
-						}
-					}else{
-						attributes.put("error", "There was a problem with your bet.");						
+					try {
+						Transaction tx = Bet.create(source, bet, chance, payout);
+						blocks.sendTransaction(tx);
+						attributes.put("success", "Thank you for betting!");
+					} catch (Exception e) {
+						attributes.put("error", e.getMessage());
 					}
 				}
 				

@@ -49,7 +49,10 @@ public class JsonRpcServiceImpl implements JsonRpcService {
 					dataString = new String(data,"ISO-8859-1");
 				} catch (UnsupportedEncodingException e) {
 				}
-				tx = blocks.transaction(source, destination, BigInteger.valueOf(Config.dustSize), BigInteger.valueOf(Config.minFee), dataString);
+				try {
+					tx = blocks.transaction(source, destination, BigInteger.valueOf(Config.dustSize), BigInteger.valueOf(Config.minFee), dataString);
+				} catch (Exception e) {
+				}
 				return tx;
 			}
 		}

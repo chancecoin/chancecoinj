@@ -87,7 +87,7 @@ public class BTCPay {
 		} catch (SQLException e) {	
 		}
 	}
-	public static Transaction create(String orderMatchId) {
+	public static Transaction create(String orderMatchId) throws Exception {
 		Database db = Database.getInstance();
 		String tx0Hash = orderMatchId.substring(0, 64);
 		String tx1Hash = orderMatchId.substring(64, 128);
@@ -134,11 +134,14 @@ public class BTCPay {
 					btcAmount = btcAmount.max(BigInteger.valueOf(Config.dustSize)); //must send at least dust size
 					Transaction tx = blocks.transaction(source, destination, btcAmount, BigInteger.valueOf(Config.minFee), dataString);
 					return tx;
-					
+				} else {
+					throw new Exception("Please specify an order match that is awaiting payment.");					
 				}
+			} else {
+				throw new Exception("Please specify a valid order match to pay for.");
 			}
 		} catch (SQLException e) {
+			throw new Exception(e.getMessage());
 		}
-		return null;
 	}
 }

@@ -1,8 +1,6 @@
 //TODO: encrypt wallet
 //TODO: easier upgrade process
-//TODO: better splash screen message so user knows what's happening
 //TODO: make it so when you make a transaction, it automatically shows the pending transaction like blockchain.info
-//TODO: better error messages for transactions
 //TODO: make transactions keep retrying
 //TODO: more information on fees
 //TODO: chancecoin wallet should list all types of transactions maybe?

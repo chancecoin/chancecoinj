@@ -118,7 +118,7 @@ public class Blocks implements Runnable {
 		while (true) {
 			Blocks.getInstance();
 			try {
-				logger.info("Looping Blocks");
+				logger.info("Looping blocks");
 				Thread.sleep(1000*60); //once a minute, we run blocks.follow()
 			} catch (InterruptedException e) {
 				System.out.println(e.toString());
@@ -154,6 +154,7 @@ public class Blocks implements Runnable {
 				logger.info(statusMessage);
 				Util.downloadToFile(Config.downloadUrl+Config.appName.toLowerCase()+"-"+Config.majorVersionDB.toString()+".db", fileCHAdb);
 		    }
+			statusMessage = "Downloading Bitcoin blocks";
 			blockStore = new H2FullPrunedBlockStore(params, Config.dbPath+Config.appName.toLowerCase(), 2000);
 			blockChain = new BlockChain(params, wallet, blockStore);
 			peerGroup = new PeerGroup(params, blockChain);
@@ -176,7 +177,6 @@ public class Blocks implements Runnable {
 	public void follow(Boolean force) {
 		logger.info("Working status: "+working);
 		if (!working || force) {
-			statusMessage = "Downloading new blocks";
 			logger.info(statusMessage);
 			if (!force) {
 				working = true;
@@ -209,6 +209,7 @@ public class Blocks implements Runnable {
 						block = peerGroup.getDownloadPeer().getBlock(blockHashes.get(i)).get(30, TimeUnit.SECONDS);
 						blockHeight = blockStore.get(block.getHash()).getHeight();
 						chancecoinBlock = blockHeight;
+						statusMessage = "Catching Chancecoin up to Bitcoin "+Util.format((blockHashes.size() - i)/((double) blockHashes.size())*100.0)+"%";	
 						logger.info("Catching Chancecoin up to Bitcoin (block "+blockHeight.toString()+"): "+Util.format((blockHashes.size() - i)/((double) blockHashes.size())*100.0)+"%");	
 						importBlock(block, blockHeight);
 					}
@@ -612,7 +613,7 @@ public class Blocks implements Runnable {
 		return address;
 	}
 	
-	public Transaction transaction(String source, String destination, BigInteger btcAmount, BigInteger fee, String dataString) {
+	public Transaction transaction(String source, String destination, BigInteger btcAmount, BigInteger fee, String dataString) throws Exception {
 		Transaction tx = new Transaction(params);
 		LinkedList<TransactionOutput> unspentOutputs = wallet.calculateAllSpendCandidates(true);
 		if (destination.equals("") || btcAmount.compareTo(BigInteger.valueOf(Config.dustSize))>=0) {
@@ -670,7 +671,7 @@ public class Blocks implements Runnable {
 			}
 			if (totalInput.compareTo(totalOutput)<0) {
 				logger.info("Not enough inputs. Output: "+totalOutput.toString()+", input: "+totalInput.toString());
-				return null; //not enough inputs
+				throw new Exception("Not enough BTC to cover transaction of "+(totalOutput.doubleValue()/Config.unit)+" BTC.");
 			}
 			BigInteger totalChange = totalInput.subtract(totalOutput);
 				

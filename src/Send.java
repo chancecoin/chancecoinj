@@ -68,7 +68,7 @@ public class Send {
 		} catch (SQLException e) {	
 		}
 	}
-	public static Transaction create(String source, String destination, String asset, BigInteger amount) {
+	public static Transaction create(String source, String destination, String asset, BigInteger amount) throws Exception {
 		if (!source.equals("") && !destination.equals("") && asset.equals("CHA")) {
 			BigInteger sourceBalance = Util.getBalance(source, asset);
 			Integer assetId = Util.getAssetId(asset);
@@ -89,8 +89,11 @@ public class Send {
 				}
 				Transaction tx = blocks.transaction(source, destination, BigInteger.valueOf(Config.dustSize), BigInteger.valueOf(Config.minFee), dataString);
 				return tx;
+			} else {
+				throw new Exception("Please send less than your balance.");
 			}
+		} else {
+			throw new Exception("Please specify a source address and destination address, and only send CHA.");
 		}
-		return null;
 	}
 }

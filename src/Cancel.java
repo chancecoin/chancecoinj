@@ -67,16 +67,16 @@ public class Cancel {
 		} catch (SQLException e) {	
 		}
 	}
-	public static Transaction create(String offerHash) {
+	public static Transaction create(String offerHash) throws Exception {
 		Database db = Database.getInstance();
-		ResultSet rsOrderMatch = db.executeQuery("select * from orders where tx_hash='"+offerHash+"';");
+		ResultSet rsOrder = db.executeQuery("select * from orders where tx_hash='"+offerHash+"';");
 		String source = "";
 		String destination = "";
 		BigInteger btcAmount = BigInteger.ZERO;
 		try {
-			if (rsOrderMatch.next()) {
-				String orderMatchValidity = rsOrderMatch.getString("validity");
-				String orderMatchSource = rsOrderMatch.getString("source");
+			if (rsOrder.next()) {
+				String orderMatchValidity = rsOrder.getString("validity");
+				String orderMatchSource = rsOrder.getString("source");
 				if (orderMatchValidity.equals("valid")) {
 					byte[] offerHashBytes = DatatypeConverter.parseHexBinary(offerHash);
 					Blocks blocks = Blocks.getInstance();
@@ -95,10 +95,14 @@ public class Cancel {
 					source = orderMatchSource;
 					Transaction tx = blocks.transaction(source, "", BigInteger.ZERO, BigInteger.valueOf(Config.minFee), dataString);
 					return tx;
+				} else {
+					throw new Exception("Please specify a valid order to cancel.");
 				}
+			} else {
+				throw new Exception("Please specify a valid order to cancel.");
 			}
 		} catch (SQLException e) {
+			throw new Exception(e.getMessage());
 		}
-		return null;
 	}
 }
