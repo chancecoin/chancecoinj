@@ -3,6 +3,7 @@
 //TODO: make it so when you make a transaction, it automatically shows the pending transaction like blockchain.info
 //TODO: make transactions keep retrying
 //TODO: more information on fees
+//TODO: reduce fees for betting somehow?
 //TODO: chancecoin wallet should list all types of transactions maybe?
 //TODO: option to allow btcpays to be completed automatically?
 //TODO: automatically buy CHA at best price and bet

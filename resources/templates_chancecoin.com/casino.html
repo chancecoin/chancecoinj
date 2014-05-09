@@ -5,8 +5,9 @@
 				<form action="/casino" class="form-inline" method="post">
 
 						<input type="hidden" name="form" value="bet">
+						<input type="hidden" name="source" value="${address}">
 
-					  <div class="form-group">
+						<div class="form-group">
 							<div class="input-group">
 								<span class="input-group-addon">#</span>
 								<input type="text" placeholder="bet size (CHA)" name="bet">
@@ -35,86 +36,94 @@
 				</form>
 		</div>
 
-		<div class="row section">
-				<h2>Quick numbers</h2>
-				<table class="table half">
-						<thead>
-								<tr>
-										<th>Total CHA</th>
-										<th>Max profit</th>
-								</tr>
-						</thead>
+		<div class="row section padding-top">
+				<ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
+						<li class="active"><a href="#recent_bets" data-toggle="tab">Recent bets</a></li>
+						<li><a href="#leaderboard" data-toggle="tab">Leaderboard</a></li>
+				</ul>
 
-						<tbody>
-								<tr>
-										<td>${supply} CHA</td>
-										<td>${max_profit} CHA</td>
-								</tr>
-						</tbody>
-				</table>
+				<div id="my-tab-content" class="tab-content">
+						<div class="tab-pane active" id="recent_bets">
+								<h2>Recent bets</h2>
+
+								<table class="table table-striped">
+										<thead>
+												<tr>
+														<th>Source Address</th>
+														<th>Time</th>
+														<th>Bet Size</th>
+														<th>Chance to Win</th>
+														<th>Payout Multiplier</th>
+														<th>Roll</th>
+														<th>Profit</th>
+												</tr>
+										</thead>
+
+										<tbody>
+											<#list bets as bet>
+													<tr>
+															<td>${bet["source"]}</td>
+															<td>${bet["block_time"]}</td>
+															<td>${bet["bet"]} CHA</td>
+															<td>${bet["chance"]}%</td>
+															<td>${bet["payout"]}X</td>
+															<td><#if bet["resolved"]??>${bet["roll"]}<#else>?</#if></td>
+															<td><#if bet["resolved"]?? && bet["resolved"]="true">${bet["profit"]} CHA<#else>Unresolved</#if></td>
+													</tr>
+											</#list>
+										</tbody>
+								</table>
+
+						</div>
+
+						<div class="tab-pane" id="leaderboard">
+								<h2>Leaderboard</h2>
+
+								<table class="table table-striped">
+										<thead>
+												<tr>
+														<th>Source Address</th>
+														<th>Total Bets</th>
+														<th>Average Bet Size</th>
+														<th>Average Win Chance</th>
+														<th>Total Profit</th>
+												</tr>
+										</thead>
+										<#list winners as winner>
+												<tr>
+														<td>${winner["source"]}</td>
+														<td>${winner["bet_count"]}</td>
+														<td>${winner["avg_bet"]} CHA</td>
+														<td>${winner["avg_chance"]}%</td>
+														<td>${winner["sum_profit"]} CHA</td>
+												</tr>
+										</#list>
+										<tbody>
+
+										</tbody>
+								</table>
+						</div>
+				</div>
+				<div class="tab-pane" id="stats">
+						<h2>Stats</h2>
+						<table class="table half">
+								<thead>
+										<tr>
+												<th>Total CHA</th>
+												<th>Max profit</th>
+												<th>House edge</th>
+										</tr>
+								</thead>
+
+								<tbody>
+										<tr>
+												<td>${supply} CHA</td>
+												<td>${max_profit} CHA (${max_profit_percentage*100}% of bankroll)</td>
+												<td>${house_edge*100}%</td>
+										</tr>
+								</tbody>
+						</table>
+				</div>
 		</div>
 
-		<div class="row section">
-
-				<h2>Leaderboard</h2>
-
-				<table class="table table-striped">
-				    <thead>
-				        <tr>
-				            <th>Source Address</th>
-				            <th>Total Bets</th>
-				            <th>Average Bet Size</th>
-				            <th>Average Win Chance</th>
-				            <th>Total Profit</th>
-				        </tr>
-				    </thead>
-						<#list winners as winner>
-								<tr>
-										<td>${winner["source"]}</td>
-										<td>${winner["bet_count"]}</td>
-										<td>${winner["avg_bet"]} CHA</td>
-										<td>${winner["avg_chance"]}%</td>
-										<td>${winner["sum_profit"]} CHA</td>
-								</tr>
-						</#list>
-				    <tbody>
-
-				    </tbody>
-				</table>
-
-	</div>
-
-	<div class="row section">
-
-				<h2>Recent bets</h2>
-
-				<table class="table table-striped">
-				    <thead>
-				        <tr>
-				            <th>Source Address</th>
-										<th>Time</th>
-				            <th>Bet Size</th>
-				            <th>Chance to Win</th>
-				            <th>Payout Multiplier</th>
-										<th>Roll</th>
-				            <th>Profit</th>
-				        </tr>
-				    </thead>
-
-				    <tbody>
-							<#list bets as bet>
-									<tr>
-											<td>${bet["source"]}</td>
-											<td>${bet["block_time"]}</td>
-											<td>${bet["bet"]} CHA</td>
-											<td>${bet["chance"]}%</td>
-											<td>${bet["payout"]}X</td>
-											<td><#if bet["resolved"]??>${bet["roll"]}<#else>?</#if></td>
-											<td><#if bet["resolved"]?? && bet["resolved"]="true">${bet["profit"]} CHA<#else>Unresolved</#if></td>
-									</tr>
-							</#list>
-				    </tbody>
-				</table>
-
-		</div>
 </@template.content>
