@@ -86,7 +86,7 @@
 
 	<div class="container-fluid content">
 		<#if info?? || error?? || success?? || warning?? || (version?? && min_version?? && (version?number<min_version?number)) || parsing??>
-		<div class="row">
+		<div class="row section messages">
 			<#if info??>
 			<div class="alert alert-info">${info}</div>
 			</#if>

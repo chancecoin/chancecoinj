@@ -21,13 +21,12 @@
 				</div>
 				<div class="col-xs-4 segment one-third">
 						<h2>Import private key</h2>
-						<p>Your private key should be in WIF format. For more information about where to find this, see the <a href="/participate">Participate</a> page.</p>
 						<form action="/wallet" method="post">
 								<input type="hidden" name="form" value="import">
 
 								<div class="input-group">
 									<span class="input-group-addon">PK</span>
-									<input type="text" placeholder="private key" name="privatekey">
+									<input type="text" placeholder="private key" name="privatekey" data-toggle="tooltip" data-placement="bottom" title="Your private key should be in WIF format. For more information about where to find this, see the Participate page.">
 								</div>
 
 								<div class="input-group">

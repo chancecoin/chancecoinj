@@ -880,6 +880,7 @@ public class Server implements Runnable {
 				
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
+				attributes.put("max_profit_percentage", Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
 
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("bet")) {
@@ -1000,6 +1001,7 @@ public class Server implements Runnable {
 				
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
+				attributes.put("max_profit_percentage", Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
 				Database db = Database.getInstance();
 				

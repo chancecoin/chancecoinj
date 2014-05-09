@@ -163,6 +163,10 @@ blockquote p {
   display: inline;
 }
 
+.messages {
+	padding-top: 2em;
+}
+
 .game {
 	padding-top: 2em;
 }
