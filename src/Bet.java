@@ -260,12 +260,10 @@ public class Bet {
 					}
 				} catch (Exception e) {
 					logger.error(e.toString());
-					System.exit(0);
 				}
 			}
 		} catch (SQLException e) {
 			logger.error(e.toString());
-			System.exit(0);
 		}
 	}
 }

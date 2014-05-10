@@ -81,8 +81,8 @@ public class Blocks implements Runnable {
 	public static Blocks getInstanceAndWait() {
 		if(instance == null) {
 			instance = new Blocks();
-			instance.init();
 			instance.versionCheck();
+			instance.init();
 		} 
 		instance.follow();
 		return instance;
@@ -91,8 +91,8 @@ public class Blocks implements Runnable {
 	public static Blocks getInstance() {
 		if(instance == null) {
 			instance = new Blocks();
-			instance.init();
 			instance.versionCheck();
+			instance.init();
 		} 
 		new Thread() { public void run() {instance.follow();}}.start();
 		return instance;

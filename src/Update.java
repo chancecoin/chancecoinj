@@ -28,7 +28,7 @@ import javax.swing.JTextArea;
 public class Update extends JFrame{
 
 	private Thread worker;
-	private final String root = "update/";
+	private final String root = "download/";
 
 	private JTextArea outText;
 	private JButton cancle;
@@ -216,7 +216,7 @@ public class Update extends JFrame{
 		outText.setText(outText.getText()+"\nDownload complete!");
 	}
 	private String getDownloadLinkFromHost() throws MalformedURLException, IOException {
-		String path = "https://raw2.github.com/chancecoin/chancecoinj/master/download.txt";
+		String path = Config.downloadZipUrl;
 		URL url = new URL(path);
 		InputStream html = null;
 		html = url.openStream();

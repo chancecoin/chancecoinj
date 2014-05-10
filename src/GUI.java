@@ -60,7 +60,7 @@ public class GUI extends Application {
 				updateMessage("Loading Chancecoin");
 				
 				// start Blocks
-				final Blocks blocks = Blocks.getInstanceFresh();
+				final Blocks blocks = Blocks.getInstance();
 				
 				Thread progressUpdateThread = new Thread(blocks) { 
 					public void run() {

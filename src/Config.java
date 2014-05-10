@@ -9,10 +9,11 @@ public class Config {
 	public static String minVersionPage = "https://raw2.github.com/chancecoin/chancecoinj/master/min_version.txt";
 	public static String dbPath = "resources/db/";
 	public static String downloadUrl = "http://chancecoin.com/downloads/";
+	public static String downloadZipUrl = "https://raw2.github.com/chancecoin/chancecoinj/master/download.txt";
 	
 	//version
-	public static Integer majorVersion = 1;
-	public static Integer minorVersion = 8;
+	public static Integer majorVersion = 2;
+	public static Integer minorVersion = 0;
 	public static String version = Integer.toString(majorVersion)+"."+Integer.toString(minorVersion);
 	public static Integer majorVersionDB = 1;
 	public static Integer minorVersionDB = 2;
