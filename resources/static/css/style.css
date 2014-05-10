@@ -189,3 +189,12 @@ table {
 	-khtml-opacity: 0;        /* Safari 1.x */
 	opacity: 0;               /* Good browsers */
 }
+
+#show_chat {
+	padding: 3px 12px;
+    background: rgb(54, 25, 25); /* Fall-back for browsers that don't support rgba */
+    background: rgba(54, 25, 25, .15);
+	border: 1px #BBBBBB solid;
+}
+
+
