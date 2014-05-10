@@ -59,8 +59,11 @@ public class GUI extends Application {
 			@Override protected Object call() throws InterruptedException {
 				updateMessage("Loading Chancecoin");
 				
+				// version Check
+				
+				
 				// start Blocks
-				final Blocks blocks = Blocks.getInstance();
+				final Blocks blocks = Blocks.getInstanceFresh();
 				
 				Thread progressUpdateThread = new Thread(blocks) { 
 					public void run() {

@@ -74,6 +74,7 @@ public class Blocks implements Runnable {
 	public static Blocks getInstanceFresh() {
 		if(instance == null) {
 			instance = new Blocks();
+			instance.versionCheck();
 		} 
 		return instance;
 	}
@@ -391,9 +392,9 @@ public class Blocks implements Runnable {
 	}
 	public void parseFrom(Integer blockNumber, Boolean force) {
 		if (!working || force) {
+			parsing = true;
 			if (!force) {
 				working = true;
-				parsing = true;
 			}
 			Database db = Database.getInstance();
 			ResultSet rs = db.executeQuery("select * from blocks where block_index>="+blockNumber.toString()+" order by block_index asc;");
@@ -409,9 +410,9 @@ public class Blocks implements Runnable {
 				e.printStackTrace();
 			}
 			if (!force) {
-				parsing = false;
 				working = false;
 			}
+			parsing = false;
 		}
 	}
 
