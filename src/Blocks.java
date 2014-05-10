@@ -121,8 +121,7 @@ public class Blocks implements Runnable {
 				logger.info("Looping blocks");
 				Thread.sleep(1000*60); //once a minute, we run blocks.follow()
 			} catch (InterruptedException e) {
-				System.out.println(e.toString());
-				System.exit(0);
+				logger.info(e.toString());
 			}
 		}
 	}
@@ -167,7 +166,6 @@ public class Blocks implements Runnable {
 			peerGroup.downloadBlockChain();
 		} catch (Exception e) {
 			logger.error(e.toString());
-			System.exit(0);
 		}
 	}
 	
@@ -225,7 +223,6 @@ public class Blocks implements Runnable {
 				}
 			} catch (Exception e) {
 				logger.error(e.toString());
-				//System.exit(0);
 			}	
 			if (!force) {
 				working = false;
@@ -530,7 +527,6 @@ public class Blocks implements Runnable {
 			updateMinorVersion();
 		} catch (Exception e) {
 			logger.error(e.toString());
-			System.exit(0);			
 		}
 	}
 	
@@ -685,7 +681,7 @@ public class Blocks implements Runnable {
 		return tx;
 	}
 	
-	public Boolean sendTransaction(Transaction tx) {
+	public Boolean sendTransaction(Transaction tx) throws Exception {
 		try {
 			tx.signInputs(SigHash.ALL, wallet);
 			//System.out.println(tx);
@@ -701,7 +697,7 @@ public class Blocks implements Runnable {
 			//	logger.error(e.toString());
 			//	future.cancel(true);
 			} catch (Exception e) {
-				logger.error(e.toString());
+				throw new Exception(e.getMessage());
 			}
 			/*
 			byte[] rawTxBytes = tx.bitcoinSerialize();
@@ -710,8 +706,7 @@ public class Blocks implements Runnable {
 			System.out.println(rawTx);
 			*/
 		} catch (Exception e) {
-			logger.error(e.toString());
+			throw new Exception(e.getMessage());
 		}		
-		return false;
 	}
 }
