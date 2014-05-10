@@ -82,8 +82,13 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
+				if (request.queryParams().contains("chat_open")) {
+					attributes.put("chat_open", request.queryParams("chat_open"));
+				} else {
+					attributes.put("chat_open", 1);
+				}
 				attributes.put("title", "A coin for betting in a decentralized casino");
-				
+
 				Blocks blocks = Blocks.getInstance();
 				
 				if (request.queryParams().contains("reparse")) {
@@ -166,6 +171,11 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
+				if (request.queryParams().contains("chat_open")) {
+					attributes.put("chat_open", request.queryParams("chat_open"));
+				} else {
+					attributes.put("chat_open", 1);
+				}
 				attributes.put("title", "Participate");
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
@@ -183,6 +193,11 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
+				if (request.queryParams().contains("chat_open")) {
+					attributes.put("chat_open", request.queryParams("chat_open"));
+				} else {
+					attributes.put("chat_open", 1);
+				}
 				attributes.put("title", "Technical");
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());	
@@ -210,6 +225,11 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
+				if (request.queryParams().contains("chat_open")) {
+					attributes.put("chat_open", request.queryParams("chat_open"));
+				} else {
+					attributes.put("chat_open", 1);
+				}
 				attributes.put("title", "Balances");
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
@@ -417,6 +437,11 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
+				if (request.queryParams().contains("chat_open")) {
+					attributes.put("chat_open", request.queryParams("chat_open"));
+				} else {
+					attributes.put("chat_open", 1);
+				}
 				attributes.put("title", "Exchange");
 				
 				Blocks blocks = Blocks.getInstance();
@@ -720,6 +745,11 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
+				if (request.queryParams().contains("chat_open")) {
+					attributes.put("chat_open", request.queryParams("chat_open"));
+				} else {
+					attributes.put("chat_open", 1);
+				}
 				attributes.put("title", "Wallet");
 				
 				Blocks blocks = Blocks.getInstance();
@@ -966,6 +996,11 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
+				if (request.queryParams().contains("chat_open")) {
+					attributes.put("chat_open", request.queryParams("chat_open"));
+				} else {
+					attributes.put("chat_open", 1);
+				}
 				attributes.put("title", "Casino");
 				
 				Blocks blocks = Blocks.getInstance();
