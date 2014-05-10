@@ -1,4 +1,5 @@
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.sql.ResultSet;
@@ -9,64 +10,31 @@ import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.bitcoin.core.Transaction;
 
-
 public class JsonRpcServiceImpl implements JsonRpcService {
+    static Logger logger = LoggerFactory.getLogger(JsonRpcServiceImpl.class);
 	
-	public Double getChancecoinBalance(String address) {
-		Database db = Database.getInstance();		
-		ResultSet rs = db.executeQuery("select sum(amount) as amount from balances where address='"+address+"' and asset='CHA';");
-		try {
-			if (rs.next()) {
-				return rs.getLong("amount") / Config.unit.doubleValue();
-			}
-		} catch (SQLException e) {
-		}
-		
-		return 0.0;
+	public String getChancecoinBalance(String address) {
+		BigInteger balance = Util.getBalance(address, "CHA");
+		return Double.toString(balance.doubleValue() / Config.unit);
 	}
 	
-	public Transaction sendChancecoin(String source, String destination, BigInteger amount) {
-		String asset = "CHA";
-		Transaction tx = null;
+	public String sendChancecoin(String source, String destination, Double amount) {
 		Blocks blocks = Blocks.getInstance();
-		if (!source.equals("") && !destination.equals("")) {
-			BigInteger sourceBalance = Util.getBalance(source, asset);
-			Integer assetId = Util.getAssetId(asset);
-			if (sourceBalance.compareTo(amount)>=0) {
-				ByteBuffer byteBuffer = ByteBuffer.allocate(20);
-				byteBuffer.putInt(0, 0);
-				byteBuffer.putLong(0+4, assetId);
-				byteBuffer.putLong(8+4, amount.longValue());
-				List<Byte> dataArrayList = Util.toByteArrayList(byteBuffer.array());
-				dataArrayList.addAll(0, Util.toByteArrayList(Config.prefix.getBytes()));
-				byte[] data = Util.toByteArray(dataArrayList);
-
-				String dataString = "";
-				try {
-					dataString = new String(data,"ISO-8859-1");
-				} catch (UnsupportedEncodingException e) {
-				}
-				try {
-					tx = blocks.transaction(source, destination, BigInteger.valueOf(Config.dustSize), BigInteger.valueOf(Config.minFee), dataString);
-				} catch (Exception e) {
-				}
-				return tx;
-			}
+		BigInteger quantity = new BigDecimal(amount*Config.unit).toBigInteger();
+		try {
+			Transaction tx = Send.create(source, destination, "CHA", quantity);
+			blocks.sendTransaction(tx);
+			System.out.println("Success! You sent "+amount+" CHA to "+destination+".");
+			return "success";
+		} catch (Exception e) {
+			System.out.println("Error! There was a problem with your transaction: "+e.getMessage());						
 		}
-		
-		if (tx!=null) {
-			if (blocks.sendTransaction(tx)) {
-				System.out.println("Success! You sent "+amount+" CHA to "+destination+".");
-			} else {
-				System.out.println("Error! Your transaction timed out and was not received by the Bitcoin network. Please try again.");							
-			}
-		}else{
-			System.out.println("Error! There was a problem with your transaction.");						
-		}
-		return null;
+		return "failure";
 	}
 	
 	public String getSends(String address) {
@@ -105,8 +73,7 @@ public class JsonRpcServiceImpl implements JsonRpcService {
 			}
 		} catch (SQLException e) {
 		}
-		return jsonArray.toString();								
-		
+		return jsonArray.toString();									
 	}
 	
 	

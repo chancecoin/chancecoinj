@@ -6,8 +6,8 @@ import com.google.bitcoin.core.Transaction;
 
 
 public interface JsonRpcService {
-	public Double getChancecoinBalance(String address);
-	public Transaction sendChancecoin(String source, String destination, BigInteger amount);
+	public String getChancecoinBalance(String address);
+	public String sendChancecoin(String source, String destination, Double amount);
 	public String getSends(String address);
 	public String getReceives(String address);
 }

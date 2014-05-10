@@ -14,7 +14,6 @@ public class JsonRpcServlet extends HttpServlet {
 
 	public void init() {
 		jsonRpcServer = new JsonRpcServer(new JsonRpcServiceImpl());
-		//Blocks blocks = Blocks.getInstance();
 	}
 
 	@Override
