@@ -69,7 +69,7 @@ public class Bet {
 
 	public static List<BetInfo> getPending(String source) {
 		Database db = Database.getInstance();
-		ResultSet rs = db.executeQuery("select * from transactions where block_index<0 and source='"+source+"'");
+		ResultSet rs = db.executeQuery("select * from transactions where block_index<0 and source='"+source+"' order by tx_index desc;");
 		List<BetInfo> bets = new ArrayList<BetInfo>();
 		Blocks blocks = Blocks.getInstance();
 		try {

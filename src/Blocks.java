@@ -345,7 +345,7 @@ public class Blocks implements Runnable {
 				} catch (UnsupportedEncodingException e) {
 				}
 			}
-			db.executeUpdate("delete from transactions where tx_hash='"+tx.getHashAsString()+"' and block_index=0");
+			db.executeUpdate("delete from transactions where tx_hash='"+tx.getHashAsString()+"' and block_index<0");
 			ResultSet rs = db.executeQuery("select * from transactions where tx_hash='"+tx.getHashAsString()+"';");
 			try {
 				if (!rs.next()) {
@@ -719,15 +719,15 @@ public class Blocks implements Runnable {
 			ListenableFuture<Transaction> future = null;
 			try {
 				future = peerGroup.broadcastTransaction(tx);
-				blocks.importTransaction(tx, null, null);
-				//future.get(60, TimeUnit.SECONDS);
-				return true;
+				future.get(60, TimeUnit.SECONDS);
 				//} catch (TimeoutException e) {
 				//	logger.error(e.toString());
 				//	future.cancel(true);
 			} catch (Exception e) {
-				throw new Exception(e.getMessage());
+				throw new Exception("Transaction timed out. Please try again.");
 			}
+			blocks.importTransaction(tx, null, null);
+			return true;
 			/*
 			byte[] rawTxBytes = tx.bitcoinSerialize();
 			String rawTx = new BigInteger(1, rawTxBytes).toString(16);
