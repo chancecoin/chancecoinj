@@ -65,6 +65,7 @@ public class Bet {
 		} catch (SQLException e) {	
 		}
 	}
+		
 	public static Transaction create(String source, BigInteger bet, Double chance, Double payout) throws Exception {
 		BigInteger chaSupply = Util.chaSupply();
 		if (source.equals("")) throw new Exception("Please specify a source address.");

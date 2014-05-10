@@ -70,14 +70,14 @@ public class Blocks implements Runnable {
 	public Integer bitcoinBlock = 0;
 	public Integer chancecoinBlock = 0;
 	public String statusMessage = "";
-	
+
 	public static Blocks getInstanceFresh() {
 		if(instance == null) {
 			instance = new Blocks();
 		} 
 		return instance;
 	}
-	
+
 	public static Blocks getInstanceAndWait() {
 		if(instance == null) {
 			instance = new Blocks();
@@ -104,15 +104,15 @@ public class Blocks implements Runnable {
 		if (Config.majorVersion<minMajorVersion || (Config.majorVersion.equals(minMajorVersion) && Config.minorVersion<minMinorVersion)) {
 			statusMessage = "Version is out of date, updating now"; 
 			logger.info(statusMessage);
-	        try {
-	            Runtime.getRuntime().exec("java -jar update/update.jar");
-	        } catch (Exception ex) {
-	            ex.printStackTrace();
-	        }
-	        System.exit(0);
+			try {
+				Runtime.getRuntime().exec("java -jar update/update.jar");
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+			System.exit(0);
 		}
 	}
-	
+
 	@Override
 	public void run() {
 		while (true) {
@@ -152,7 +152,7 @@ public class Blocks implements Runnable {
 				statusMessage = "Downloading CHA database"; 
 				logger.info(statusMessage);
 				Util.downloadToFile(Config.downloadUrl+Config.appName.toLowerCase()+"-"+Config.majorVersionDB.toString()+".db", fileCHAdb);
-		    }
+			}
 			statusMessage = "Downloading Bitcoin blocks";
 			blockStore = new H2FullPrunedBlockStore(params, Config.dbPath+Config.appName.toLowerCase(), 2000);
 			blockChain = new BlockChain(params, wallet, blockStore);
@@ -168,13 +168,14 @@ public class Blocks implements Runnable {
 			logger.error(e.toString());
 		}
 	}
-	
+
 	public void follow() {
 		follow(false);
 	}
 	public void follow(Boolean force) {
 		logger.info("Working status: "+working);
 		if (!working || force) {
+			statusMessage = "Checking block height";
 			logger.info(statusMessage);
 			if (!force) {
 				working = true;
@@ -186,7 +187,7 @@ public class Blocks implements Runnable {
 					lastBlock = Config.firstBlock - 1;
 				}
 				Integer nextBlock = lastBlock + 1;
-				
+
 				if (lastBlock < blockHeight) {
 					//traverse new blocks
 					Database db = Database.getInstance();
@@ -196,13 +197,13 @@ public class Blocks implements Runnable {
 					chancecoinBlock = lastBlock;
 					Integer blocksToScan = blockHeight - lastBlock;
 					List<Sha256Hash> blockHashes = new ArrayList<Sha256Hash>();
-					
+
 					Block block = peerGroup.getDownloadPeer().getBlock(blockStore.getChainHead().getHeader().getHash()).get(30, TimeUnit.SECONDS);
 					while (blockStore.get(block.getHash()).getHeight()>lastBlock) {
 						blockHashes.add(block.getHash());
 						block = blockStore.get(block.getPrevBlockHash()).getHeader();
 					}
-					
+
 					for (int i = blockHashes.size()-1; i>=0; i--) { //traverse blocks in reverse order
 						block = peerGroup.getDownloadPeer().getBlock(blockHashes.get(i)).get(30, TimeUnit.SECONDS);
 						blockHeight = blockStore.get(block.getHash()).getHeight();
@@ -211,7 +212,7 @@ public class Blocks implements Runnable {
 						logger.info("Catching Chancecoin up to Bitcoin (block "+blockHeight.toString()+"): "+Util.format((blockHashes.size() - i)/((double) blockHashes.size())*100.0)+"%");	
 						importBlock(block, blockHeight);
 					}
-					
+
 					if (getDBMinorVersion()<Config.minorVersionDB){
 						reparse(true);
 						updateMinorVersion();		    	
@@ -242,10 +243,10 @@ public class Blocks implements Runnable {
 				}
 			}
 		} catch (Exception e) {
-			
+
 		}
 	}
-	
+
 	public void importBlock(Block block, Integer blockHeight) {
 		statusMessage = "Importing block "+blockHeight;
 		logger.info(statusMessage);
@@ -353,7 +354,7 @@ public class Blocks implements Runnable {
 						ps.setString(1, dataString);
 						ps.execute();
 					}else{
-						PreparedStatement ps = db.connection.prepareStatement("INSERT INTO transactions(tx_index, tx_hash, block_index, block_time, source, destination, btc_amount, fee, data) VALUES('"+(Util.getLastTxIndex()+1)+"','"+tx.getHashAsString()+"','0','','"+source+"','"+destination+"','"+btcAmount.toString()+"','"+fee.toString()+"',?)");
+						PreparedStatement ps = db.connection.prepareStatement("INSERT INTO transactions(tx_index, tx_hash, block_index, block_time, source, destination, btc_amount, fee, data) VALUES('"+(Util.getLastTxIndex()+1)+"','"+tx.getHashAsString()+"','-1','','"+source+"','"+destination+"','"+btcAmount.toString()+"','"+fee.toString()+"',?)");
 						ps.setString(1, dataString);
 						ps.execute();
 					}
@@ -413,7 +414,35 @@ public class Blocks implements Runnable {
 			}
 		}
 	}
-	
+
+	public List<Byte> getMessageFromTransaction(String txDataString) {
+		byte[] data;
+		List<Byte> message = null;
+		try {
+			data = txDataString.getBytes("ISO-8859-1");
+			List<Byte> dataArrayList = Util.toByteArrayList(data);
+
+			message = dataArrayList.subList(4, dataArrayList.size());		
+			return message;
+		} catch (UnsupportedEncodingException e) {
+		}
+		return message;
+	}
+
+	public List<Byte> getMessageTypeFromTransaction(String txDataString) {
+		byte[] data;
+		List<Byte> messageType = null;
+		try {
+			data = txDataString.getBytes("ISO-8859-1");
+			List<Byte> dataArrayList = Util.toByteArrayList(data);
+
+			messageType = dataArrayList.subList(0, 4);
+			return messageType;
+		} catch (UnsupportedEncodingException e) {
+		}
+		return messageType;
+	}	
+
 	public void parseBlock(Integer blockIndex) {
 		Database db = Database.getInstance();
 		ResultSet rsTx = db.executeQuery("select * from transactions where block_index="+blockIndex.toString()+" order by tx_index asc;");
@@ -426,36 +455,36 @@ public class Blocks implements Runnable {
 				String source = rsTx.getString("source");
 				String destination = rsTx.getString("destination");
 				BigInteger btcAmount = BigInteger.valueOf(rsTx.getInt("btc_amount"));
-				byte[] data = rsTx.getString("data").getBytes("ISO-8859-1");
+				String dataString = rsTx.getString("data");
 
 				if (destination.equals(Config.burnAddress)) {
 					//parse Burn
 					Burn.parse(txIndex);
 				} else {
-					List<Byte> dataArrayList = Util.toByteArrayList(data);
+					List<Byte> messageType = getMessageTypeFromTransaction(dataString);
+					List<Byte> message = getMessageFromTransaction(dataString);
 
-					List<Byte> messageType = dataArrayList.subList(0, 4);
-					List<Byte> message = dataArrayList.subList(4, dataArrayList.size());
-
-					if (messageType.get(3)==Bet.id.byteValue()) {
-						Bet.parse(txIndex, message);
-					} else if (messageType.get(3)==Send.id.byteValue()) {
-						Send.parse(txIndex, message);
-					} else if (messageType.get(3)==Order.id.byteValue()) {
-						Order.parse(txIndex, message);
-					} else if (messageType.get(3)==Cancel.id.byteValue()) {
-						Cancel.parse(txIndex, message);
-					} else if (messageType.get(3)==BTCPay.id.byteValue()) {
-						BTCPay.parse(txIndex, message);
-					}						
+					if (messageType!=null && messageType.size()>=4 && message!=null) {
+						if (messageType.get(3)==Bet.id.byteValue()) {
+							Bet.parse(txIndex, message);
+						} else if (messageType.get(3)==Send.id.byteValue()) {
+							Send.parse(txIndex, message);
+						} else if (messageType.get(3)==Order.id.byteValue()) {
+							Order.parse(txIndex, message);
+						} else if (messageType.get(3)==Cancel.id.byteValue()) {
+							Cancel.parse(txIndex, message);
+						} else if (messageType.get(3)==BTCPay.id.byteValue()) {
+							BTCPay.parse(txIndex, message);
+						}						
+					}
 				}
 			}
-		} catch (UnsupportedEncodingException | SQLException e) {
+		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
 	}
-	
+
 	public void createTables() {
 		Database db = Database.getInstance();
 		try {
@@ -523,19 +552,19 @@ public class Blocks implements Runnable {
 			// Messages
 			db.executeUpdate("CREATE TABLE IF NOT EXISTS messages(message_index INTEGER PRIMARY KEY, block_index INTEGER, command TEXT, category TEXT, bindings TEXT)");
 			db.executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON messages (block_index)");
-			
+
 			updateMinorVersion();
 		} catch (Exception e) {
 			logger.error(e.toString());
 		}
 	}
-	
+
 	public Integer getDBMinorVersion() {
 		Database db = Database.getInstance();
 		ResultSet rs = db.executeQuery("PRAGMA user_version;");
 		try {
 			while(rs.next()) {
-			    return rs.getInt("user_version");
+				return rs.getInt("user_version");
 			}
 		} catch (SQLException e) {
 		}	
@@ -547,7 +576,7 @@ public class Blocks implements Runnable {
 		Database db = Database.getInstance();
 		db.executeUpdate("PRAGMA user_version = "+Config.minorVersionDB.toString());
 	}
-	
+
 	public Integer getHeight() {
 		try {
 			Integer height = blockStore.getChainHead().getHeight();
@@ -573,7 +602,7 @@ public class Blocks implements Runnable {
 			wallet.addWatchedAddress(new Address(params, address));
 			} catch (AddressFormatException e1) {
 			}
-			*/
+			 */
 		}
 		logger.info("Importing address "+address);
 		if (key!=null) {
@@ -608,12 +637,12 @@ public class Blocks implements Runnable {
 		logger.info("Address balance: "+balance);
 		return address;
 	}
-	
+
 	public Transaction transaction(String source, String destination, BigInteger btcAmount, BigInteger fee, String dataString) throws Exception {
 		Transaction tx = new Transaction(params);
 		LinkedList<TransactionOutput> unspentOutputs = wallet.calculateAllSpendCandidates(true);
 		if (destination.equals("") || btcAmount.compareTo(BigInteger.valueOf(Config.dustSize))>=0) {
-			
+
 			byte[] data = null;
 			List<Byte> dataArrayList = new ArrayList<Byte>();
 			try {
@@ -654,7 +683,7 @@ public class Blocks implements Runnable {
 				tx.addOutput(BigInteger.valueOf(Config.dustSize), script);
 				totalOutput = totalOutput.add(BigInteger.valueOf(Config.dustSize));
 			}
-			
+
 			for (TransactionOutput out : unspentOutputs) {
 				Script script = out.getScriptPubKey();
 				Address address = script.getToAddress(params);
@@ -670,7 +699,7 @@ public class Blocks implements Runnable {
 				throw new Exception("Not enough BTC to cover transaction of "+(totalOutput.doubleValue()/Config.unit)+" BTC.");
 			}
 			BigInteger totalChange = totalInput.subtract(totalOutput);
-				
+
 			try {
 				if (totalChange.compareTo(BigInteger.ZERO)>0) {
 					tx.addOutput(totalChange, new Address(params, source));
@@ -680,7 +709,7 @@ public class Blocks implements Runnable {
 		}
 		return tx;
 	}
-	
+
 	public Boolean sendTransaction(Transaction tx) throws Exception {
 		try {
 			tx.signInputs(SigHash.ALL, wallet);
@@ -690,12 +719,12 @@ public class Blocks implements Runnable {
 			ListenableFuture<Transaction> future = null;
 			try {
 				future = peerGroup.broadcastTransaction(tx);
-				//blocks.importTransaction(tx, null, null);
+				blocks.importTransaction(tx, null, null);
 				//future.get(60, TimeUnit.SECONDS);
 				return true;
-			//} catch (TimeoutException e) {
-			//	logger.error(e.toString());
-			//	future.cancel(true);
+				//} catch (TimeoutException e) {
+				//	logger.error(e.toString());
+				//	future.cancel(true);
 			} catch (Exception e) {
 				throw new Exception(e.getMessage());
 			}
@@ -704,7 +733,7 @@ public class Blocks implements Runnable {
 			String rawTx = new BigInteger(1, rawTxBytes).toString(16);
 			rawTx = "0" + rawTx;
 			System.out.println(rawTx);
-			*/
+			 */
 		} catch (Exception e) {
 			throw new Exception(e.getMessage());
 		}		
