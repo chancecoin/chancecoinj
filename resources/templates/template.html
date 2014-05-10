@@ -85,7 +85,7 @@
 	</nav>
 
 	<div class="container-fluid content">
-		<#if info?? || error?? || success?? || warning?? || (version?? && min_version?? && (version?number<min_version?number)) || parsing??>
+		<#if info?? || error?? || success?? || warning?? || parsing?? || (version?? && min_version?? && (version_major?number<min_version_major?number || (version_major?number==min_version_major?number && version_minor?number<min_version_minor?number)))??>
 		<div class="row section messages">
 			<#if info??>
 			<div class="alert alert-info">${info}</div>
@@ -126,16 +126,16 @@
 		<script type="text/javascript">
 			window.onload = function() {
 				if (document.getElementById('chat_open').innerHTML == 0) {
-					document.getElementById('CHATBUTTON_CHATBOX').style.display='none'; 
-					document.getElementById('hide_chat').style.display='none'; 
+					document.getElementById('CHATBUTTON_CHATBOX').style.display='none';
+					document.getElementById('hide_chat').style.display='none';
 					document.getElementById('show_chat').style.display='block';
 				} else {
-					document.getElementById('CHATBUTTON_CHATBOX').style.display='block'; 
-					document.getElementById('hide_chat').style.display='block'; 
+					document.getElementById('CHATBUTTON_CHATBOX').style.display='block';
+					document.getElementById('hide_chat').style.display='block';
 					document.getElementById('show_chat').style.display='none';
 				}
 			}
-			
+
 			function updateChatStatus() {
 				$.ajax({
 					url: "/chat_status_update?chat_open="+$('#chat_open').html(),
@@ -143,8 +143,8 @@
 					success: function(data) {
 					}
 		          	});
-			} 
-			
+			}
+
 		</script>
 	</div>
 
