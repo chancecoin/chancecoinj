@@ -1,4 +1,3 @@
-import static spark.Spark.externalStaticFileLocation;
 import static spark.Spark.get;
 import static spark.Spark.post;
 import static spark.Spark.setPort;
@@ -42,10 +41,7 @@ public class Server implements Runnable {
 	} 
 	
 	public Map<String, Object> updateChatStatus(Request request, Map<String, Object> attributes) {
-		if (request.queryParams().contains("chat_open")) {
-			attributes.put("chat_open", request.queryParams("chat_open"));
-			request.session().attribute("chat_open", request.queryParams("chat_open"));
-		} else if (request.session().attributes().contains("chat_open")) {
+		if (request.session().attributes().contains("chat_open")) {
 			attributes.put("chat_open", request.session().attribute("chat_open"));
 		} else {
 			attributes.put("chat_open", 1);
@@ -87,6 +83,16 @@ public class Server implements Runnable {
 			@Override
 			public Object handle(Request request, Response response) {
 				return Util.chaSupply().toString();
+			}
+		});
+		get(new Route("/chat_status_update") {
+			@Override
+			public Object handle(Request request, Response response) {
+				request.session(true);
+				if (request.queryParams().contains("chat_open")) {
+					request.session().attribute("chat_open", request.queryParams("chat_open"));	
+				}
+				return request.session().attribute("chat_open");
 			}
 		});
 		get(new FreeMarkerRoute("/") {
