@@ -27,17 +27,17 @@
 	        <span class="icon-bar"></span>
 	        <span class="icon-bar"></span>
 	      </button>
-	      <a class="navbar-brand logo" onclick="changeLocation('/');" href="#">Chancecoin</a>
+	      <a class="navbar-brand logo" href="/">Chancecoin</a>
 	    </div>
 
 	    <!-- Collect the nav links, forms, and other content for toggling -->
 	    <div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
 	      <ul class="nav navbar-nav">
-					<li <#if title?? && title=="Casino">class="active"</#if>><a onclick="changeLocation('/casino');" href="#">Casino</a></li>
-					<li <#if title?? && title=="Exchange">class="active"</#if>><a onclick="changeLocation('/exchange');" href="#">Exchange</a></li>
-					<li <#if title?? && title=="Wallet">class="active"</#if>><a onclick="changeLocation('/wallet');" href="#">Wallet</a></li>
-					<li <#if title?? && title=="Participate">class="active"</#if>><a onclick="changeLocation('/participate');" href="#">Participate</a></li>
-					<li <#if title?? && title=="Technical">class="active"</#if>><a onclick="changeLocation('/technical');" href="#">Technical</a></li>
+					<li <#if title?? && title=="Casino">class="active"</#if>><a href="/casino">Casino</a></li>
+					<li <#if title?? && title=="Exchange">class="active"</#if>><a href="/exchange">Exchange</a></li>
+					<li <#if title?? && title=="Wallet">class="active"</#if>><a href="/wallet">Wallet</a></li>
+					<li <#if title?? && title=="Participate">class="active"</#if>><a href="/participate">Participate</a></li>
+					<li <#if title?? && title=="Technical">class="active"</#if>><a href="/technical">Technical</a></li>
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Resources <b class="caret"></b></a>
 						<ul class="dropdown-menu">
@@ -111,8 +111,8 @@
 		<#nested/>
 
 		<div style="position: fixed; bottom: 0em; right: 1em;">
-		<div id="hide_chat" onclick="document.getElementById('chat_open').innerHTML='0'; document.getElementById('CHATBUTTON_CHATBOX').style.display='none'; document.getElementById('hide_chat').style.display='none'; document.getElementById('show_chat').style.display='block';"></div>
-		<p id="show_chat" style="display: none;"><a href="#" onclick="document.getElementById('chat_open').innerHTML='1'; document.getElementById('CHATBUTTON_CHATBOX').style.display='block'; document.getElementById('show_chat').style.display='none'; document.getElementById('hide_chat').style.display='block';">Show chat</a></p>
+		<div id="hide_chat" onclick="document.getElementById('chat_open').innerHTML='0'; document.getElementById('CHATBUTTON_CHATBOX').style.display='none'; document.getElementById('hide_chat').style.display='none'; document.getElementById('show_chat').style.display='block'; updateChatStatus();"></div>
+		<p id="show_chat" style="display: none;"><a href="#" onclick="document.getElementById('chat_open').innerHTML='1'; document.getElementById('CHATBUTTON_CHATBOX').style.display='block'; document.getElementById('show_chat').style.display='none'; document.getElementById('hide_chat').style.display='block'; updateChatStatus();">Show chat</a></p>
 		<iframe name="CHATBUTTON_CHATBOX" id="CHATBUTTON_CHATBOX" src="https://www.chatbutton.com/chatroom/18347632/" width="300" height="300" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" style="display:none"><a href="https://www.chatbutton.com/chatroom/18347632/">Enter Chat Room</a></iframe>
 		<script type="text/javascript">
 		CHBT_channel="18347632";
@@ -123,7 +123,6 @@
 		</script>
 		</div>
 		<div id="chat_open" style="display:none">${chat_open}</div>
-		<div id="chat_open_attr" style="display:none">${chat_open}</div>
 		<script type="text/javascript">
 			window.onload = function() {
 				if (document.getElementById('chat_open').innerHTML == 0) {
@@ -137,12 +136,13 @@
 				}
 			}
 			
-			function changeLocation(location) {
-				if ($('#chat_open').html() == $('#chat_open_attr').html()) {
-					window.location.href = location;
-				} else {
-					window.location.href = location + "?chat_open="+$('#chat_open').html();
-				}
+			function updateChatStatus() {
+				$.ajax({
+					url: "/chat_status_update?chat_open="+$('#chat_open').html(),
+					type: 'GET',
+					success: function(data) {
+					}
+		          	});
 			} 
 			
 		</script>
