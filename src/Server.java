@@ -40,7 +40,19 @@ public class Server implements Runnable {
 	public void run() { 
 		init(); 
 	} 
-
+	
+	public Map<String, Object> updateChatStatus(Request request, Map<String, Object> attributes) {
+		if (request.queryParams().contains("chat_open")) {
+			attributes.put("chat_open", request.queryParams("chat_open"));
+			request.session().attribute("chat_open", request.queryParams("chat_open"));
+		} else if (request.session().attributes().contains("chat_open")) {
+			attributes.put("chat_open", request.session().attribute("chat_open"));
+		} else {
+			attributes.put("chat_open", 1);
+		}
+		return attributes;
+	}
+	
 	public void init() {
 		//start Blocks thread
 		Blocks blocks = new Blocks();
@@ -82,11 +94,8 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
-				if (request.queryParams().contains("chat_open")) {
-					attributes.put("chat_open", request.queryParams("chat_open"));
-				} else {
-					attributes.put("chat_open", 1);
-				}
+				request.session(true);
+				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "A coin for betting in a decentralized casino");
 
 				Blocks blocks = Blocks.getInstance();
@@ -107,7 +116,7 @@ public class Server implements Runnable {
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 					
 				String address = Util.getAddresses().get(0);
-				request.session(true);
+				
 				if (request.session().attributes().contains("address")) {
 					address = request.session().attribute("address");
 				}
@@ -171,11 +180,8 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
-				if (request.queryParams().contains("chat_open")) {
-					attributes.put("chat_open", request.queryParams("chat_open"));
-				} else {
-					attributes.put("chat_open", 1);
-				}
+				request.session(true);
+				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Participate");
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
@@ -193,11 +199,8 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
-				if (request.queryParams().contains("chat_open")) {
-					attributes.put("chat_open", request.queryParams("chat_open"));
-				} else {
-					attributes.put("chat_open", 1);
-				}
+				request.session(true);
+				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Technical");
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());	
@@ -225,11 +228,8 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
-				if (request.queryParams().contains("chat_open")) {
-					attributes.put("chat_open", request.queryParams("chat_open"));
-				} else {
-					attributes.put("chat_open", 1);
-				}
+				request.session(true);
+				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Balances");
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
@@ -261,6 +261,8 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
+				request.session(true);
+				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Exchange");
 				
 				Blocks blocks = Blocks.getInstance();
@@ -276,7 +278,6 @@ public class Server implements Runnable {
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				String address = Util.getAddresses().get(0);
-				request.session(true);
 				if (request.session().attributes().contains("address")) {
 					address = request.session().attribute("address");
 				}
@@ -437,11 +438,8 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
-				if (request.queryParams().contains("chat_open")) {
-					attributes.put("chat_open", request.queryParams("chat_open"));
-				} else {
-					attributes.put("chat_open", 1);
-				}
+				request.session(true);
+				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Exchange");
 				
 				Blocks blocks = Blocks.getInstance();
@@ -457,7 +455,6 @@ public class Server implements Runnable {
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				String address = Util.getAddresses().get(0);
-				request.session(true);
 				if (request.session().attributes().contains("address")) {
 					address = request.session().attribute("address");
 				}
@@ -567,6 +564,8 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
+				request.session(true);
+				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Wallet");
 				
 				Blocks blocks = Blocks.getInstance();
@@ -615,7 +614,6 @@ public class Server implements Runnable {
 				}
 				
 				String address = Util.getAddresses().get(0);
-				request.session(true);
 				if (request.session().attributes().contains("address")) {
 					address = request.session().attribute("address");
 				}
@@ -745,11 +743,8 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
-				if (request.queryParams().contains("chat_open")) {
-					attributes.put("chat_open", request.queryParams("chat_open"));
-				} else {
-					attributes.put("chat_open", 1);
-				}
+				request.session(true);
+				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Wallet");
 				
 				Blocks blocks = Blocks.getInstance();
@@ -875,6 +870,8 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
+				request.session(true);
+				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Casino");
 				
 				Blocks blocks = Blocks.getInstance();
@@ -890,7 +887,6 @@ public class Server implements Runnable {
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 
 				String address = Util.getAddresses().get(0);
-				request.session(true);
 				if (request.session().attributes().contains("address")) {
 					address = request.session().attribute("address");
 				}
@@ -996,11 +992,8 @@ public class Server implements Runnable {
 			public ModelAndView handle(Request request, Response response) {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
-				if (request.queryParams().contains("chat_open")) {
-					attributes.put("chat_open", request.queryParams("chat_open"));
-				} else {
-					attributes.put("chat_open", 1);
-				}
+				request.session(true);
+				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Casino");
 				
 				Blocks blocks = Blocks.getInstance();
@@ -1016,7 +1009,6 @@ public class Server implements Runnable {
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				String address = Util.getAddresses().get(0);
-				request.session(true);
 				if (request.session().attributes().contains("address")) {
 					address = request.session().attribute("address");
 				}

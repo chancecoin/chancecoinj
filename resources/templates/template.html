@@ -123,6 +123,7 @@
 		</script>
 		</div>
 		<div id="chat_open" style="display:none">${chat_open}</div>
+		<div id="chat_open_attr" style="display:none">${chat_open}</div>
 		<script type="text/javascript">
 			window.onload = function() {
 				if (document.getElementById('chat_open').innerHTML == 0) {
@@ -137,7 +138,11 @@
 			}
 			
 			function changeLocation(location) {
-    			window.location.href = location + "?chat_open="+document.getElementById('chat_open').innerHTML;
+				if ($('#chat_open').html() == $('#chat_open_attr').html()) {
+					window.location.href = location;
+				} else {
+					window.location.href = location + "?chat_open="+$('#chat_open').html();
+				}
 			} 
 			
 		</script>
