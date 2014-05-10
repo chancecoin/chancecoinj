@@ -1,5 +1,4 @@
 //TODO: encrypt wallet
-//TODO: easier upgrade process
 //TODO: make it so when you make a transaction, it automatically shows the pending transaction like blockchain.info
 //TODO: make transactions keep retrying
 //TODO: more information on fees

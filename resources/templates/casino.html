@@ -64,6 +64,19 @@
 										</thead>
 
 										<tbody>
+											<#if my_bets_pending??>
+											<#list my_bets_pending as bet>
+													<tr>
+															<td><a href="/wallet?address=${bet["source"]}">${bet["source"]}</a></td>
+															<td>Pending</td>
+															<td>${bet["bet"]} CHA</td>
+															<td>${bet["chance"]}%</td>
+															<td>${bet["payout"]}X</td>
+															<td>?</td>
+															<td>?</td>
+													</tr>
+											</#list>
+											</#if>
 											<#list bets as bet>
 													<tr>
 															<td><a href="/wallet?address=${bet["source"]}">${bet["source"]}</a></td>
@@ -96,9 +109,22 @@
 												</tr>
 										</thead>
 										<tbody>
+											<#if my_bets_pending??>
+											<#list my_bets_pending as bet>
+													<tr>
+															<td><a href="/wallet?address=${bet["source"]}">${bet["source"]}</a></td>
+															<td>Pending</td>
+															<td>${bet["bet"]} CHA</td>
+															<td>${bet["chance"]}%</td>
+															<td>${bet["payout"]}X</td>
+															<td>?</td>
+															<td>?</td>
+													</tr>
+											</#list>
+											</#if>
 											<#list my_bets as bet>
 													<tr>
-															<td><a href="http://blockchain.info/tx/${bet["tx_hash"]}">${bet["source"]}</a></td>
+															<td><a href="/wallet?address=${bet["source"]}">${bet["source"]}</a></td>
 															<td>${bet["block_time"]}</td>
 															<td>${bet["bet"]} CHA</td>
 															<td>${bet["chance"]}%</td>

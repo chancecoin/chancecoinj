@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -984,6 +985,19 @@ public class Server implements Runnable {
 				}
 				attributes.put("my_bets", bets);
 				
+				List<BetInfo> betsPending = Bet.getPending(address);
+				bets = new ArrayList<HashMap<String, Object>>();
+				for (BetInfo betInfo : betsPending) {
+					HashMap<String,Object> map = new HashMap<String,Object>();
+					map.put("source", betInfo.source);
+					map.put("bet", betInfo.bet.doubleValue()/Config.unit.doubleValue());
+					map.put("chance", betInfo.chance);
+					map.put("payout", betInfo.payout);
+					map.put("tx_hash", betInfo.txHash);
+					bets.add(map);
+				}
+				attributes.put("my_bets_pending", bets);
+				
 				return modelAndView(attributes, "casino.html");
 			}
 		});
@@ -1090,6 +1104,19 @@ public class Server implements Runnable {
 				}
 				attributes.put("my_bets", bets);
 								
+				List<BetInfo> betsPending = Bet.getPending(address);
+				bets = new ArrayList<HashMap<String, Object>>();
+				for (BetInfo betInfo : betsPending) {
+					HashMap<String,Object> map = new HashMap<String,Object>();
+					map.put("source", betInfo.source);
+					map.put("bet", betInfo.bet.doubleValue()/Config.unit.doubleValue());
+					map.put("chance", betInfo.chance);
+					map.put("payout", betInfo.payout);
+					map.put("tx_hash", betInfo.txHash);
+					bets.add(map);
+				}
+				attributes.put("my_bets_pending", bets);
+
 				return modelAndView(attributes, "casino.html");
 			}
 		});

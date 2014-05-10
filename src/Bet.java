@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -18,10 +19,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.bitcoin.core.Transaction;
 
 public class Bet {
-    static Logger logger = LoggerFactory.getLogger(Bet.class);
+	static Logger logger = LoggerFactory.getLogger(Bet.class);
 	public static Integer length = 8+8+8;
 	public static Integer id = 40;
-	
+
 	public static void parse(Integer txIndex, List<Byte> message) {
 		Database db = Database.getInstance();
 		ResultSet rs = db.executeQuery("select * from transactions where tx_index="+txIndex.toString());
@@ -65,7 +66,61 @@ public class Bet {
 		} catch (SQLException e) {	
 		}
 	}
-		
+
+	public static List<BetInfo> getPending(String source) {
+		Database db = Database.getInstance();
+		ResultSet rs = db.executeQuery("select * from transactions where block_index<0 and source='"+source+"'");
+		List<BetInfo> bets = new ArrayList<BetInfo>();
+		Blocks blocks = Blocks.getInstance();
+		try {
+			while (rs.next()) {
+				String destination = rs.getString("destination");
+				BigInteger btcAmount = BigInteger.valueOf(rs.getLong("btc_amount"));
+				BigInteger fee = BigInteger.valueOf(rs.getLong("fee"));
+				Integer blockIndex = rs.getInt("block_index");
+				String txHash = rs.getString("tx_hash");
+				Integer txIndex = rs.getInt("tx_index");
+				String dataString = rs.getString("data");
+
+				ResultSet rsCheck = db.executeQuery("select * from bets where tx_index='"+txIndex.toString()+"'");
+				if (!rsCheck.next()) {
+					List<Byte> messageType = blocks.getMessageTypeFromTransaction(dataString);
+					List<Byte> message = blocks.getMessageFromTransaction(dataString);
+					if (messageType.get(3)==Bet.id.byteValue() && message.size() == length) {
+						ByteBuffer byteBuffer = ByteBuffer.allocate(length);
+						for (byte b : message) {
+							byteBuffer.put(b);
+						}			
+						BigInteger bet = BigInteger.valueOf(byteBuffer.getLong(0));
+						Double chance = byteBuffer.getDouble(8);
+						Double payout = byteBuffer.getDouble(16);
+						Double houseEdge = Config.houseEdge;
+						//PROTOCOL CHANGE
+						Double oldHouseEdge = 0.02;
+						Boolean payoutChanceCongruent = Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-houseEdge)),6) || Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-oldHouseEdge)),6);
+						BigInteger chaSupply = Util.chaSupply();
+						String validity = "invalid";
+						if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
+							if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
+								if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
+									BetInfo betInfo = new BetInfo();
+									betInfo.bet = bet;
+									betInfo.chance = chance;
+									betInfo.payout = payout;
+									betInfo.source = source;
+									betInfo.txHash = txHash;
+									bets.add(betInfo);
+								}
+							}
+						}
+					}	
+				}
+			}
+		} catch (SQLException e) {	
+		}	
+		return bets;
+	}
+
 	public static Transaction create(String source, BigInteger bet, Double chance, Double payout) throws Exception {
 		BigInteger chaSupply = Util.chaSupply();
 		if (source.equals("")) throw new Exception("Please specify a source address.");
@@ -96,14 +151,14 @@ public class Bet {
 		return tx;
 	}
 	public static BigInteger factorial(BigInteger n) {
-	    BigInteger result = BigInteger.ONE;
+		BigInteger result = BigInteger.ONE;
 
-	    while (!n.equals(BigInteger.ZERO)) {
-	        result = result.multiply(n);
-	        n = n.subtract(BigInteger.ONE);
-	    }
+		while (!n.equals(BigInteger.ZERO)) {
+			result = result.multiply(n);
+			n = n.subtract(BigInteger.ONE);
+		}
 
-	    return result;
+		return result;
 	}
 	public static BigInteger combinations(BigInteger n, BigInteger k) {
 		if (k.compareTo(n)>0) {
@@ -112,18 +167,18 @@ public class Bet {
 			return factorial(n).divide(factorial(k)).divide(factorial(n.subtract(k)));
 		}
 	}
-    public static Date addDays(Date date, int days)
-    {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
-        cal.add(Calendar.DATE, days); //minus number would decrement the days
-        return cal.getTime();
-    }
+	public static Date addDays(Date date, int days)
+	{
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+		cal.add(Calendar.DATE, days); //minus number would decrement the days
+		return cal.getTime();
+	}
 	public static void resolve() {
 		//resolve bets
-		
+
 		logger.info("Resolving bets");
-		
+
 		Database db = Database.getInstance();
 		ResultSet rs = db.executeQuery("select block_time,blocks.block_index as block_index,tx_index,tx_hash,source,bet,payout,chance,cha_supply from bets,blocks where bets.block_index=blocks.block_index and bets.validity='valid' and bets.resolved IS NOT 'true';");
 		//if (true) return;
@@ -140,8 +195,8 @@ public class Bet {
 		dateFormatDateTimeLotto.setTimeZone(newYork);
 		dateFormatHour.setTimeZone(newYork);
 		dateFormatMinute.setTimeZone(newYork);
-	    
-	    try {
+
+		try {
 			while (rs.next()) {
 				String source = rs.getString("source");
 				String txHash = rs.getString("tx_hash");
@@ -152,9 +207,9 @@ public class Bet {
 				Double chance = rs.getDouble("chance");
 				BigInteger chaSupply = BigInteger.valueOf(rs.getLong("cha_supply"));
 				Date blockTime = new Date((long)rs.getLong("block_time")*1000);
-				
+
 				logger.info("Attempting to resolve bet "+txHash);
-				
+
 				String lottoDate = dateFormatDateLotto.format(blockTime);
 				Integer hour = Integer.parseInt(dateFormatHour.format(blockTime));
 				Integer minute = Integer.parseInt(dateFormatMinute.format(blockTime));
@@ -168,7 +223,7 @@ public class Bet {
 					ObjectMapper objectMapper = new ObjectMapper();
 					objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 					LottoResult lottoMap = objectMapper.readValue(lottoPage, LottoResult.class);
-					
+
 					for (LottoDraw draw : lottoMap.draw) {
 						Date time = dateFormatDateTimeLotto.parse(draw.date);
 						if (time.after(blockTime)) {
@@ -184,9 +239,9 @@ public class Bet {
 							Double rollB = (new BigInteger(txHash.substring(10, txHash.length()),16)).mod(BigInteger.valueOf(1000000000)).doubleValue()/1000000000.0;
 							Double roll = (rollA + rollB) % 1.0;
 							roll = roll * 100.0;
-							
+
 							logger.info("Roll = "+roll.toString()+", chance = "+chance.toString());
-							
+
 							BigInteger profit = BigInteger.ZERO;
 							if (roll<chance) {
 								logger.info("The bet is a winner");
@@ -222,4 +277,12 @@ class LottoResult {
 class LottoDraw {
 	public String date;
 	public List<BigInteger> numbersDrawn;
+}
+
+class BetInfo {
+	public String source;
+	public BigInteger bet;
+	public Double chance;
+	public Double payout;
+	public String txHash;
 }
