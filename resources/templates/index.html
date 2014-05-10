@@ -49,14 +49,17 @@
 </div>
 
 <div class="row section">
-		<div class="col-xs-6 segment">
+		<div class="col-xs-12">
 				<h2>Recent <a href="/casino">bets</a></h2>
 				<table class="table table-striped">
 						<thead>
 								<tr>
+										<th>Source address</th>
+										<th>Time</th>
 										<th>Bet size</th>
 										<th>Chance to win</th>
 										<th>Payout multiplier</th>
+										<th>Roll</th>
 										<th>Profit</th>
 								</tr>
 						</thead>
@@ -64,34 +67,15 @@
 						<tbody>
 							<#list bets as bet>
 									<tr>
+											<td><a href="/wallet?address=${bet["source"]}">${bet["source"]}</a></td>
+											<td>${bet["block_time"]}</td>
 											<td>${bet["bet"]} CHA</td>
 											<td>${bet["chance"]}%</td>
 											<td>${bet["payout"]}X</td>
+											<td><#if bet["resolved"]??>${bet["roll"]}<#else>?</#if></td>
 											<td><#if bet["resolved"]?? && bet["resolved"]="true">${bet["profit"]} CHA<#else>Unresolved</#if></td>
 									</tr>
 							</#list>
-						</tbody>
-				</table>
-		</div>
-		<div class="col-xs-6 segment">
-				<h2>Top <a href="/balances">balances</a></h2>
-				<table class="table table-striped">
-						<thead>
-								<tr>
-										<th>Address</th>
-										<th>CHA balance</th>
-										<th>Market share</th>
-								</tr>
-						</thead>
-
-						<tbody>
-								<#list balances as balance>
-										<tr>
-												<td>${balance["address"]}</td>
-												<td>${balance["balance"]?string(",##0.00")}</td>
-												<td>${balance["share"]?string("##0.00")}%</td>
-										</tr>
-								</#list>
 						</tbody>
 				</table>
 		</div>
