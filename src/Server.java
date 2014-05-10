@@ -950,9 +950,48 @@ public class Server implements Runnable {
 				}
 				attributes.put("winners", winners);				
 				
+				//get top 10 highest rollers
+				rs = db.executeQuery("select source, count(bet) as bet_count, sum(bet) as sum_bet, avg(chance) as avg_chance, sum(profit) as sum_profit from bets where validity='valid' group by source order by sum(bet) desc limit 10;");
+				ArrayList<HashMap<String, Object>> highRollers = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("source", rs.getString("source"));
+						map.put("bet_count", rs.getDouble("bet_count"));
+						map.put("sum_bet", BigInteger.valueOf(rs.getLong("sum_bet")).doubleValue()/Config.unit.doubleValue());
+						map.put("avg_chance", rs.getDouble("avg_chance"));
+						map.put("sum_profit", BigInteger.valueOf(rs.getLong("sum_profit")).doubleValue()/Config.unit.doubleValue());
+						highRollers.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("high_rollers", highRollers);	
+				
+				//get top 10 largest bets
+				rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.bet desc limit 10;");
+				ArrayList<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("source", rs.getString("source"));
+						map.put("bet", BigInteger.valueOf(rs.getLong("bet")).doubleValue()/Config.unit.doubleValue());
+						map.put("chance", rs.getDouble("chance"));
+						map.put("payout", rs.getDouble("payout"));
+						map.put("tx_hash", rs.getString("tx_hash"));
+						map.put("roll", rs.getDouble("roll"));
+						map.put("resolved", rs.getString("resolved"));
+						map.put("block_time", Util.timeFormat(rs.getInt("block_time")));
+						map.put("profit", BigInteger.valueOf(rs.getLong("profit")).doubleValue()/Config.unit.doubleValue());
+						bets.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("largest_bets", bets);
+
+				
 				//get last 200 bets
 				rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 200;");
-				ArrayList<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
+				bets = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
 						HashMap<String,Object> map = new HashMap<String,Object>();
@@ -1069,9 +1108,48 @@ public class Server implements Runnable {
 				}
 				attributes.put("winners", winners);				
 				
+				//get top 10 highest rollers
+				rs = db.executeQuery("select source, count(bet) as bet_count, sum(bet) as sum_bet, avg(chance) as avg_chance, sum(profit) as sum_profit from bets where validity='valid' group by source order by sum(bet) desc limit 10;");
+				ArrayList<HashMap<String, Object>> highRollers = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("source", rs.getString("source"));
+						map.put("bet_count", rs.getDouble("bet_count"));
+						map.put("sum_bet", BigInteger.valueOf(rs.getLong("sum_bet")).doubleValue()/Config.unit.doubleValue());
+						map.put("avg_chance", rs.getDouble("avg_chance"));
+						map.put("sum_profit", BigInteger.valueOf(rs.getLong("sum_profit")).doubleValue()/Config.unit.doubleValue());
+						highRollers.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("high_rollers", highRollers);	
+				
+				//get top 10 largest bets
+				rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.bet desc limit 10;");
+				ArrayList<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("source", rs.getString("source"));
+						map.put("bet", BigInteger.valueOf(rs.getLong("bet")).doubleValue()/Config.unit.doubleValue());
+						map.put("chance", rs.getDouble("chance"));
+						map.put("payout", rs.getDouble("payout"));
+						map.put("tx_hash", rs.getString("tx_hash"));
+						map.put("roll", rs.getDouble("roll"));
+						map.put("resolved", rs.getString("resolved"));
+						map.put("block_time", Util.timeFormat(rs.getInt("block_time")));
+						map.put("profit", BigInteger.valueOf(rs.getLong("profit")).doubleValue()/Config.unit.doubleValue());
+						bets.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("largest_bets", bets);
+
+				
 				//get last 200 bets
 				rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 200;");
-				ArrayList<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
+				bets = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
 						HashMap<String,Object> map = new HashMap<String,Object>();

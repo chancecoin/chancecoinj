@@ -43,7 +43,7 @@
 						<li><a href="#my_bets" data-toggle="tab">My bets</a></li>
 						</#if>
 		        <li><a href="#leaderboard" data-toggle="tab">Leaderboard</a></li>
-						<li><a href="#stats" data-toggle="tab">Stats</a></li>
+						<li><a href="#house_info" data-toggle="tab">House Info</a></li>
 		    </ul>
 
 		    <div id="my-tab-content" class="tab-content">
@@ -139,8 +139,7 @@
 						</#if>
 
 		        <div class="tab-pane" id="leaderboard">
-								<h2>Leaderboard</h2>
-
+								<h2>Biggest Winners</h2>
 								<table class="table table-striped">
 										<thead>
 												<tr>
@@ -164,9 +163,64 @@
 
 										</tbody>
 								</table>
+							
+								<h2>High Rollers</h2>
+								<table class="table table-striped">
+										<thead>
+												<tr>
+														<th>Source Address</th>
+														<th>Total Bets</th>
+														<th>Total Bet Size</th>
+														<th>Average Win Chance</th>
+														<th>Total Profit</th>
+												</tr>
+										</thead>
+										<#list high_rollers as high_roller>
+												<tr>
+														<td><a href="/wallet?address=${high_roller["source"]}">${high_roller["source"]}</a></td>
+														<td>${high_roller["bet_count"]}</td>
+														<td>${high_roller["sum_bet"]} CHA</td>
+														<td>${high_roller["avg_chance"]}%</td>
+														<td>${high_roller["sum_profit"]} CHA</td>
+												</tr>
+										</#list>
+										<tbody>
+
+										</tbody>
+								</table>
+
+								<h2>Largest Bets</h2>
+								<table class="table table-striped">
+										<thead>
+											<tr>
+													<th>Source address</th>
+													<th>Time</th>
+													<th>Bet size</th>
+													<th>Chance to win</th>
+													<th>Payout multiplier</th>
+													<th>Roll</th>
+													<th>Profit</th>
+											</tr>
+										</thead>
+										<#list largest_bets as largest_bet>
+											<tr>
+													<td><a href="/wallet?address=${largest_bet["source"]}">${largest_bet["source"]}</a></td>
+													<td>${largest_bet["block_time"]}</td>
+													<td>${largest_bet["bet"]} CHA</td>
+													<td>${largest_bet["chance"]}%</td>
+													<td>${largest_bet["payout"]}X</td>
+													<td><#if largest_bet["resolved"]??>${largest_bet["roll"]}<#else>?</#if></td>
+													<td><#if largest_bet["resolved"]?? && largest_bet["resolved"]="true">${largest_bet["profit"]} CHA<#else>Unresolved</#if></td>
+											</tr>
+										</#list>
+										<tbody>
+
+										</tbody>
+								</table>
+
 		        </div>
-						<div class="tab-pane" id="stats">
-								<h2>Stats</h2>
+						<div class="tab-pane" id="house_info">
+								<h2>House Info</h2>
 								<table class="table half">
 										<thead>
 												<tr>
