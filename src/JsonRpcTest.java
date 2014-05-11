@@ -15,12 +15,12 @@ public class JsonRpcTest {
 
 	public void runJsonRpcHttpClient() throws MalformedURLException {
 		JsonRpcHttpClient jsonRpcHttpClient = new JsonRpcHttpClient(new URL(
-				"http://127.0.0.1:" + JsonRpcServletEngine.PORT + "/servlet"));
+				"http://127.0.0.1:" + JsonRpcServletEngine.PORT + "/"+ Config.appName.toLowerCase()));
 		JsonRpcService service = ProxyUtil.createClientProxy(
 				JsonRpcService.class.getClassLoader(), JsonRpcService.class,
 				jsonRpcHttpClient);
 
-		System.out.println(service.getChancecoinBalance("1BckY64TE6VrjVcGMizYBE7gt22axnq6CM"));
+		System.out.println(service.getBalance("1BckY64TE6VrjVcGMizYBE7gt22axnq6CM"));
 		System.out.println(service.getSends("15QN22d2nzNM2FE9dyPrwAdLfxUkgavSUY"));
 		System.out.println(service.getReceives("15QN22d2nzNM2FE9dyPrwAdLfxUkgavSUY"));
 	}

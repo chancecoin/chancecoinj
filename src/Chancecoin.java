@@ -5,7 +5,6 @@ public class Chancecoin {
 		try {
 			engine.startup();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

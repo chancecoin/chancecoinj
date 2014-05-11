@@ -10,6 +10,7 @@ public class Config {
 	public static String dbPath = "resources/db/";
 	public static String downloadUrl = "http://chancecoin.com/downloads/";
 	public static String downloadZipUrl = "https://raw2.github.com/chancecoin/chancecoinj/master/download.txt";
+	public static Integer RPCPort = 54121;
 	
 	//version
 	public static Integer majorVersion = 2;
@@ -42,9 +43,6 @@ public class Config {
 	public static Integer unit = 100000000;
 	
 	//etc.
-	public static Integer twoWeeks = 2*7*24*3600;
 	public static Integer maxExpiration = 4*2016;
 	public static Integer maxInt = ((int) Math.pow(2.0,63.0))-1;
-	public static Double feeRequiredDefault = 0.01;
-	public static Double feeProvidedDefault = 0.01;
 }

@@ -2,7 +2,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.server.Server;
 
 public class JsonRpcServletEngine {
-	public static final int PORT = 54321;
+	public static final int PORT = Config.RPCPort;
 	Server server;
 
 	public void startup() throws Exception {
@@ -10,7 +10,7 @@ public class JsonRpcServletEngine {
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
 		context.setContextPath("/");
 		server.setHandler(context);
-		context.addServlet(JsonRpcServlet.class, "/servlet");
+		context.addServlet(JsonRpcServlet.class, "/"+Config.appName.toLowerCase());
 		server.start();
 	}
 
@@ -23,7 +23,6 @@ public class JsonRpcServletEngine {
 		try {
 			engine.startup();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

@@ -18,12 +18,12 @@ import com.google.bitcoin.core.Transaction;
 public class JsonRpcServiceImpl implements JsonRpcService {
     static Logger logger = LoggerFactory.getLogger(JsonRpcServiceImpl.class);
 	
-	public String getChancecoinBalance(String address) {
+	public String getBalance(String address) {
 		BigInteger balance = Util.getBalance(address, "CHA");
 		return Double.toString(balance.doubleValue() / Config.unit);
 	}
 	
-	public String sendChancecoin(String source, String destination, Double amount) {
+	public String send(String source, String destination, Double amount) {
 		Blocks blocks = Blocks.getInstance();
 		BigInteger quantity = new BigDecimal(amount*Config.unit).toBigInteger();
 		try {
