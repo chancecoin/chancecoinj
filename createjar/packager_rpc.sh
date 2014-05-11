@@ -6,7 +6,7 @@ mkdir classes
 mkdir classes/resources
 cp -R ../resources/templates classes/resources/
 cp -R ../resources release_rpc/
-mkdir release/resources/db
+mkdir release_rpc/resources/db
 rm -Rf release_rpc/resources/templates
 rm -Rf release_rpc/resources/templates_chancecoin.com
 rm release_rpc/resources/db/*
