@@ -76,5 +76,14 @@ public class JsonRpcServiceImpl implements JsonRpcService {
 		return jsonArray.toString();									
 	}
 	
+	public void importPrivateKey(String privateKey) {
+		Blocks blocks = Blocks.getInstance();
+		blocks.importPrivateKey(privateKey);
+	}
+
+	public void reparse() {
+    	Blocks blocks = Blocks.getInstance();
+    	blocks.reparse();
+    }
 	
 }

@@ -1,3 +1,7 @@
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
+
 
 public class Config {
 	//name
@@ -11,6 +15,9 @@ public class Config {
 	public static String downloadUrl = "http://chancecoin.com/downloads/";
 	public static String downloadZipUrl = "https://raw2.github.com/chancecoin/chancecoinj/master/download.txt";
 	public static Integer RPCPort = 54121;
+	public static String RPCUsername = "";
+	public static String RPCPassword = "";
+	public static String ConfigFile = "./resources/db/chancecoin.conf";
 	
 	//version
 	public static Integer majorVersion = 2;
@@ -45,4 +52,16 @@ public class Config {
 	//etc.
 	public static Integer maxExpiration = 4*2016;
 	public static Integer maxInt = ((int) Math.pow(2.0,63.0))-1;
+	
+	public static void loadUserDefined() {
+		FileInputStream input;
+		try {
+			input = new FileInputStream(ConfigFile);
+			Properties prop = new Properties();
+			prop.load(input);
+			RPCUsername = prop.getProperty("RPCUsername");
+			RPCPassword = prop.getProperty("RPCPassword");
+		} catch (IOException e) {
+		}		
+	}
 }
