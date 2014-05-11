@@ -102,7 +102,7 @@ public class Util {
 			}
 			output.close();
 		} catch (Exception e) {
-			
+			logger.info(e.toString());
 		}
 	}
 
