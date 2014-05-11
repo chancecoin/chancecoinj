@@ -6,7 +6,10 @@ import java.util.Properties;
 
 public class Chancecoin {
 	public static void main(String[] args) {
-		Blocks blocks = Blocks.getInstance();
+		Blocks blocks = new Blocks();
+		Thread blocksThread = new Thread(blocks);
+		blocksThread.setDaemon(true);
+		blocksThread.start(); 
 		Config.loadUserDefined();
 		JsonRpcServletEngine engine = new JsonRpcServletEngine();
 		try {
