@@ -3,7 +3,6 @@ rm -Rf classes
 mkdir release
 mkdir release/update
 mkdir classes
-cp ../bin/*.class classes/
 mkdir classes/resources
 cp -R ../resources/templates classes/resources/
 cp -R ../resources release/
