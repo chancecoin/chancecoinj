@@ -1,61 +1,107 @@
 <?php
-class XMLRPCClient
+class Client
 {
-    public function __construct($uri)
-    {
-        $this->uri = $uri;
-        $this->curl_hdl = null;
-    }
+    private $url;
+    private $timeout;
+    private $debug;
+    private $username;
+    private $password;
 
-    public function __destruct()
-    {
-        $this->close();
-    }
+    private $headers = array(
+        'Connection: close',
+        'Content-Type: application/json',
+        'Accept: application/json'
+    );
 
-    public function close()
-    {
-        if ($this->curl_hdl !== null)
-        {
-            curl_close($this->curl_hdl);
-        }
-        $this->curl_hdl = null;
-    }
 
-    public function setUri($uri)
+    public function __construct($url, $timeout = 5, $debug = false, $headers = array())
     {
-        $this->uri = $uri;
-        $this->close();
+        $this->url = $url;
+        $this->timeout = $timeout;
+        $this->debug = $debug;
+        $this->headers = array_merge($this->headers, $headers);
     }
 
     public function __call($method, $params)
     {
-        $xml = xmlrpc_encode_request($method, $params);
 
-        if ($this->curl_hdl === null)
-        {
-            // Create cURL resource
-            $this->curl_hdl = curl_init();
+        return $this->execute($method, $params);
+    }
 
-            // Configure options
-            curl_setopt($this->curl_hdl, CURLOPT_URL, $this->uri);
-            curl_setopt($this->curl_hdl, CURLOPT_HEADER, 0);
-            curl_setopt($this->curl_hdl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($this->curl_hdl, CURLOPT_POST, true);
+    public function authentication($username, $password)
+    {
+        $this->username = $username;
+        $this->password = $password;
+    }
+
+
+    public function execute($procedure, array $params = array())
+    {
+        $id = mt_rand();
+
+        $payload = array(
+            'jsonrpc' => '2.0',
+            'method' => $procedure,
+            'id' => $id
+        );
+
+        if (! empty($params)) {
+
+            $payload['params'] = $params;
         }
 
-        curl_setopt($this->curl_hdl, CURLOPT_POSTFIELDS, $xml);
+        $result = $this->doRequest($payload);
 
-        // Invoke RPC command
-        $response = curl_exec($this->curl_hdl);
+        if (isset($result['id']) && $result['id'] == $id && array_key_exists('result', $result)) {
 
-        $result = xmlrpc_decode_request($response, $method);
+            return $result['result'];
+        }
+        else if ($this->debug && isset($result['error'])) {
 
-        return $result;
+            print_r($result['error']);
+        }
+
+        return null;
+    }
+
+
+    public function doRequest($payload)
+    {
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $this->url);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $this->timeout);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'JSON-RPC PHP Client');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->headers);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+
+        if ($this->username && $this->password) {
+
+            curl_setopt($ch, CURLOPT_USERPWD, $this->username.':'.$this->password);
+        }
+
+        $result = curl_exec($ch);
+        $response = json_decode($result, true);
+
+        curl_close($ch);
+
+        return is_array($response) ? $response : array();
     }
 }
 
-$client = new XMLRPCClient("http://127.0.0.1:54121/chancecoin/");
-$response = $client->getBalance('1BckY64TE6VrjVcGMizYBE7gt22axnq6CM');
-print var_export($response);
-$client->close();
+$client = new Client("http://127.0.0.1:54121/chancecoin");
+
+$result = $client->execute('getBalance', array('1BckY64TE6VrjVcGMizYBE7gt22axnq6CM'));
+print_r($result);
+
+$result = $client->execute('getSends', array('1BckY64TE6VrjVcGMizYBE7gt22axnq6CM'));
+print_r($result);
+
+$result = $client->execute('getReceives', array('1BckY64TE6VrjVcGMizYBE7gt22axnq6CM'));
+print_r($result);
+
 ?>
