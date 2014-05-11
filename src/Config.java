@@ -17,7 +17,7 @@ public class Config {
 	public static Integer RPCPort = 54121;
 	public static String RPCUsername = "";
 	public static String RPCPassword = "";
-	public static String ConfigFile = "./resources/db/chancecoin.conf";
+	public static String ConfigFile = "./resources/chancecoin.conf";
 	
 	//version
 	public static Integer majorVersion = 2;
