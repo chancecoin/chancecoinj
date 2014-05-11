@@ -54,7 +54,7 @@ class XMLRPCClient
     }
 }
 
-$client = new XMLRPCClient("http://127.0.0.1:54121/chancecoin");
+$client = new XMLRPCClient("http://127.0.0.1:54121/chancecoin/");
 $response = $client->getBalance('1BckY64TE6VrjVcGMizYBE7gt22axnq6CM');
 print var_export($response);
 $client->close();
