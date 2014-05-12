@@ -9,6 +9,7 @@
 //TODO: test betting with 0 bet size
 //TODO: other games
 //TODO: easy function to allow you to get escrow back easily
+//TODO: let people send BTC with Chancecoin client
 public class Test {
 
 	public static void main(String[] args) {
