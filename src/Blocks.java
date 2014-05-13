@@ -109,7 +109,6 @@ public class Blocks implements Runnable {
 	public void versionCheck() {
 		Integer minMajorVersion = Util.getMinMajorVersion();
 		Integer minMinorVersion = Util.getMinMinorVersion();
-		System.exit(0);
 		if (Config.majorVersion<minMajorVersion || (Config.majorVersion.equals(minMajorVersion) && Config.minorVersion<minMinorVersion)) {
 			statusMessage = "Version is out of date, updating now"; 
 			logger.info(statusMessage);
