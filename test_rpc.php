@@ -96,6 +96,7 @@ class Client
 $client = new Client("http://127.0.0.1:54121/chancecoin");
 $client->authentication("chancecoin", "password");
 // $result = $client->execute('reparse', array());
+// $result = $client->execute('importPrivateKey', array('key in wif format'));
 
 $result = $client->execute('getBalance', array('1BckY64TE6VrjVcGMizYBE7gt22axnq6CM'));
 print_r($result);
