@@ -52,7 +52,7 @@ public class Server implements Runnable {
 	
 	public void init() {
 		//start Blocks thread
-		Blocks blocks = new Blocks();
+		Blocks blocks = Blocks.getInstance();
 		Thread blocksThread = new Thread(blocks);
 		blocksThread.setDaemon(true);
 		blocksThread.start(); 

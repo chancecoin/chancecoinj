@@ -6,8 +6,7 @@ import java.util.Properties;
 
 public class Chancecoin {
 	public static void main(String[] args) {
-		Blocks blocks = new Blocks();
-		blocks.getInstanceSkipVersionCheck();
+		Blocks blocks = Blocks.getInstanceSkipVersionCheck();
 		blocks.init();
 		//blocks.versionCheck();
 		blocks.follow();
