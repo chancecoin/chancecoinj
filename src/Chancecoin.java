@@ -7,8 +7,9 @@ import java.util.Properties;
 public class Chancecoin {
 	public static void main(String[] args) {
 		Blocks blocks = new Blocks();
+		blocks.getInstanceSkipVersionCheck();
 		blocks.init();
-		blocks.versionCheck();
+		//blocks.versionCheck();
 		blocks.follow();
 		Thread blocksThread = new Thread(blocks);
 		blocksThread.setDaemon(true);
