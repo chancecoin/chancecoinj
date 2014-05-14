@@ -11,9 +11,11 @@ public class Config {
 	public static String prefix = "CHANCECO";
 	public static String log = appName+".log";
 	public static String minVersionPage = "https://raw2.github.com/chancecoin/chancecoinj/master/min_version.txt";
+	public static String minVersionPage2 = "http://chancecoin.com/downloads/min_version.txt";
 	public static String dbPath = "resources/db/";
 	public static String downloadUrl = "http://chancecoin.com/downloads/";
 	public static String downloadZipUrl = "https://raw2.github.com/chancecoin/chancecoinj/master/download.txt";
+	public static String downloadZipUrl2 = "https://chancecoin.com/downloads/download.txt";
 	public static Integer RPCPort = 54121;
 	public static String RPCUsername = "";
 	public static String RPCPassword = "";

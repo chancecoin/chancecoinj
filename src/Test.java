@@ -9,12 +9,13 @@
 //TODO: test betting with 0 bet size
 //TODO: other games
 //TODO: easy function to allow you to get escrow back easily
+//TODO: redundancy for downloads.txt on github
 //TODO: let people send BTC with Chancecoin client
 public class Test {
 
 	public static void main(String[] args) {
 		Blocks blocks = Blocks.getInstance();
-		blocks.reDownloadBlockTransactions(299628);
+		//blocks.reDownloadBlockTransactions(299628);
 	}
 	
 }

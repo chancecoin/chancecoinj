@@ -348,7 +348,10 @@ public class Util {
 	public static String getMinVersion() {
 		String minVersion = getPage(Config.minVersionPage).trim();
 		if (minVersion.length()>0) {
-			return Config.version;
+			minVersion = getPage(Config.minVersionPage2).trim();
+			if (minVersion.length()>0) {
+				return Config.version;
+			}
 		}
 		return minVersion;
 	}
