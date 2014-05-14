@@ -70,7 +70,7 @@ public class Util {
 			if (retries != 0) {
 				return getPage(url_string, retries-1);	
 			} else {
-				e.printStackTrace();
+				logger.error(e.toString());
 			}
 		}
 		return text;
@@ -347,6 +347,9 @@ public class Util {
 
 	public static String getMinVersion() {
 		String minVersion = getPage(Config.minVersionPage).trim();
+		if (minVersion.length()>0) {
+			return Config.version;
+		}
 		return minVersion;
 	}
 	public static Integer getMinMajorVersion() {
