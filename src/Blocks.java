@@ -594,6 +594,16 @@ public class Blocks implements Runnable {
 		return 0;
 	}
 
+	public String importPrivateKey(ECKey key) {
+		String address = "";
+		logger.info("Importing private key");
+		address = key.toAddress(params).toString();
+		logger.info("Importing address "+address);
+		wallet.removeKey(key);
+		wallet.addKey(key);
+		importTransactionsFromAddress(address);
+		return address;		
+	}
 	public String importPrivateKey(String privateKey) {
 		DumpedPrivateKey dumpedPrivateKey;
 		String address = "";
@@ -606,16 +616,19 @@ public class Blocks implements Runnable {
 		} catch (AddressFormatException e) {
 			//If it's not a private key, maybe it's an address
 			address = privateKey;
-			/*
-			wallet.addWatchedAddress(new Address(params, address));
-			} catch (AddressFormatException e1) {
-			}
-			 */
 		}
 		logger.info("Importing address "+address);
 		if (key!=null) {
 			wallet.removeKey(key);
 			wallet.addKey(key);
+		}
+		importTransactionsFromAddress(address);
+		return address;
+	}
+	public void importTransactionsFromAddress(String address) {
+		try {
+			wallet.addWatchedAddress(new Address(params, address));
+		} catch (AddressFormatException e) {
 		}
 		List<Map.Entry<String,String>> txsInfo = Util.infoGetTransactions(address);
 		BigInteger balance = BigInteger.ZERO;
@@ -642,8 +655,7 @@ public class Blocks implements Runnable {
 			} catch (ExecutionException e) {				
 			}
 		}
-		logger.info("Address balance: "+balance);
-		return address;
+		logger.info("Address balance: "+balance);		
 	}
 
 	public Transaction transaction(String source, String destination, BigInteger btcAmount, BigInteger fee, String dataString) throws Exception {

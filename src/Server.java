@@ -615,7 +615,7 @@ public class Server implements Runnable {
 					}
 					if (importKey != null) {
 						logger.info("Reimporting private key transactions");
-						blocks.importPrivateKey(importKey.toString());
+						blocks.importPrivateKey(importKey);
 						attributes.put("success", "Your transactions have been reimported.");
 					}
 				}
@@ -642,6 +642,7 @@ public class Server implements Runnable {
 					String privateKey = request.queryParams("privatekey");
 					address = Blocks.getInstance().importPrivateKey(privateKey);
 					request.session().attribute("address", address);
+					attributes.put("address", address);				
 					attributes.put("success", "Your private key has been imported.");
 				}
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("send")) {
