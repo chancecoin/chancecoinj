@@ -29,12 +29,12 @@ public class JsonRpcServiceImpl implements JsonRpcService {
 		try {
 			Transaction tx = Send.create(source, destination, "CHA", quantity);
 			blocks.sendTransaction(tx);
-			System.out.println("Success! You sent "+amount+" CHA to "+destination+".");
-			return "success";
+			logger.info("Success! You sent "+amount+" CHA to "+destination+".");
+			return tx.getHashAsString();
 		} catch (Exception e) {
-			System.out.println("Error! There was a problem with your transaction: "+e.getMessage());						
+			logger.info("Error! There was a problem with your transaction: "+e.getMessage());						
+			return "Error: "+e.getMessage();
 		}
-		return "failure";
 	}
 	
 	public String getSends(String address) {
@@ -76,9 +76,11 @@ public class JsonRpcServiceImpl implements JsonRpcService {
 		return jsonArray.toString();									
 	}
 	
-	public void importPrivateKey(String privateKey) {
+	public String importPrivateKey(String privateKey) {
 		Blocks blocks = Blocks.getInstance();
-		blocks.importPrivateKey(privateKey);
+		String address = blocks.importPrivateKey(privateKey);
+		BigInteger balanceBTC = Util.getBalance(address, "BTC");
+		return "\""+address+"\""+":"+(balanceBTC.doubleValue() / Config.unit.doubleValue());
 	}
 
 	public void reparse() {

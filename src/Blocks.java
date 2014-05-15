@@ -727,19 +727,19 @@ public class Blocks implements Runnable {
 			} catch (AddressFormatException e) {
 			}
 		}
+		tx.signInputs(SigHash.ALL, wallet);
 		return tx;
 	}
 
 	public Boolean sendTransaction(Transaction tx) throws Exception {
 		try {
-			tx.signInputs(SigHash.ALL, wallet);
 			//System.out.println(tx);
 			Blocks blocks = Blocks.getInstance();
 			//blocks.wallet.commitTx(txBet);
 			ListenableFuture<Transaction> future = null;
 			try {
 				future = peerGroup.broadcastTransaction(tx);
-				future.get(60, TimeUnit.SECONDS);
+				//future.get(60, TimeUnit.SECONDS);
 				//} catch (TimeoutException e) {
 				//	logger.error(e.toString());
 				//	future.cancel(true);

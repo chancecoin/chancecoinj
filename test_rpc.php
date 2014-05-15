@@ -95,16 +95,27 @@ class Client
 
 $client = new Client("http://127.0.0.1:54121/chancecoin");
 $client->authentication("chancecoin", "password");
+
 // $result = $client->execute('reparse', array());
-// $result = $client->execute('importPrivateKey', array('key in wif format'));
 
-$result = $client->execute('getBalance', array('1BckY64TE6VrjVcGMizYBE7gt22axnq6CM'));
-print_r($result);
+//$result = $client->execute('importPrivateKey', array('private key in WIF format'));
+//print_r($result);
+//print "\n";
 
-$result = $client->execute('getSends', array('1BckY64TE6VrjVcGMizYBE7gt22axnq6CM'));
+$result = $client->execute('send', array('1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes','1GbWCwjHorFdFTuGzGk8tEtLctq4xxxqY9',1000.0));
 print_r($result);
+print "\n";
 
-$result = $client->execute('getReceives', array('1BckY64TE6VrjVcGMizYBE7gt22axnq6CM'));
+$result = $client->execute('getBalance', array('1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes'));
 print_r($result);
+print "\n";
+
+$result = $client->execute('getSends', array('1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes'));
+print_r($result);
+print "\n";
+
+$result = $client->execute('getReceives', array('1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes'));
+print_r($result);
+print "\n";
 
 ?>
