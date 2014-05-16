@@ -11,5 +11,6 @@ public interface JsonRpcService {
 	public String getSends(String address);
 	public String getReceives(String address);
 	public String importPrivateKey(String privateKey);
+	public String importPrivKey(String privateKey);
 	public void reparse();
 }

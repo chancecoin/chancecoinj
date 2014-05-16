@@ -98,11 +98,11 @@ $client->authentication("chancecoin", "password");
 
 // $result = $client->execute('reparse', array());
 
-//$result = $client->execute('importPrivateKey', array('private key in WIF format'));
-//print_r($result);
-//print "\n";
+$result = $client->execute('importPrivateKey', array('private key in WIF format'));
+print_r($result);
+print "\n";
 
-$result = $client->execute('send', array('1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes','1GbWCwjHorFdFTuGzGk8tEtLctq4xxxqY9',1000.0));
+$result = $client->execute('send', array('1GbWCwjHorFdFTuGzGk8tEtLctq4xxxqY9','1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes',1.0));
 print_r($result);
 print "\n";
 
@@ -117,5 +117,4 @@ print "\n";
 $result = $client->execute('getReceives', array('1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes'));
 print_r($result);
 print "\n";
-
 ?>

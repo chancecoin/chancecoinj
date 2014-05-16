@@ -640,10 +640,14 @@ public class Server implements Runnable {
 				
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("import")) {
 					String privateKey = request.queryParams("privatekey");
-					address = Blocks.getInstance().importPrivateKey(privateKey);
-					request.session().attribute("address", address);
-					attributes.put("address", address);				
-					attributes.put("success", "Your private key has been imported.");
+					try {
+						address = Blocks.getInstance().importPrivateKey(privateKey);
+						request.session().attribute("address", address);
+						attributes.put("address", address);				
+						attributes.put("success", "Your private key has been imported.");
+					} catch (Exception e) {
+						attributes.put("error", "Error when importing private key: "+e.getMessage());
+					}
 				}
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("send")) {
 					String source = request.queryParams("source");

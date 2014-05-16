@@ -76,11 +76,19 @@ public class JsonRpcServiceImpl implements JsonRpcService {
 		return jsonArray.toString();									
 	}
 	
+	public String importPrivKey(String privateKey) {
+		return importPrivateKey(privateKey);
+	}
 	public String importPrivateKey(String privateKey) {
 		Blocks blocks = Blocks.getInstance();
-		String address = blocks.importPrivateKey(privateKey);
-		BigInteger balanceBTC = Util.getBalance(address, "BTC");
-		return "\""+address+"\""+":"+(balanceBTC.doubleValue() / Config.unit.doubleValue());
+		String address;
+		try {
+			address = blocks.importPrivateKey(privateKey);
+			BigInteger balanceBTC = Util.getBalance(address, "BTC");
+			return "\""+address+"\""+":"+(balanceBTC.doubleValue() / Config.unit.doubleValue());
+		} catch (Exception e) {
+			return "Error: "+e.getMessage();
+		}
 	}
 
 	public void reparse() {

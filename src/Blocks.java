@@ -604,7 +604,7 @@ public class Blocks implements Runnable {
 		importTransactionsFromAddress(address);
 		return address;		
 	}
-	public String importPrivateKey(String privateKey) {
+	public String importPrivateKey(String privateKey) throws Exception {
 		DumpedPrivateKey dumpedPrivateKey;
 		String address = "";
 		ECKey key = null;
@@ -612,18 +612,10 @@ public class Blocks implements Runnable {
 		try {
 			dumpedPrivateKey = new DumpedPrivateKey(params, privateKey);
 			key = dumpedPrivateKey.getKey();
-			address = key.toAddress(params).toString();
+			return importPrivateKey(key);
 		} catch (AddressFormatException e) {
-			//If it's not a private key, maybe it's an address
-			address = privateKey;
+			throw new Exception(e.getMessage());
 		}
-		logger.info("Importing address "+address);
-		if (key!=null) {
-			wallet.removeKey(key);
-			wallet.addKey(key);
-		}
-		importTransactionsFromAddress(address);
-		return address;
 	}
 	public void importTransactionsFromAddress(String address) {
 		try {
@@ -716,7 +708,7 @@ public class Blocks implements Runnable {
 			}
 			if (totalInput.compareTo(totalOutput)<0) {
 				logger.info("Not enough inputs. Output: "+totalOutput.toString()+", input: "+totalInput.toString());
-				throw new Exception("Not enough BTC to cover transaction of "+(totalOutput.doubleValue()/Config.unit)+" BTC.");
+				throw new Exception("Not enough BTC to cover transaction of "+String.format("%.10f",totalOutput.doubleValue()/Config.unit)+" BTC.");
 			}
 			BigInteger totalChange = totalInput.subtract(totalOutput);
 
