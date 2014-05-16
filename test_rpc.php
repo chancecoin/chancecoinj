@@ -102,7 +102,7 @@ $result = $client->execute('importPrivateKey', array('5KVDLxzczs1rpAhrkLGCkuWTiX
 print_r($result);
 print "\n";
 
-$result = $client->execute('send', array('1GbWCwjHorFdFTuGzGk8tEtLctq4xxxqY9','1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes',1.0));
+$result = $client->execute('send', array('1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes', '1GbWCwjHorFdFTuGzGk8tEtLctq4xxxqY9',1000.0));
 print_r($result);
 print "\n";
 
