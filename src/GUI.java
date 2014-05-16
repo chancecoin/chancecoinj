@@ -1,3 +1,5 @@
+import java.util.Locale;
+
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -43,6 +45,7 @@ public class GUI extends Application {
 	public static void main(String[] args) throws Exception { launch(args); }
 
 	@Override public void init() {
+		Locale.setDefault(new Locale("en", "US"));
 		ImageView splash = new ImageView(new Image("file:./resources/static/images/logo.png"));
 		loadProgress = new ProgressBar();
 		loadProgress.setPrefWidth(SPLASH_WIDTH);

@@ -39,6 +39,7 @@ public class JsonRpcServiceImpl implements JsonRpcService {
 	
 	public String getSends(String address) {
 		Database db = Database.getInstance();
+		Blocks blocks = Blocks.getInstance();
 		//get my sends
 		ResultSet rs = db.executeQuery("select * from sends where (source='"+address+"') and asset='CHA' and validity='valid' order by block_index desc, tx_index desc;");
 		JSONArray jsonArray = new JSONArray();
@@ -49,6 +50,7 @@ public class JsonRpcServiceImpl implements JsonRpcService {
 				map.put("tx_hash", rs.getString("tx_hash"));
 				map.put("source", rs.getString("source"));
 				map.put("destination", rs.getString("destination"));
+				map.put("confirmations", Math.max(blocks.bitcoinBlock - rs.getInt("block_index") + 1,0));
 				jsonArray.put(map);
 			}
 		} catch (SQLException e) {
@@ -58,6 +60,7 @@ public class JsonRpcServiceImpl implements JsonRpcService {
 	
 	public String getReceives(String address) {
 		Database db = Database.getInstance();
+		Blocks blocks = Blocks.getInstance();
 		//get my receives
 		ResultSet rs = db.executeQuery("select * from sends where (destination='"+address+"') and asset='CHA' and validity='valid' order by block_index desc, tx_index desc;");
 		JSONArray jsonArray = new JSONArray();
@@ -68,6 +71,7 @@ public class JsonRpcServiceImpl implements JsonRpcService {
 				map.put("tx_hash", rs.getString("tx_hash"));
 				map.put("source", rs.getString("source"));
 				map.put("destination", rs.getString("destination"));
+				map.put("confirmations", Math.max(blocks.bitcoinBlock - rs.getInt("block_index") + 1,0));
 				jsonArray.put(map);
 				
 			}

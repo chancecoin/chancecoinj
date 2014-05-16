@@ -98,7 +98,7 @@ $client->authentication("chancecoin", "password");
 
 // $result = $client->execute('reparse', array());
 
-$result = $client->execute('importPrivateKey', array('5KVDLxzczs1rpAhrkLGCkuWTiXVUktvnjeizFLmiDqpHjGGLVKg'));
+$result = $client->execute('importPrivateKey', array('KybpV7G13H8Yc9G5dRVPqt3KsTaYQQnozX9xvdqy744F1jNUygh1'));
 print_r($result);
 print "\n";
 

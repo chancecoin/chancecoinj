@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -135,6 +136,7 @@ public class Blocks implements Runnable {
 	}
 
 	public void init() {
+		Locale.setDefault(new Locale("en", "US"));
 		params = MainNetParams.get();
 		try {
 			if ((new File(walletFile)).exists()) {
