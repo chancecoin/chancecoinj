@@ -9,16 +9,16 @@ public class Chancecoin {
 		Blocks blocks = Blocks.getInstanceSkipVersionCheck();
 		blocks.init();
 		//blocks.versionCheck();
-		blocks.follow();
-		Thread blocksThread = new Thread(blocks);
-		blocksThread.setDaemon(true);
-		blocksThread.start(); 
-		Config.loadUserDefined();
 		JsonRpcServletEngine engine = new JsonRpcServletEngine();
 		try {
 			engine.startup();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		blocks.follow();
+		Thread blocksThread = new Thread(blocks);
+		blocksThread.setDaemon(true);
+		blocksThread.start(); 
+		Config.loadUserDefined();
 	}
 }
