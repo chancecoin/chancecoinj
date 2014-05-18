@@ -13,6 +13,7 @@ wget -O chancecoin.com/casino.html http://0.0.0.0:8080/casino
 wget -O chancecoin.com/wallet.html http://0.0.0.0:8080/wallet
 wget -O chancecoin.com/exchange.html http://0.0.0.0:8080/exchange
 wget -O chancecoin.com/balances.html http://0.0.0.0:8080/balances
+wget -O chancecoin.com/supply.html http://0.0.0.0:8080/supply
 
 mv resources/templates resources/templates_chancecoin.com
 mv resources/templates_temp resources/templates

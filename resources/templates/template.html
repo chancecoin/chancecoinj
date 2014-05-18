@@ -34,16 +34,23 @@
 	    <div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
 	      <ul class="nav navbar-nav">
 					<li <#if title?? && title=="Casino">class="active"</#if>><a href="/casino">Casino</a></li>
-					<li <#if title?? && title=="Exchange">class="active"</#if>><a href="/exchange">Exchange</a></li>
+					<li class="dropdown<#if title?? && title=="Exchange"> active</#if>">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Exchange <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="/exchange">Decentralized exchange</a></li>
+							<li><a href="https://poloniex.com/exchange/btc_cha">Centralized exchange &mdash; Poloniex</a></li>
+						</ul>
+					</li>
 					<li <#if title?? && title=="Wallet">class="active"</#if>><a href="/wallet">Wallet</a></li>
 					<li <#if title?? && title=="Participate">class="active"</#if>><a href="/participate">Participate</a></li>
 					<li <#if title?? && title=="Technical">class="active"</#if>><a href="/technical">Technical</a></li>
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Resources <b class="caret"></b></a>
 						<ul class="dropdown-menu">
+							<li><a href="https://bitcointalk.org/index.php?topic=528023.0">Bitcointalk</a></li>
+							<li><a href="http://twitter.com/chancecoin">Twitter</a></li>
 							<li><a href="http://reddit.com/r/chancecoin">Subreddit</a></li>
 							<li><a href="https://github.com/chancecoin/chancecoinj">GitHub</a></li>
-							<li><a href="https://bitcointalk.org/index.php?topic=528023.0">Bitcointalk</a></li>
 						</ul>
 					</li>
 	      </ul>

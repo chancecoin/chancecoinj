@@ -29,6 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.Transaction;
@@ -51,6 +53,8 @@ public class Util {
 		try {
 			url = new URL(url_string);
 			URLConnection urlc = url.openConnection();
+			urlc.setRequestProperty("User-Agent", "Chancecoin "+Config.version);
+			urlc.connect();
 
 			BufferedInputStream buffer = new BufferedInputStream(urlc.getInputStream());
 
@@ -106,7 +110,21 @@ public class Util {
 		}
 	}
 
-	public static List<Map.Entry<String,String>> infoGetTransactions(String address) {
+	public static List<UnspentOutput> getUnspents(String address) {
+		String result = getPage("http://blockchain.info/unspent?active=1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes&format=json");
+		List<UnspentOutput> unspents = new ArrayList<UnspentOutput> ();
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			UnspentOutputs unspentOutputs = objectMapper.readValue(result, new TypeReference<UnspentOutputs>() {});
+			unspents = unspentOutputs.unspent_outputs;
+		} catch (Exception e) {
+			System.out.println(e.toString());
+		}
+		return unspents;
+	}
+	
+	public static List<Map.Entry<String,String>> getTransactions(String address) {
 		List<Map.Entry<String,String>> txs = new ArrayList<Map.Entry<String,String>>();
 		/*
 		String result = getPage("https://blockexplorer.com/q/mytransactions/"+address);
@@ -132,26 +150,6 @@ public class Util {
 		return txs;
 	}
 
-	public static Map<String,Object> infoGetBlock(Integer blockNumber) {
-		String result = getPage("https://blockchain.info/block-index/"+Integer.toString(blockNumber)+"?format=json");
-		try {
-			Map<String, Object> map = (new ObjectMapper()).readValue(result, new TypeReference<Map<String,Object>>() { });
-			return map;
-		} catch (Exception e) {
-		}
-		return null;
-	}
-
-	public static Map<String,Object> infoGetBlockByHash(String blockHash) {
-		String result = getPage("https://blockchain.info/rawblock/"+blockHash);
-		try {
-			Map<String, Object> map = (new ObjectMapper()).readValue(result, new TypeReference<Map<String,Object>>() { });
-			return map;
-		} catch (Exception e) {
-		}
-		return null;
-	}
-
 	public static String format(Double input) {
 		return format(input, "#.00");
 	}
@@ -167,8 +165,7 @@ public class Util {
 		return formattedDate;
 	}
 
-	static float roundOff(Double x, int position)
-	{
+	static float roundOff(Double x, int position) {
 		float a = x.floatValue();
 		double temp = Math.pow(10.0, position);
 		a *= temp;
@@ -211,6 +208,7 @@ public class Util {
 			}
 		}
 	}
+	
 	public static void credit(String address, String asset, BigInteger amount, String callingFunction, String event, Integer blockIndex) {
 		Database db = Database.getInstance();
 		if (hasBalance(address, asset)) {
@@ -222,6 +220,7 @@ public class Util {
 		}
 		db.executeUpdate("insert into credits(address, asset, amount, calling_function, event, block_index) values('"+address+"','"+asset+"','"+amount.toString()+"', '"+callingFunction+"', '"+event+"', '"+blockIndex.toString()+"');");
 	}
+	
 	public static Boolean hasBalance(String address, String asset) {
 		Database db = Database.getInstance();
 		ResultSet rs = db.executeQuery("select amount from balances where address='"+address+"' and asset='"+asset+"';");
@@ -233,20 +232,28 @@ public class Util {
 		}
 		return false;
 	}
+	
+	public static BigInteger getBTCBalance(String address) {
+		String result = getPage("https://api.biteasy.com/blockchain/v1/addresses/"+address);
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			AddressInfo addressInfo = objectMapper.readValue(result, new TypeReference<AddressInfo>() {});
+			return addressInfo.data.balance;
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			return BigInteger.ZERO;
+		}
+	}
+	
 	public static BigInteger getBalance(String address, String asset) {
 		Database db = Database.getInstance();
 		Blocks blocks = Blocks.getInstance();
 		if (asset.equals("BTC")) {
+			/*
 			BigInteger totalBalance = BigInteger.ZERO;
 			LinkedList<TransactionOutput> unspentOutputs = blocks.wallet.calculateAllSpendCandidates(true);
 			Set<Transaction> txs = blocks.wallet.getTransactions(true);
-			/*
-			for (Transaction tx : txs) {
-				System.out.println(tx);
-				totalBalance = totalBalance.add(tx.getValueSentToMe(blocks.wallet));
-				totalBalance = totalBalance.subtract(tx.getValueSentFromMe(blocks.wallet));
-			}
-			 */
 			for (TransactionOutput out : unspentOutputs) {
 				Script script = out.getScriptPubKey();
 				if (script.getToAddress(blocks.params).toString().equals(address) && out.isAvailableForSpending()) {
@@ -254,6 +261,8 @@ public class Util {
 				}
 			}
 			return totalBalance;
+			*/
+			return getBTCBalance(address);
 		} else {
 			ResultSet rs = db.executeQuery("select sum(amount) as amount from balances where address='"+address+"' and asset='"+asset+"';");
 			try {
@@ -267,10 +276,21 @@ public class Util {
 	}
 	public static BigInteger chaSupply() {
 		Database db = Database.getInstance();
-		ResultSet rs = db.executeQuery("select sum(amount) as amount from balances where asset='CHA';");
+		ResultSet rs = db.executeQuery("select (select sum(earned) from burns)-(select sum(profit) from bets where resolved IS 'true')-(select sum(bet) from bets where resolved IS NOT 'true') as supply;");
 		try {
 			if (rs.next()) {
-				return BigInteger.valueOf(rs.getLong("amount"));
+				return BigInteger.valueOf(rs.getLong("supply"));
+			}
+		} catch (SQLException e) {
+		}
+		return BigInteger.ZERO;
+	}
+	public static BigInteger chaSupplyForBetting() {
+		Database db = Database.getInstance();
+		ResultSet rs = db.executeQuery("select sum(amount) as supply from balances where asset='CHA';");
+		try {
+			if (rs.next()) {
+				return BigInteger.valueOf(rs.getLong("supply"));
 			}
 		} catch (SQLException e) {
 		}
@@ -365,4 +385,16 @@ public class Util {
 		String[] pieces = minVersion.split("\\.");
 		return Integer.parseInt(pieces[1].trim());
 	}
+}
+
+class AddressInfo {
+    public Data data;
+
+    public static class Data {
+        public BigInteger balance;
+    }
+}
+
+class UnspentOutputs {
+    public List<UnspentOutput> unspent_outputs;
 }

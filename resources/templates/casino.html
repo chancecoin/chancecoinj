@@ -25,10 +25,11 @@
 								<input type="text" placeholder="payout" name="payout" onchange="document.getElementsByName('chance')[0].value=100/(document.getElementsByName('payout')[0].value/(${1-house_edge}));">
 							</div>
 						</div>
+
 						<div class="form-group">
 							<div class="input-group">
 								<span class="input-group-btn">
-									<button class="btn btn-default" type="submit">Roll dice</button>
+									<button class="btn btn-default" type="submit" <#if !own??>disabled="disabled"</#if>>Roll dice</button>
 								</span>
 							</div>
 						</div>

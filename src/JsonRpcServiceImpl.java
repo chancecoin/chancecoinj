@@ -46,7 +46,7 @@ public class JsonRpcServiceImpl implements JsonRpcService {
 		try {
 			while (rs.next()) {
 				HashMap<String,Object> map = new HashMap<String,Object>();
-				map.put("amount", String.format("%.10f", BigInteger.valueOf(rs.getLong("amount")).doubleValue()/Config.unit.doubleValue()));
+				map.put("amount", String.format("%.8f", BigInteger.valueOf(rs.getLong("amount")).doubleValue()/Config.unit.doubleValue()));
 				map.put("tx_hash", rs.getString("tx_hash"));
 				map.put("source", rs.getString("source"));
 				map.put("destination", rs.getString("destination"));
@@ -67,7 +67,7 @@ public class JsonRpcServiceImpl implements JsonRpcService {
 		try {
 			while (rs.next()) {
 				HashMap<String,Object> map = new HashMap<String,Object>();
-				map.put("amount", String.format("%.10f", BigInteger.valueOf(rs.getLong("amount")).doubleValue()/Config.unit.doubleValue()));
+				map.put("amount", String.format("%.8f", BigInteger.valueOf(rs.getLong("amount")).doubleValue()/Config.unit.doubleValue()));
 				map.put("tx_hash", rs.getString("tx_hash"));
 				map.put("source", rs.getString("source"));
 				map.put("destination", rs.getString("destination"));
@@ -89,7 +89,7 @@ public class JsonRpcServiceImpl implements JsonRpcService {
 		try {
 			address = blocks.importPrivateKey(privateKey);
 			BigInteger balanceBTC = Util.getBalance(address, "BTC");
-			return "\""+address+"\""+":"+String.format("%.10f",balanceBTC.doubleValue() / Config.unit.doubleValue());
+			return "\""+address+"\""+":"+String.format("%.8f",balanceBTC.doubleValue() / Config.unit.doubleValue());
 		} catch (Exception e) {
 			return "Error: "+e.getMessage();
 		}

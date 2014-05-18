@@ -50,7 +50,7 @@ public class Bet {
 					//PROTOCOL CHANGE
 					Double oldHouseEdge = 0.02;
 					Boolean payoutChanceCongruent = Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-houseEdge)),6) || Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-oldHouseEdge)),6);
-					BigInteger chaSupply = Util.chaSupply();
+					BigInteger chaSupply = Util.chaSupplyForBetting();
 					String validity = "invalid";
 					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
 						if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
@@ -98,7 +98,7 @@ public class Bet {
 						//PROTOCOL CHANGE
 						Double oldHouseEdge = 0.02;
 						Boolean payoutChanceCongruent = Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-houseEdge)),6) || Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-oldHouseEdge)),6);
-						BigInteger chaSupply = Util.chaSupply();
+						BigInteger chaSupply = Util.chaSupplyForBetting();
 						String validity = "invalid";
 						if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
 							if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
@@ -122,7 +122,7 @@ public class Bet {
 	}
 
 	public static Transaction create(String source, BigInteger bet, Double chance, Double payout) throws Exception {
-		BigInteger chaSupply = Util.chaSupply();
+		BigInteger chaSupply = Util.chaSupplyForBetting();
 		if (source.equals("")) throw new Exception("Please specify a source address.");
 		if (!(bet.compareTo(BigInteger.ZERO)>0)) throw new Exception("Please bet more than zero.");
 		if (!(chance>0.0 && chance<100.0)) throw new Exception("Please specify a chance between 0 and 100.");

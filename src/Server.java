@@ -3,6 +3,7 @@ import static spark.Spark.post;
 import static spark.Spark.setPort;
 
 import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
@@ -83,7 +84,7 @@ public class Server implements Runnable {
 		get(new Route("/supply") {
 			@Override
 			public Object handle(Request request, Response response) {
-				return Util.chaSupply().toString();
+				return String.format("%.8f", Util.chaSupply().doubleValue() / Config.unit);
 			}
 		});
 		get(new Route("/chat_status_update") {
@@ -301,6 +302,11 @@ public class Server implements Runnable {
 				}
 				attributes.put("address", address);				
 				attributes.put("addresses", addresses);				
+				for (ECKey key : blocks.wallet.getKeys()) {
+					if (key.toAddress(blocks.params).toString().equals(address)) {
+						attributes.put("own", true);
+					}
+				}
 				
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("cancel")) {
 					String txHash = request.queryParams("tx_hash");
@@ -478,6 +484,11 @@ public class Server implements Runnable {
 				}
 				attributes.put("address", address);				
 				attributes.put("addresses", addresses);
+				for (ECKey key : blocks.wallet.getKeys()) {
+					if (key.toAddress(blocks.params).toString().equals(address)) {
+						attributes.put("own", true);
+					}
+				}
 				
 				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
 				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
@@ -603,7 +614,7 @@ public class Server implements Runnable {
 							ECKey newKey = new ECKey();
 							blocks.wallet.addKey(newKey);
 						}
-					}
+					} 
 				}
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("reimport")) {
 					ECKey importKey = null;
@@ -615,40 +626,15 @@ public class Server implements Runnable {
 					}
 					if (importKey != null) {
 						logger.info("Reimporting private key transactions");
-						blocks.importPrivateKey(importKey);
-						attributes.put("success", "Your transactions have been reimported.");
+						try {
+							blocks.importPrivateKey(importKey);
+							attributes.put("success", "Your transactions have been reimported.");
+						} catch (Exception e) {
+							attributes.put("error", "Error when reimporting transactions: "+e.getMessage());
+						}
 					}
 				}
-				
-				String address = Util.getAddresses().get(0);
-				if (request.session().attributes().contains("address")) {
-					address = request.session().attribute("address");
-				}
-				if (request.queryParams().contains("address")) {
-					address = request.queryParams("address");
-					request.session().attribute("address", address);
-				}
-				ArrayList<HashMap<String, Object>> addresses = new ArrayList<HashMap<String, Object>>();
-				for (String addr : Util.getAddresses()) {
-					HashMap<String,Object> map = new HashMap<String,Object>();	
-					map.put("address", addr);
-					map.put("balance_CHA", Util.getBalance(addr, "CHA").floatValue() / Config.unit.floatValue());
-					addresses.add(map);
-				}
-				attributes.put("address", address);				
-				attributes.put("addresses", addresses);				
-				
-				if (request.queryParams().contains("form") && request.queryParams("form").equals("import")) {
-					String privateKey = request.queryParams("privatekey");
-					try {
-						address = Blocks.getInstance().importPrivateKey(privateKey);
-						request.session().attribute("address", address);
-						attributes.put("address", address);				
-						attributes.put("success", "Your private key has been imported.");
-					} catch (Exception e) {
-						attributes.put("error", "Error when importing private key: "+e.getMessage());
-					}
-				}
+								
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("send")) {
 					String source = request.queryParams("source");
 					String destination = request.queryParams("destination");
@@ -662,7 +648,43 @@ public class Server implements Runnable {
 						attributes.put("error", e.getMessage());
 					}
 				}
+				
+				String address = Util.getAddresses().get(0);
+				if (request.session().attributes().contains("address")) {
+					address = request.session().attribute("address");
+				}
+				if (request.queryParams().contains("address")) {
+					address = request.queryParams("address");
+					request.session().attribute("address", address);
+				}
+				attributes.put("address", address);		
+				for (ECKey key : blocks.wallet.getKeys()) {
+					if (key.toAddress(blocks.params).toString().equals(address)) {
+						attributes.put("own", true);
+					}
+				}
 
+				if (request.queryParams().contains("form") && request.queryParams("form").equals("import")) {
+					String privateKey = request.queryParams("privatekey");
+					try {
+						address = Blocks.getInstance().importPrivateKey(privateKey);
+						request.session().attribute("address", address);
+						attributes.put("address", address);				
+						attributes.put("success", "Your private key has been imported.");
+					} catch (Exception e) {
+						attributes.put("error", "Error when importing private key: "+e.getMessage());
+					}
+				}
+
+				ArrayList<HashMap<String, Object>> addresses = new ArrayList<HashMap<String, Object>>();
+				for (String addr : Util.getAddresses()) {
+					HashMap<String,Object> map = new HashMap<String,Object>();	
+					map.put("address", addr);
+					map.put("balance_CHA", Util.getBalance(addr, "CHA").floatValue() / Config.unit.floatValue());
+					addresses.add(map);
+				}
+				attributes.put("addresses", addresses);				
+				
 				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
 				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
 				
@@ -747,6 +769,12 @@ public class Server implements Runnable {
 				}
 				attributes.put("burns", burns);				
 
+				//save wallet file
+				try {
+					blocks.wallet.saveToFile(new File(blocks.walletFile));
+				} catch (IOException e) {
+				}
+				
 				return modelAndView(attributes, "wallet.html");
 			}
 		});	
@@ -787,8 +815,13 @@ public class Server implements Runnable {
 					map.put("balance_CHA", Util.getBalance(addr, "CHA").floatValue() / Config.unit.floatValue());
 					addresses.add(map);
 				}
-				attributes.put("address", address);				
+				attributes.put("address", address);
 				attributes.put("addresses", addresses);
+				for (ECKey key : blocks.wallet.getKeys()) {
+					if (key.toAddress(blocks.params).toString().equals(address)) {
+						attributes.put("own", true);
+					}
+				}
 				
 				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
 				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
@@ -915,6 +948,11 @@ public class Server implements Runnable {
 				}
 				attributes.put("address", address);				
 				attributes.put("addresses", addresses);
+				for (ECKey key : blocks.wallet.getKeys()) {
+					if (key.toAddress(blocks.params).toString().equals(address)) {
+						attributes.put("own", true);
+					}
+				}
 				
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
@@ -1089,6 +1127,11 @@ public class Server implements Runnable {
 				}
 				attributes.put("address", address);				
 				attributes.put("addresses", addresses);
+				for (ECKey key : blocks.wallet.getKeys()) {
+					if (key.toAddress(blocks.params).toString().equals(address)) {
+						attributes.put("own", true);
+					}
+				}
 				
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);

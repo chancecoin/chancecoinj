@@ -53,7 +53,7 @@ public class Send {
 					String asset = Util.getAssetName(assetId);
 					String validity = "invalid";
 					BigInteger amountToTransfer = BigInteger.ZERO;
-					if (!source.equals("") && !destination.equals("") && asset.equals("CHA")) {
+					if (!source.equals("") && !destination.equals("") && asset.equals("CHA") && amount.compareTo(BigInteger.ZERO)>0) {
 						BigInteger sourceBalance = Util.getBalance(source, asset);
 						amountToTransfer = amount.min(sourceBalance);
 						validity = "valid";
@@ -69,7 +69,7 @@ public class Send {
 		}
 	}
 	public static Transaction create(String source, String destination, String asset, BigInteger amount) throws Exception {
-		if (!source.equals("") && !destination.equals("") && asset.equals("CHA")) {
+		if (!source.equals("") && !destination.equals("") && asset.equals("CHA") && amount.compareTo(BigInteger.ZERO)>0) {
 			BigInteger sourceBalance = Util.getBalance(source, asset);
 			Integer assetId = Util.getAssetId(asset);
 			if (sourceBalance.compareTo(amount)>=0) {
@@ -93,7 +93,7 @@ public class Send {
 				throw new Exception("Please send less than your balance.");
 			}
 		} else {
-			throw new Exception("Please specify a source address and destination address, and only send CHA.");
+			throw new Exception("Please specify a source address and destination address, and send more than 0 CHA.");
 		}
 	}
 }

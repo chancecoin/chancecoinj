@@ -596,14 +596,20 @@ public class Blocks implements Runnable {
 		return 0;
 	}
 
-	public String importPrivateKey(ECKey key) {
+	public String importPrivateKey(ECKey key) throws Exception {
 		String address = "";
 		logger.info("Importing private key");
 		address = key.toAddress(params).toString();
 		logger.info("Importing address "+address);
-		wallet.removeKey(key);
+		if (wallet.getKeys().contains(key)) {
+			wallet.removeKey(key);
+		}
 		wallet.addKey(key);
-		importTransactionsFromAddress(address);
+		try {
+			importTransactionsFromAddress(address);
+		} catch (Exception e) {
+			throw new Exception(e.getMessage());
+		}
 		return address;		
 	}
 	public String importPrivateKey(String privateKey) throws Exception {
@@ -619,12 +625,13 @@ public class Blocks implements Runnable {
 			throw new Exception(e.getMessage());
 		}
 	}
-	public void importTransactionsFromAddress(String address) {
+	public void importTransactionsFromAddress(String address) throws Exception {
+		logger.info("Importing transactions");
 		try {
 			wallet.addWatchedAddress(new Address(params, address));
 		} catch (AddressFormatException e) {
 		}
-		List<Map.Entry<String,String>> txsInfo = Util.infoGetTransactions(address);
+		List<Map.Entry<String,String>> txsInfo = Util.getTransactions(address);
 		BigInteger balance = BigInteger.ZERO;
 		BigInteger balanceSent = BigInteger.ZERO;
 		BigInteger balanceReceived = BigInteger.ZERO;
@@ -646,7 +653,9 @@ public class Blocks implements Runnable {
 					}
 				}
 			} catch (InterruptedException e) {
+				throw new Exception(e.getMessage());
 			} catch (ExecutionException e) {				
+				throw new Exception(e.getMessage());
 			}
 		}
 		logger.info("Address balance: "+balance);		
@@ -698,6 +707,17 @@ public class Blocks implements Runnable {
 				totalOutput = totalOutput.add(BigInteger.valueOf(Config.dustSize));
 			}
 
+			for (UnspentOutput unspent : Util.getUnspents(source)) {
+				if (totalOutput.compareTo(totalInput)>0) {
+					totalInput = totalInput.add(unspent.value);
+					Transaction out = new Transaction(params, 1, new Sha256Hash(unspent.tx_hash));
+					System.out.println("txhash: "+unspent.tx_hash);
+					tx.addInput(out.getOutput(unspent.tx_output_n));
+				}
+			}
+			System.out.println(tx);
+			System.exit(0);
+			/*
 			for (TransactionOutput out : unspentOutputs) {
 				Script script = out.getScriptPubKey();
 				Address address = script.getToAddress(params);
@@ -708,9 +728,11 @@ public class Blocks implements Runnable {
 					}
 				}
 			}
+			*/
+			
 			if (totalInput.compareTo(totalOutput)<0) {
 				logger.info("Not enough inputs. Output: "+totalOutput.toString()+", input: "+totalInput.toString());
-				throw new Exception("Not enough BTC to cover transaction of "+String.format("%.10f",totalOutput.doubleValue()/Config.unit)+" BTC.");
+				throw new Exception("Not enough BTC to cover transaction of "+String.format("%.8f",totalOutput.doubleValue()/Config.unit)+" BTC.");
 			}
 			BigInteger totalChange = totalInput.subtract(totalOutput);
 
@@ -733,6 +755,7 @@ public class Blocks implements Runnable {
 			ListenableFuture<Transaction> future = null;
 			try {
 				future = peerGroup.broadcastTransaction(tx);
+				
 				//future.get(60, TimeUnit.SECONDS);
 				//} catch (TimeoutException e) {
 				//	logger.error(e.toString());
