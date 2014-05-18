@@ -13,6 +13,7 @@
 //TODO: easy function to allow you to get escrow back easily
 //TODO: redundancy for downloads.txt on github
 //TODO: let people send BTC with Chancecoin client
+//TODO: http://api.bitwatch.co/redeem
 public class Test {
 
 	public static void main(String[] args) {
