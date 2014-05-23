@@ -17,8 +17,8 @@
 public class Test {
 
 	public static void main(String[] args) {
-		Blocks blocks = Blocks.getInstance();
-		//blocks.reDownloadBlockTransactions(299628);
+		Blocks blocks = Blocks.getInstanceAndWait();
+		blocks.reDownloadBlockTransactions(302163);
 	}
 	
 }

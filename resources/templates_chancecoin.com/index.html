@@ -48,7 +48,7 @@
 </div>
 
 <div class="row section">
-		<div class="col-xs-6 segment">
+		<div class="col-xs-4 segment">
 				<h2>Recent <a href="/casino">bets</a></h2>
 				<table class="table table-striped">
 						<thead>
@@ -72,25 +72,29 @@
 						</tbody>
 				</table>
 		</div>
-		<div class="col-xs-6 segment">
-				<h2>Top <a href="/balances">balances</a></h2>
+		<div class="col-xs-8 segment">
+				<h2>Biggest winners</h2>
 				<table class="table table-striped">
 						<thead>
 								<tr>
-										<th>Address</th>
-										<th>CHA balance</th>
-										<th>Market share</th>
+										<th>Source address</th>
+										<th>Total bets</th>
+										<th>Average bet size</th>
+										<th>Average win chance</th>
+										<th>Total profit</th>
 								</tr>
 						</thead>
-
+						<#list winners as winner>
+								<tr>
+										<td>${winner["source"]}</td>
+										<td>${winner["bet_count"]}</td>
+										<td>${winner["avg_bet"]} CHA</td>
+										<td>${winner["avg_chance"]}%</td>
+										<td>${winner["sum_profit"]} CHA</td>
+								</tr>
+						</#list>
 						<tbody>
-								<#list balances as balance>
-										<tr>
-												<td>${balance["address"]}</td>
-												<td>${balance["balance"]?string(",##0.00")}</td>
-												<td>${balance["share"]?string("##0.00")}%</td>
-										</tr>
-								</#list>
+
 						</tbody>
 				</table>
 		</div>

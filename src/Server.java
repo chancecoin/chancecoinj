@@ -176,6 +176,23 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("bets", bets);
+				
+				//get top winners
+				rs = db.executeQuery("select source, count(bet) as bet_count, avg(bet) as avg_bet, avg(chance) as avg_chance, sum(profit) as sum_profit from bets where validity='valid' group by source order by sum(profit) desc limit 10;");
+				ArrayList<HashMap<String, Object>> winners = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("source", rs.getString("source"));
+						map.put("bet_count", rs.getDouble("bet_count"));
+						map.put("avg_bet", BigInteger.valueOf(rs.getLong("avg_bet")).doubleValue()/Config.unit.doubleValue());
+						map.put("avg_chance", rs.getDouble("avg_chance"));
+						map.put("sum_profit", BigInteger.valueOf(rs.getLong("sum_profit")).doubleValue()/Config.unit.doubleValue());
+						winners.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("winners", winners);				
 								
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);

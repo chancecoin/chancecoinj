@@ -110,6 +110,7 @@ public class Util {
 		}
 	}
 
+	/*
 	public static List<UnspentOutput> getUnspents(String address) {
 		String result = getPage("http://blockchain.info/unspent?active=1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes&format=json");
 		List<UnspentOutput> unspents = new ArrayList<UnspentOutput> ();
@@ -123,7 +124,22 @@ public class Util {
 		}
 		return unspents;
 	}
+	*/
 	
+	public static List<UnspentOutput> getUnspents(String address) {
+		String result = getPage("http://api.bitwatch.co/listunspent/1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes?verbose=1&minconf=0");
+		List<UnspentOutput> unspents = new ArrayList<UnspentOutput> ();
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			UnspentOutputs unspentOutputs = objectMapper.readValue(result, new TypeReference<UnspentOutputs>() {});
+			unspents = unspentOutputs.result;
+		} catch (Exception e) {
+			System.out.println(e.toString());
+		}
+		return unspents;
+	}
+
 	public static List<Map.Entry<String,String>> getTransactions(String address) {
 		List<Map.Entry<String,String>> txs = new ArrayList<Map.Entry<String,String>>();
 		/*
@@ -396,5 +412,5 @@ class AddressInfo {
 }
 
 class UnspentOutputs {
-    public List<UnspentOutput> unspent_outputs;
+    public List<UnspentOutput> result;
 }

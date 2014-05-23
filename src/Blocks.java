@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,6 +25,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.AddressFormatException;
@@ -40,8 +43,11 @@ import com.google.bitcoin.core.Sha256Hash;
 import com.google.bitcoin.core.StoredBlock;
 import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.TransactionInput;
+import com.google.bitcoin.core.TransactionOutPoint;
 import com.google.bitcoin.core.TransactionOutput;
+import com.google.bitcoin.core.UnsafeByteArrayOutputStream;
 import com.google.bitcoin.core.Wallet;
+import com.google.bitcoin.crypto.TransactionSignature;
 import com.google.bitcoin.net.discovery.DnsDiscovery;
 import com.google.bitcoin.params.MainNetParams;
 import com.google.bitcoin.script.Script;
@@ -52,6 +58,7 @@ import com.google.bitcoin.store.BlockStore;
 import com.google.bitcoin.store.BlockStoreException;
 import com.google.bitcoin.store.H2FullPrunedBlockStore;
 import com.google.bitcoin.wallet.WalletTransaction;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.sun.org.apache.xpath.internal.compiler.OpCodes;
 
@@ -334,11 +341,17 @@ public class Blocks implements Runnable {
 			try {
 				Script script = in.getScriptSig();
 				//fee = fee.add(in.getValue()); //TODO, turn this on
-				Address address = script.getFromAddress(params);
-				if (source.equals("")) {
-					source = address.toString();
-				}else if (!source.equals(address.toString()) && !destination.equals(Config.burnAddress)){ //require all sources to be the same unless this is a burn
-					return;
+				Script scriptOutput = in.getParentTransaction().getOutput((int) in.getOutpoint().getIndex()).getScriptPubKey();
+				Address address = null;
+				if (scriptOutput.isSentToAddress()) {
+					address = script.getFromAddress(params);
+				}
+				if (address!=null) {
+					if (source.equals("")) {
+						source = address.toString();
+					}else if (!source.equals(address.toString()) && !destination.equals(Config.burnAddress)){ //require all sources to be the same unless this is a burn
+						return;
+					}
 				}
 			} catch(ScriptException e) {
 			}
@@ -605,11 +618,13 @@ public class Blocks implements Runnable {
 			wallet.removeKey(key);
 		}
 		wallet.addKey(key);
+		/*
 		try {
 			importTransactionsFromAddress(address);
 		} catch (Exception e) {
 			throw new Exception(e.getMessage());
 		}
+		 */
 		return address;		
 	}
 	public String importPrivateKey(String privateKey) throws Exception {
@@ -663,7 +678,6 @@ public class Blocks implements Runnable {
 
 	public Transaction transaction(String source, String destination, BigInteger btcAmount, BigInteger fee, String dataString) throws Exception {
 		Transaction tx = new Transaction(params);
-		LinkedList<TransactionOutput> unspentOutputs = wallet.calculateAllSpendCandidates(true);
 		if (destination.equals("") || btcAmount.compareTo(BigInteger.valueOf(Config.dustSize))>=0) {
 
 			byte[] data = null;
@@ -707,29 +721,42 @@ public class Blocks implements Runnable {
 				totalOutput = totalOutput.add(BigInteger.valueOf(Config.dustSize));
 			}
 
-			for (UnspentOutput unspent : Util.getUnspents(source)) {
-				if (totalOutput.compareTo(totalInput)>0) {
-					totalInput = totalInput.add(unspent.value);
-					Transaction out = new Transaction(params, 1, new Sha256Hash(unspent.tx_hash));
-					System.out.println("txhash: "+unspent.tx_hash);
-					tx.addInput(out.getOutput(unspent.tx_output_n));
-				}
-			}
-			System.out.println(tx);
-			System.exit(0);
-			/*
-			for (TransactionOutput out : unspentOutputs) {
-				Script script = out.getScriptPubKey();
-				Address address = script.getToAddress(params);
-				if (address.toString().equals(source)) {
-					if (totalOutput.compareTo(totalInput)>0) {
-						totalInput = totalInput.add(out.getValue());
-						tx.addInput(out);
+			List<UnspentOutput> unspents = Util.getUnspents(source);
+			List<Script> inputScripts = new ArrayList<Script>();			
+			List<ECKey> inputKeys = new ArrayList<ECKey>();			
+
+			Boolean atLeastOneRegularInput = false;
+			for (UnspentOutput unspent : unspents) {
+				String txHash = unspent.txid;
+				byte[] scriptBytes = Hex.decode(unspent.scriptPubKey.hex.getBytes(Charset.forName("UTF-8")));
+				Script script = new Script(scriptBytes);
+				//if it's sent to an address and we don't yet have enough inputs or we don't yet have at least one regular input, or if it's sent to a multisig
+				//in other words, we sweep up any unused multisig inputs with every transaction
+				if ((script.isSentToAddress() && (totalOutput.compareTo(totalInput)>0 || !atLeastOneRegularInput)) || (script.isSentToMultiSig())) {
+					if (script.isSentToAddress()) {
+						atLeastOneRegularInput = true;
+					}
+					Sha256Hash sha256Hash = new Sha256Hash(txHash);	
+					TransactionOutPoint txOutPt = new TransactionOutPoint(params, unspent.vout, sha256Hash);
+					for (ECKey key : wallet.getKeys()) {
+						try {
+							if (key.toAddress(params).equals(new Address(params, source))) {
+								totalInput = totalInput.add(BigDecimal.valueOf(unspent.amount*Config.unit).toBigInteger());
+								TransactionInput input = new TransactionInput(params, tx, new byte[]{}, txOutPt);
+								tx.addInput(input);
+								inputScripts.add(script);
+								inputKeys.add(key);
+								break;
+							}
+						} catch (AddressFormatException e) {
+						}
 					}
 				}
 			}
-			*/
-			
+			if (!atLeastOneRegularInput) {
+				throw new Exception("Not enough standard unspent outputs to cover transaction.");
+			}
+
 			if (totalInput.compareTo(totalOutput)<0) {
 				logger.info("Not enough inputs. Output: "+totalOutput.toString()+", input: "+totalInput.toString());
 				throw new Exception("Not enough BTC to cover transaction of "+String.format("%.8f",totalOutput.doubleValue()/Config.unit)+" BTC.");
@@ -742,20 +769,45 @@ public class Blocks implements Runnable {
 				}
 			} catch (AddressFormatException e) {
 			}
+
+			//sign inputs
+			for (int i = 0; i<tx.getInputs().size(); i++) {
+				Script script = inputScripts.get(i);
+				ECKey key = inputKeys.get(i);
+				TransactionInput input = tx.getInput(i);
+				TransactionSignature txSig = tx.calculateSignature(i, key, script, SigHash.ALL, false);
+				if (script.isSentToAddress()) {
+					input.setScriptSig(ScriptBuilder.createInputScript(txSig, key));
+				} else if (script.isSentToMultiSig()) {
+					//input.setScriptSig(ScriptBuilder.createMultiSigInputScript(txSig));
+					ScriptBuilder builder = new ScriptBuilder();
+					builder.smallNum(0);
+					builder.data(txSig.encodeToBitcoin());
+					input.setScriptSig(builder.build());
+				}
+			}
 		}
-		tx.signInputs(SigHash.ALL, wallet);
+		tx.verify();
 		return tx;
 	}
 
 	public Boolean sendTransaction(Transaction tx) throws Exception {
 		try {
 			//System.out.println(tx);
+
+			byte[] rawTxBytes = tx.bitcoinSerialize();
+			String rawTx = new BigInteger(1, rawTxBytes).toString(16);
+			rawTx = "0" + rawTx;
+			//System.out.println(rawTx);
+			//System.exit(0);
+
 			Blocks blocks = Blocks.getInstance();
 			//blocks.wallet.commitTx(txBet);
 			ListenableFuture<Transaction> future = null;
 			try {
+				logger.info("Broadcasting transaction: "+tx.toString());
 				future = peerGroup.broadcastTransaction(tx);
-				
+
 				//future.get(60, TimeUnit.SECONDS);
 				//} catch (TimeoutException e) {
 				//	logger.error(e.toString());
@@ -763,14 +815,9 @@ public class Blocks implements Runnable {
 			} catch (Exception e) {
 				throw new Exception("Transaction timed out. Please try again.");
 			}
+			logger.info("Importing transaction (assigning block number -1)");
 			blocks.importTransaction(tx, null, null);
 			return true;
-			/*
-			byte[] rawTxBytes = tx.bitcoinSerialize();
-			String rawTx = new BigInteger(1, rawTxBytes).toString(16);
-			rawTx = "0" + rawTx;
-			System.out.println(rawTx);
-			 */
 		} catch (Exception e) {
 			throw new Exception(e.getMessage());
 		}		
