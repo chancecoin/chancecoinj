@@ -41,6 +41,7 @@
 						<li class="active"><a href="#recent_bets" data-toggle="tab">Recent bets</a></li>
 						<li><a href="#leaderboard" data-toggle="tab">Leaderboard</a></li>
 						<li><a href="#house_info" data-toggle="tab">House info</a></li>
+						<li><a href="#stats" data-toggle="tab">Stats</a></li>
 				</ul>
 
 				<div id="my-tab-content" class="tab-content">
@@ -176,6 +177,115 @@
 												</tr>
 										</tbody>
 								</table>
+						</div>
+						<div class="tab-pane" id="stats">
+								<h2>Profit</h2>
+								<div id="chart_div_1" style="width: 700px; height: 275px; float: left; clear: both; display: block; margin-bottom: 1em;"></div>
+								<h2>Volume</h2>
+								<div id="chart_div_2" style="width: 700px; height: 275px; float: left; clear: both; display: block; margin-bottom: 1em;"></div>
+								<script type='text/javascript'>
+									$('#chart_div_1').highcharts({
+										chart: {
+												type: 'line'
+										},
+										title: {
+												text: 'Profit'
+										},
+										xAxis: {
+												type: 'datetime',
+												labels: {
+														formatter: function() {
+																return Highcharts.dateFormat('%Y-%m-%d', this.value);
+														}
+												}
+										},
+										yAxis: {
+												title: {
+														text: 'CHA'
+												}
+										},
+										tooltip: {
+												headerFormat: '<b>{series.name}</b><br>',
+												pointFormat: '{point.x:%Y-%m-%d %H:%M:%S}: {point.y:.2f}'
+										},
+										legend: {
+												layout: 'vertical',
+												align: 'right',
+												verticalAlign: 'middle',
+												borderWidth: 0
+										},
+										series: [{
+												name: 'Profit',
+												data: [
+														<#list vstimes as vstime>
+														[(new Date(${vstime['block_time']?string("##0")}*1000)).valueOf(), parseFloat(${vstime['profit']?string("##0.00000000")})],
+														</#list>
+												],
+										}, {
+												name: 'Expected profit',
+												data: [
+														<#list vstimes as vstime>
+														[(new Date(${vstime['block_time']?string("##0")}*1000)).valueOf(), parseFloat(${vstime['expected_profit']?string("##0.00000000")})],
+														</#list>
+												],
+										}]
+									});
+									$('#chart_div_2').highcharts({
+										chart: {
+												type: 'line'
+										},
+										title: {
+												text: 'Volume'
+										},
+										xAxis: {
+												type: 'datetime',
+												labels: {
+														formatter: function() {
+																return Highcharts.dateFormat('%Y-%m-%d', this.value);
+														}
+												}
+										},
+										yAxis: [{
+												title: {
+														text: 'Volume (CHA)'
+												},
+												min: 0
+										}, {
+												title: {
+														text: 'Volume (bets)'
+												},
+												min: 0,
+												opposite: true
+										}],
+										tooltip: {
+												headerFormat: '<b>{series.name}</b><br>',
+												pointFormat: '{point.x:%Y-%m-%d %H:%M:%S}: {point.y:.2f}'
+										},
+										legend: {
+												layout: 'vertical',
+												align: 'right',
+												verticalAlign: 'middle',
+												borderWidth: 0
+										},
+										series: [{
+												name: 'Volume (CHA)',
+												yAxis: 0,
+												data: [
+														<#list vstimes as vstime>
+														[(new Date(${vstime['block_time']?string("##0")}*1000)).valueOf(), parseFloat(${vstime['volume']?string("##0.00000000")})],
+														</#list>
+												],
+										}, {
+												name: 'Volume (Bets)',
+												yAxis: 1,
+												data: [
+														<#list vstimes as vstime>
+														[(new Date(${vstime['block_time']?string("##0")}*1000)).valueOf(), parseFloat(${vstime['bets']?string("##0")})],
+														</#list>
+												],
+										}]
+									});
+								</script>
 						</div>
 				</div>
 		</div>

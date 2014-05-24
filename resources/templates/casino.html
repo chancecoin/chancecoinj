@@ -246,102 +246,108 @@
 								<div id="chart_div_1" style="width: 700px; height: 275px; float: left; clear: both; display: block; margin-bottom: 1em;"></div>
 								<h2>Volume</h2>
 								<div id="chart_div_2" style="width: 700px; height: 275px; float: left; clear: both; display: block; margin-bottom: 1em;"></div>
-								<h2>Bets</h2>
-								<div id="chart_div_3" style="width: 700px; height: 275px; float: left; clear: both; display: block; margin-bottom: 1em;"></div>
 								<script type='text/javascript'>
-									/*
-						      function drawCharts() {
-						        var data1 = new google.visualization.DataTable();
-						        data1.addColumn('date', 'Date');
-						        data1.addColumn('number', 'Profit');
-						        data1.addColumn('string', 'title1');
-						        data1.addColumn('string', 'text1');
-						        data1.addColumn('number', 'Expected profit');
-						        data1.addColumn('string', 'title2');
-						        data1.addColumn('string', 'text2');
-						        data1.addRows([
-											<#list vstimes as vstime>
-											[new Date(${vstime['block_time']?string("##0")}*1000), parseFloat(${vstime['profit']?string("##0.00000000")}), undefined, undefined, parseFloat(${vstime['expected_profit']?string("##0.00000000")}), undefined, undefined],
-											</#list>
-						        ]);
-						        var chart1 = new google.visualization.AnnotationChart(document.getElementById('chart_div_1'));
-						        chart1.draw(data1, {displayAnnotations: false, displayRangeSelector: false});
-
-										var data2 = new google.visualization.DataTable();
-										data2.addColumn('date', 'Date');
-										data2.addColumn('number', 'Volume');
-										data2.addColumn('string', 'title1');
-										data2.addColumn('string', 'text1');
-										data2.addRows([
-											<#list vstimes as vstime>
-											[new Date(${vstime['block_time']?string("##0")}*1000), parseFloat(${vstime['volume']?string("##0.00000000")}), undefined, undefined],
-											</#list>
-										]);
-										var chart2 = new google.visualization.AnnotationChart(document.getElementById('chart_div_2'));
-										chart2.draw(data2, {displayAnnotations: false, displayRangeSelector: false});
-
-										var data3 = new google.visualization.DataTable();
-										data3.addColumn('date', 'Date');
-										data3.addColumn('number', 'Bets');
-										data3.addColumn('string', 'title1');
-										data3.addColumn('string', 'text1');
-										data3.addRows([
-											<#list vstimes as vstime>
-											[new Date(${vstime['block_time']?string("##0")}*1000), parseFloat(${vstime['bets']?string("##0.00000000")}), undefined, undefined],
-											</#list>
-										]);
-										var chart3 = new google.visualization.AnnotationChart(document.getElementById('chart_div_3'));
-										chart3.draw(data3, {displayAnnotations: false, displayRangeSelector: false});
-						      }
-									google.load('visualization', '1.1', {'packages':['annotationchart']});
-									google.setOnLoadCallback(drawCharts);
-									*/
 									$('#chart_div_1').highcharts({
-			            chart: {
-			                type: 'line'
-			            },
-			            title: {
-			                text: 'Profit'
-			            },
-									/*
-			            subtitle: {
-			                text: 'Irregular time data in Highcharts JS'
-			            },
-									*/
-			            xAxis: {
-			                type: 'datetime',
-			                title: {
-			                    text: 'Date'
-			                }
-			            },
-			            yAxis: {
-			                title: {
-			                    text: 'Profit'
-			                }
-			            },
-			            tooltip: {
-			                headerFormat: '<b>{series.name}</b><br>',
-			                pointFormat: '{point.x:%e. %b}: {point.y:.2f} m'
-			            },
-
-			            series: [{
-			                name: 'Profit',
-			                data: [
-													<#list vstimes as vstime>
-													[new Date(${vstime['block_time']?string("##0")}*1000), parseFloat(${vstime['profit']?string("##0.00000000")})],
-													</#list>
-			                ],
-											pointInterval: 24 * 3600 * 1000
-			            }, {
-			                name: 'Expected profit',
-			                data: [
-													<#list vstimes as vstime>
-													[new Date(${vstime['block_time']?string("##0")}*1000), parseFloat(${vstime['expected_profit']?string("##0.00000000")})],
-													</#list>
-			                ],
-											pointInterval: 24 * 3600 * 1000
-			            }]
-			        });
+				            chart: {
+				                type: 'line'
+				            },
+				            title: {
+				                text: 'Profit'
+				            },
+				            xAxis: {
+				                type: 'datetime',
+												labels: {
+														formatter: function() {
+																return Highcharts.dateFormat('%Y-%m-%d', this.value);
+														}
+												}
+				            },
+				            yAxis: {
+				                title: {
+				                    text: 'CHA'
+				                }
+				            },
+				            tooltip: {
+				                headerFormat: '<b>{series.name}</b><br>',
+				                pointFormat: '{point.x:%Y-%m-%d %H:%M:%S}: {point.y:.2f}'
+				            },
+										legend: {
+												layout: 'vertical',
+												align: 'right',
+												verticalAlign: 'middle',
+												borderWidth: 0
+										},
+				            series: [{
+				                name: 'Profit',
+				                data: [
+														<#list vstimes as vstime>
+														[(new Date(${vstime['block_time']?string("##0")}*1000)).valueOf(), parseFloat(${vstime['profit']?string("##0.00000000")})],
+														</#list>
+				                ],
+				            }, {
+				                name: 'Expected profit',
+				                data: [
+														<#list vstimes as vstime>
+														[(new Date(${vstime['block_time']?string("##0")}*1000)).valueOf(), parseFloat(${vstime['expected_profit']?string("##0.00000000")})],
+														</#list>
+				                ],
+				            }]
+			        		});
+									$('#chart_div_2').highcharts({
+										chart: {
+												type: 'line'
+										},
+										title: {
+												text: 'Volume'
+										},
+										xAxis: {
+												type: 'datetime',
+												labels: {
+										        formatter: function() {
+										            return Highcharts.dateFormat('%Y-%m-%d', this.value);
+										        }
+												}
+										},
+										yAxis: [{
+										    title: {
+										        text: 'Volume (CHA)'
+										    },
+												min: 0
+										}, {
+										    title: {
+										        text: 'Volume (bets)'
+										    },
+												min: 0,
+										    opposite: true
+										}],
+										tooltip: {
+												headerFormat: '<b>{series.name}</b><br>',
+												pointFormat: '{point.x:%Y-%m-%d %H:%M:%S}: {point.y:.2f}'
+										},
+										legend: {
+												layout: 'vertical',
+												align: 'right',
+												verticalAlign: 'middle',
+												borderWidth: 0
+										},
+										series: [{
+												name: 'Volume (CHA)',
+												yAxis: 0,
+												data: [
+														<#list vstimes as vstime>
+														[(new Date(${vstime['block_time']?string("##0")}*1000)).valueOf(), parseFloat(${vstime['volume']?string("##0.00000000")})],
+														</#list>
+												],
+										}, {
+												name: 'Volume (Bets)',
+												yAxis: 1,
+												data: [
+														<#list vstimes as vstime>
+														[(new Date(${vstime['block_time']?string("##0")}*1000)).valueOf(), parseFloat(${vstime['bets']?string("##0")})],
+														</#list>
+												],
+										}]
+									});
 						    </script>
 						</div>
 		    </div>
