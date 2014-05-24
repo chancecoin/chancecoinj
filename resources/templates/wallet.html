@@ -26,13 +26,6 @@
 										<button type="submit" class="btn btn-default">Delete this address</button>
 								</div>
 						</form>
-						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
-								<div class="input-group">
-										<input type="hidden" name="form" value="reimport">
-										<input type="hidden" name="address" value="${address}">
-										<button type="submit" class="btn btn-default">Reimport transactions</button>
-								</div>
-						</form>
 						<#else>
 						<div class="alert alert-warning">You do not own this address, so you cannot create Chancecoin transactions using it.</div>
 						</#if>

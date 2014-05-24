@@ -207,6 +207,7 @@ public class Blocks implements Runnable {
 
 				if (lastBlock < blockHeight) {
 					//traverse new blocks
+					parsing = true;
 					Database db = Database.getInstance();
 					logger.info("Bitcoin block height: "+blockHeight);	
 					logger.info("Chancecoin block height: "+lastBlock);
@@ -238,6 +239,7 @@ public class Blocks implements Runnable {
 					}
 					Bet.resolve();
 					Order.expire();
+					parsing = false;
 				}
 			} catch (Exception e) {
 				logger.error(e.toString());
@@ -341,17 +343,14 @@ public class Blocks implements Runnable {
 			try {
 				Script script = in.getScriptSig();
 				//fee = fee.add(in.getValue()); //TODO, turn this on
-				Script scriptOutput = in.getParentTransaction().getOutput((int) in.getOutpoint().getIndex()).getScriptPubKey();
+				//Script scriptOutput = in.getParentTransaction().getOutput((int) in.getOutpoint().getIndex()).getScriptPubKey();
 				Address address = null;
-				if (scriptOutput.isSentToAddress()) {
-					address = script.getFromAddress(params);
-				}
-				if (address!=null) {
-					if (source.equals("")) {
-						source = address.toString();
-					}else if (!source.equals(address.toString()) && !destination.equals(Config.burnAddress)){ //require all sources to be the same unless this is a burn
-						return;
-					}
+				//if (scriptOutput.isSentToAddress()) {
+				address = script.getFromAddress(params);
+				if (source.equals("")) {
+					source = address.toString();
+				}else if (!source.equals(address.toString()) && !destination.equals(Config.burnAddress)){ //require all sources to be the same unless this is a burn
+					return;
 				}
 			} catch(ScriptException e) {
 			}
@@ -640,6 +639,8 @@ public class Blocks implements Runnable {
 			throw new Exception(e.getMessage());
 		}
 	}
+
+	/*
 	public void importTransactionsFromAddress(String address) throws Exception {
 		logger.info("Importing transactions");
 		try {
@@ -675,6 +676,7 @@ public class Blocks implements Runnable {
 		}
 		logger.info("Address balance: "+balance);		
 	}
+	 */
 
 	public Transaction transaction(String source, String destination, BigInteger btcAmount, BigInteger fee, String dataString) throws Exception {
 		Transaction tx = new Transaction(params);
@@ -732,27 +734,37 @@ public class Blocks implements Runnable {
 				Script script = new Script(scriptBytes);
 				//if it's sent to an address and we don't yet have enough inputs or we don't yet have at least one regular input, or if it's sent to a multisig
 				//in other words, we sweep up any unused multisig inputs with every transaction
-				if ((script.isSentToAddress() && (totalOutput.compareTo(totalInput)>0 || !atLeastOneRegularInput)) || (script.isSentToMultiSig())) {
-					if (script.isSentToAddress()) {
-						atLeastOneRegularInput = true;
-					}
-					Sha256Hash sha256Hash = new Sha256Hash(txHash);	
-					TransactionOutPoint txOutPt = new TransactionOutPoint(params, unspent.vout, sha256Hash);
-					for (ECKey key : wallet.getKeys()) {
-						try {
-							if (key.toAddress(params).equals(new Address(params, source))) {
-								totalInput = totalInput.add(BigDecimal.valueOf(unspent.amount*Config.unit).toBigInteger());
-								TransactionInput input = new TransactionInput(params, tx, new byte[]{}, txOutPt);
-								tx.addInput(input);
-								inputScripts.add(script);
-								inputKeys.add(key);
-								break;
+
+				try {
+					if ((script.isSentToAddress() && (totalOutput.compareTo(totalInput)>0 || !atLeastOneRegularInput)) || (script.isSentToMultiSig())) {
+						//if we have this transaction in our wallet already, we shall confirm that it is not already spent
+						if (wallet.getTransaction(new Sha256Hash(txHash))==null || wallet.getTransaction(new Sha256Hash(txHash)).getOutput(unspent.vout).isAvailableForSpending()) {
+							if (script.isSentToAddress()) {
+								atLeastOneRegularInput = true;
 							}
-						} catch (AddressFormatException e) {
+							Sha256Hash sha256Hash = new Sha256Hash(txHash);	
+							TransactionOutPoint txOutPt = new TransactionOutPoint(params, unspent.vout, sha256Hash);
+							for (ECKey key : wallet.getKeys()) {
+								try {
+									if (key.toAddress(params).equals(new Address(params, source))) {
+										System.out.println("Spending "+sha256Hash+" "+unspent.vout);
+										totalInput = totalInput.add(BigDecimal.valueOf(unspent.amount*Config.unit).toBigInteger());
+										TransactionInput input = new TransactionInput(params, tx, new byte[]{}, txOutPt);
+										tx.addInput(input);
+										inputScripts.add(script);
+										inputKeys.add(key);
+										break;
+									}
+								} catch (AddressFormatException e) {
+								}
+							}
 						}
 					}
+				} catch (Exception e) {
+					logger.error(e.toString());
 				}
 			}
+
 			if (!atLeastOneRegularInput) {
 				throw new Exception("Not enough standard unspent outputs to cover transaction.");
 			}

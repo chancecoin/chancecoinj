@@ -109,25 +109,9 @@ public class Util {
 			logger.info(e.toString());
 		}
 	}
-
-	/*
-	public static List<UnspentOutput> getUnspents(String address) {
-		String result = getPage("http://blockchain.info/unspent?active=1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes&format=json");
-		List<UnspentOutput> unspents = new ArrayList<UnspentOutput> ();
-		try {
-			ObjectMapper objectMapper = new ObjectMapper();
-			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			UnspentOutputs unspentOutputs = objectMapper.readValue(result, new TypeReference<UnspentOutputs>() {});
-			unspents = unspentOutputs.unspent_outputs;
-		} catch (Exception e) {
-			System.out.println(e.toString());
-		}
-		return unspents;
-	}
-	*/
 	
 	public static List<UnspentOutput> getUnspents(String address) {
-		String result = getPage("http://api.bitwatch.co/listunspent/1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes?verbose=1&minconf=0");
+		String result = getPage("http://api.bitwatch.co/listunspent/"+address+"?verbose=1&minconf=0");
 		List<UnspentOutput> unspents = new ArrayList<UnspentOutput> ();
 		try {
 			ObjectMapper objectMapper = new ObjectMapper();
@@ -140,19 +124,9 @@ public class Util {
 		return unspents;
 	}
 
+	/*
 	public static List<Map.Entry<String,String>> getTransactions(String address) {
 		List<Map.Entry<String,String>> txs = new ArrayList<Map.Entry<String,String>>();
-		/*
-		String result = getPage("https://blockexplorer.com/q/mytransactions/"+address);
-		try {
-			Map<String, Object> map = (new ObjectMapper()).readValue(result, new TypeReference<Map<String,Object>>() { });
-			for (String key : map.keySet()) {
-				Map<String, Object> txMap = (Map<String, Object>) map.get(key);
-				txs.add(new AbstractMap.SimpleEntry(key, txMap.get("block").toString()));
-			}
-		} catch (Exception e) {
-		}
-		*/
 		String result = getPage("https://blockexplorer.com/address/"+address);
 		Pattern p = Pattern.compile("href=\"/tx/(.*?)#.*?/block/(.*?)\"", Pattern.DOTALL);
 		Matcher m = p.matcher(result);
@@ -165,6 +139,7 @@ public class Util {
 		}		
 		return txs;
 	}
+	*/
 
 	public static String format(Double input) {
 		return format(input, "#.00");
@@ -382,13 +357,14 @@ public class Util {
 	}	
 
 	public static String getMinVersion() {
-		String minVersion = getPage(Config.minVersionPage).trim();
-		if (minVersion.length()>0) {
+		String minVersion = getPage(Config.minVersionPage);
+		if (minVersion == null) {
 			minVersion = getPage(Config.minVersionPage2).trim();
-			if (minVersion.length()>0) {
+			if (minVersion == null) {
 				return Config.version;
 			}
 		}
+		minVersion = minVersion.trim();
 		return minVersion;
 	}
 	public static Integer getMinMajorVersion() {
