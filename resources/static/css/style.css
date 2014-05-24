@@ -180,8 +180,8 @@ table {
 	height: 17px;
 	top: 5px;
 	left: -2px;
-	position: absolute; 
-	z-index: 100000000; 
+	position: absolute;
+	z-index: 100000000;
 	cursor: pointer;
 	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";       /* IE 8 */
 	filter: alpha(opacity=0);  /* IE 5-7 */
@@ -197,4 +197,6 @@ table {
 	border: 1px #BBBBBB solid;
 }
 
-
+h1, h2, h3 {
+	clear: both;
+}

@@ -506,6 +506,11 @@ public class Blocks implements Runnable {
 			e.printStackTrace();
 		}		
 	}
+	
+	public void deletePending() {
+		Database db = Database.getInstance();
+		db.executeUpdate("delete from transactions where block_index<0 and tx_index<(select max(tx_index) from transactions)-10;");
+	}
 
 	public void createTables() {
 		Database db = Database.getInstance();
