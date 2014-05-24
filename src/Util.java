@@ -110,8 +110,12 @@ public class Util {
 		}
 	}
 	
+	public static String unspentAddress(String address) {
+		return "http://api.bitwatch.co/listunspent/"+address+"?verbose=1&minconf=0";
+	}
+	
 	public static List<UnspentOutput> getUnspents(String address) {
-		String result = getPage("http://api.bitwatch.co/listunspent/"+address+"?verbose=1&minconf=0");
+		String result = getPage(unspentAddress(address));
 		List<UnspentOutput> unspents = new ArrayList<UnspentOutput> ();
 		try {
 			ObjectMapper objectMapper = new ObjectMapper();
@@ -224,8 +228,12 @@ public class Util {
 		return false;
 	}
 	
+	public static String BTCBalanceAddress(String address) {
+		return "https://api.biteasy.com/blockchain/v1/addresses/"+address;
+	}
+	
 	public static BigInteger getBTCBalance(String address) {
-		String result = getPage("https://api.biteasy.com/blockchain/v1/addresses/"+address);
+		String result = getPage(BTCBalanceAddress(address));
 		try {
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

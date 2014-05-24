@@ -594,6 +594,71 @@ public class Server implements Runnable {
 				return modelAndView(attributes, "exchange.html");
 			}
 		});	
+		get(new FreeMarkerRoute("/unspents") {
+			@Override
+			public ModelAndView handle(Request request, Response response) {
+				setConfiguration(configuration);
+				Map<String, Object> attributes = new HashMap<String, Object>();
+				request.session(true);
+				attributes = updateChatStatus(request, attributes);
+				attributes.put("title", "Unspents");
+				
+				Blocks blocks = Blocks.getInstance();
+				attributes.put("blocksBTC", blocks.getHeight());
+				attributes.put("blocksCHA", Util.getLastBlock());
+				attributes.put("version", Config.version);
+				attributes.put("min_version", Util.getMinVersion());
+				attributes.put("min_version_major", Util.getMinMajorVersion());
+				attributes.put("min_version_minor", Util.getMinMinorVersion());
+				attributes.put("version_major", Config.majorVersion);
+				attributes.put("version_minor", Config.minorVersion);
+				Blocks.getInstance().versionCheck();
+				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
+				
+				String address = Util.getAddresses().get(0);
+				request.session(true);
+				if (request.session().attributes().contains("address")) {
+					address = request.session().attribute("address");
+				}
+				if (request.queryParams().contains("address")) {
+					address = request.queryParams("address");
+					request.session().attribute("address", address);
+				}
+				ArrayList<HashMap<String, Object>> addresses = new ArrayList<HashMap<String, Object>>();
+				for (String addr : Util.getAddresses()) {
+					HashMap<String,Object> map = new HashMap<String,Object>();	
+					map.put("address", addr);
+					map.put("balance_CHA", Util.getBalance(addr, "CHA").floatValue() / Config.unit.floatValue());
+					addresses.add(map);
+				}
+				attributes.put("address", address);
+				attributes.put("addresses", addresses);
+				for (ECKey key : blocks.wallet.getKeys()) {
+					if (key.toAddress(blocks.params).toString().equals(address)) {
+						attributes.put("own", true);
+					}
+				}
+				
+				Double unspentTotal = 0.0;
+				List<UnspentOutput> unspentOutputs = Util.getUnspents(address);
+				ArrayList<HashMap<String, Object>> unspents = new ArrayList<HashMap<String, Object>>();
+				for (UnspentOutput unspent : unspentOutputs) {
+					HashMap<String,Object> map = new HashMap<String,Object>();	
+					map.put("amount", unspent.amount);
+					map.put("tx_hash", unspent.txid);
+					map.put("vout", unspent.vout);
+					map.put("type", unspent.type);
+					map.put("confirmations", unspent.confirmations);
+					unspentTotal += unspent.amount;
+					unspents.add(map);
+				}
+				attributes.put("unspents", unspents);
+				attributes.put("unspent_address", Util.unspentAddress(address));
+				attributes.put("unspent_total", unspentTotal);
+
+				return modelAndView(attributes, "unspents.html");
+			}
+		});			
 		post(new FreeMarkerRoute("/wallet") {
 			@Override
 			public ModelAndView handle(Request request, Response response) {

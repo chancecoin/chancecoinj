@@ -13,7 +13,7 @@
 						<#if balanceBTC??>
 						<li class="list-group-item">
 						<span class="badge">BTC</span>
-						${balanceBTC?string(",##0.00000000")}
+						<a href="/unspents?address=${address}">${balanceBTC?string(",##0.00000000")}</a>
 						</li>
 						</#if>
 						</ul>

@@ -747,7 +747,7 @@ public class Blocks implements Runnable {
 							for (ECKey key : wallet.getKeys()) {
 								try {
 									if (key.toAddress(params).equals(new Address(params, source))) {
-										System.out.println("Spending "+sha256Hash+" "+unspent.vout);
+										//System.out.println("Spending "+sha256Hash+" "+unspent.vout);
 										totalInput = totalInput.add(BigDecimal.valueOf(unspent.amount*Config.unit).toBigInteger());
 										TransactionInput input = new TransactionInput(params, tx, new byte[]{}, txOutPt);
 										tx.addInput(input);

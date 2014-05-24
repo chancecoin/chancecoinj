@@ -6,6 +6,7 @@ public class UnspentOutput {
     public String txid;
     public Integer vout;
     public String type;
+    public Integer confirmations;
     public ScriptPubKey scriptPubKey;
     
     public class ScriptPubKey {
