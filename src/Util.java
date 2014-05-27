@@ -6,6 +6,8 @@ import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.SecureRandom;
+import java.security.Security;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
@@ -25,6 +27,13 @@ import java.util.regex.Pattern;
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
 
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import java.io.OutputStream; 
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,9 +47,8 @@ import com.google.bitcoin.core.TransactionOutput;
 import com.google.bitcoin.script.Script;
 import com.google.bitcoin.wallet.WalletTransaction;
 
-
 public class Util {
-    static Logger logger = LoggerFactory.getLogger(Util.class);
+	static Logger logger = LoggerFactory.getLogger(Util.class);
 
 	public static String getPage(String url_string) {
 		return getPage(url_string, 1);
@@ -51,6 +59,7 @@ public class Util {
 		URL url;
 		String text = null;
 		try {
+			doTrustCertificates();
 			url = new URL(url_string);
 			URLConnection urlc = url.openConnection();
 			urlc.setRequestProperty("User-Agent", "Chancecoin "+Config.version);
@@ -78,6 +87,33 @@ public class Util {
 			}
 		}
 		return text;
+	}	
+
+	public static void doTrustCertificates() throws Exception {
+		TrustManager[] trustAllCerts = new TrustManager[]{
+				new X509TrustManager() {
+					public java.security.cert.X509Certificate[] getAcceptedIssuers()
+					{
+						return null;
+					}
+					public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType)
+					{
+					}
+					public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType)
+					{
+					}
+				}
+		};
+		try 
+		{
+			SSLContext sc = SSLContext.getInstance("SSL");
+			sc.init(null, trustAllCerts, new java.security.SecureRandom());
+			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+		} 
+		catch (Exception e) 
+		{
+			System.out.println(e);
+		}
 	}	
 
 	private static boolean isRedirected( Map<String, List<String>> header ) {
@@ -109,11 +145,11 @@ public class Util {
 			logger.info(e.toString());
 		}
 	}
-	
+
 	public static String unspentAddress(String address) {
 		return "http://api.bitwatch.co/listunspent/"+address+"?verbose=1&minconf=0";
 	}
-	
+
 	public static List<UnspentOutput> getUnspents(String address) {
 		String result = getPage(unspentAddress(address));
 		List<UnspentOutput> unspents = new ArrayList<UnspentOutput> ();
@@ -123,7 +159,7 @@ public class Util {
 			UnspentOutputs unspentOutputs = objectMapper.readValue(result, new TypeReference<UnspentOutputs>() {});
 			unspents = unspentOutputs.result;
 		} catch (Exception e) {
-			System.out.println(e.toString());
+			logger.error(e.toString());
 		}
 		return unspents;
 	}
@@ -143,7 +179,7 @@ public class Util {
 		}		
 		return txs;
 	}
-	*/
+	 */
 
 	public static String format(Double input) {
 		return format(input, "#.00");
@@ -204,7 +240,7 @@ public class Util {
 			}
 		}
 	}
-	
+
 	public static void credit(String address, String asset, BigInteger amount, String callingFunction, String event, Integer blockIndex) {
 		Database db = Database.getInstance();
 		if (hasBalance(address, asset)) {
@@ -216,7 +252,7 @@ public class Util {
 		}
 		db.executeUpdate("insert into credits(address, asset, amount, calling_function, event, block_index) values('"+address+"','"+asset+"','"+amount.toString()+"', '"+callingFunction+"', '"+event+"', '"+blockIndex.toString()+"');");
 	}
-	
+
 	public static Boolean hasBalance(String address, String asset) {
 		Database db = Database.getInstance();
 		ResultSet rs = db.executeQuery("select amount from balances where address='"+address+"' and asset='"+asset+"';");
@@ -228,11 +264,11 @@ public class Util {
 		}
 		return false;
 	}
-	
+
 	public static String BTCBalanceAddress(String address) {
 		return "https://api.biteasy.com/blockchain/v1/addresses/"+address;
 	}
-	
+
 	public static BigInteger getBTCBalance(String address) {
 		String result = getPage(BTCBalanceAddress(address));
 		try {
@@ -241,11 +277,11 @@ public class Util {
 			AddressInfo addressInfo = objectMapper.readValue(result, new TypeReference<AddressInfo>() {});
 			return addressInfo.data.balance;
 		} catch (Exception e) {
-			System.out.println(e.toString());
+			logger.error(e.toString());
 			return BigInteger.ZERO;
 		}
 	}
-	
+
 	public static BigInteger getBalance(String address, String asset) {
 		Database db = Database.getInstance();
 		Blocks blocks = Blocks.getInstance();
@@ -261,7 +297,7 @@ public class Util {
 				}
 			}
 			return totalBalance;
-			*/
+			 */
 			return getBTCBalance(address);
 		} else {
 			ResultSet rs = db.executeQuery("select sum(amount) as amount from balances where address='"+address+"' and asset='"+asset+"';");
@@ -386,16 +422,78 @@ public class Util {
 		String[] pieces = minVersion.split("\\.");
 		return Integer.parseInt(pieces[1].trim());
 	}
+
+	public static Double getBTCPrice() {
+		String result = getPage("http://www.bitstamp.net/api/ticker/");
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			Ticker ticker = objectMapper.readValue(result, new TypeReference<Ticker>() {});
+			return ticker.last;
+		} catch (Exception e) {
+			logger.error(e.toString());
+		}		
+		return 0.0;
+	}
+
+	public static OrderBook getOrderBookPoloniex() {
+		String result = getPage("https://poloniex.com/public?command=returnOrderBook&currencyPair=BTC_CHA");
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			OrderBook orderBook = objectMapper.readValue(result, new TypeReference<OrderBook>() {});
+			return orderBook;
+		} catch (Exception e) {
+			logger.error(e.toString());
+		}		
+		return null;		
+	}
+
+	public static List<Trade> getTradesPoloniex() {
+		String result = getPage("https://poloniex.com/public?command=returnTradeHistory&currencyPair=BTC_CHA");
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			List<Trade> tradeHistory = objectMapper.readValue(result, objectMapper.getTypeFactory().constructCollectionType(List.class,Trade.class));
+			return tradeHistory;
+		} catch (Exception e) {
+			logger.error(e.toString());
+		}		
+		return null;		
+	}
+}
+
+class Trade {
+	public String date;
+	public String type;
+	public Double rate;
+	public Double amount;
+	public Double total;
+}
+
+class OrderBook {
+	public List<List<Double>> bids;
+	public List<List<Double>> asks;
+}
+
+class Ticker {
+	public Double last;
+	public Double bid;
+	public Double ask;
+	public Double high;
+	public Double low;
+	public Double volume;
+	public Integer timestamp;
 }
 
 class AddressInfo {
-    public Data data;
+	public Data data;
 
-    public static class Data {
-        public BigInteger balance;
-    }
+	public static class Data {
+		public BigInteger balance;
+	}
 }
 
 class UnspentOutputs {
-    public List<UnspentOutput> result;
+	public List<UnspentOutput> result;
 }

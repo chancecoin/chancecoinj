@@ -58,6 +58,17 @@
 					</li>
 	      </ul>
 	      <ul class="nav navbar-nav navbar-right">
+					<#if price_BTC?? && price_CHA?? && supply??>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">1 CHA = $${(price_BTC*price_CHA)?string(",##0.00")} <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="#">CHA Supply <span class="badge">${supply?string(",##0.00")}</span></a></li>
+							<li><a href="#">BTC price <span class="badge">$${price_BTC?string(",##0.00")}</span></a></li>
+							<li><a href="#">CHA price <span class="badge">${price_CHA?string(",##0.0000")} BTC</span></a></li>
+							<li><a href="#">Market cap <span class="badge">$${(supply*price_BTC*price_CHA)?string(",##0.00")}</span></a></li>
+						</ul>
+					</li>
+					</#if>
 					<#if addresses??>
 	        <li class="dropdown">
 	          <a href="#" class="dropdown-toggle" data-toggle="dropdown">${address?substring(0,6)}... <b class="caret"></b></a>

@@ -15,7 +15,7 @@ public class Config {
 	public static String dbPath = "resources/db/";
 	public static String downloadUrl = "http://chancecoin.com/downloads/";
 	public static String downloadZipUrl = "https://raw2.github.com/chancecoin/chancecoinj/master/download.txt";
-	public static String downloadZipUrl2 = "https://chancecoin.com/downloads/download.txt";
+	public static String downloadZipUrl2 = "http://chancecoin.com/downloads/download.txt";
 	public static Integer RPCPort = 54121;
 	public static String RPCUsername = "";
 	public static String RPCPassword = "";

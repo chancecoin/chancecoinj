@@ -43,9 +43,12 @@
 						<#if my_bets??>
 						<li><a href="#my_bets" data-toggle="tab">My bets</a></li>
 						</#if>
+						<#if my_vstimes??>
+						<li><a href="#my_stats" data-toggle="tab">My stats</a></li>
+						</#if>
 		        <li><a href="#leaderboard" data-toggle="tab">Leaderboard</a></li>
 						<li><a href="#house_info" data-toggle="tab">House info</a></li>
-						<li><a href="#stats" data-toggle="tab">Stats</a></li>
+						<li><a href="#house_stats" data-toggle="tab">House stats</a></li>
 		    </ul>
 
 		    <div id="my-tab-content" class="tab-content">
@@ -69,7 +72,7 @@
 											<#if my_bets_pending??>
 											<#list my_bets_pending as bet>
 													<tr>
-															<td><a href="/wallet?address=${bet["source"]}">${bet["source"]}</a></td>
+															<td><a href="?address=${bet["source"]}">${bet["source"]}</a></td>
 															<td>Pending</td>
 															<td>${bet["bet"]} CHA</td>
 															<td>${bet["chance"]}%</td>
@@ -81,7 +84,7 @@
 											</#if>
 											<#list bets as bet>
 													<tr>
-															<td><a href="/wallet?address=${bet["source"]}">${bet["source"]}</a></td>
+															<td><a href="?address=${bet["source"]}">${bet["source"]}</a></td>
 															<td>${bet["block_time"]}</td>
 															<td>${bet["bet"]} CHA</td>
 															<td>${bet["chance"]}%</td>
@@ -126,7 +129,7 @@
 											</#if>
 											<#list my_bets as bet>
 													<tr>
-															<td><a href="/wallet?address=${bet["source"]}">${bet["source"]}</a></td>
+															<td><a href="?address=${bet["source"]}">${bet["source"]}</a></td>
 															<td>${bet["block_time"]}</td>
 															<td>${bet["bet"]} CHA</td>
 															<td>${bet["chance"]}%</td>
@@ -137,6 +140,111 @@
 											</#list>
 										</tbody>
 								</table>
+						</div>
+						</#if>
+
+						<#if my_vstimes??>
+						<div class="tab-pane" id="my_stats">
+								<h2>Profit</h2>
+								<div id="chart_div_1" style="width: 700px; height: 275px; display: block; margin-bottom: 1em;"></div>
+								<h2>Volume</h2>
+								<div id="chart_div_2" style="width: 700px; height: 275px; display: block; margin-bottom: 1em;"></div>
+								<script type='text/javascript'>
+									$('#chart_div_1').highcharts({
+										chart: {
+												type: 'line'
+										},
+										title: {
+												text: 'Profit'
+										},
+										xAxis: {
+												type: 'datetime',
+												labels: {
+														formatter: function() {
+																return Highcharts.dateFormat('%Y-%m-%d', this.value);
+														}
+												}
+										},
+										yAxis: {
+												title: {
+														text: 'CHA'
+												}
+										},
+										tooltip: {
+												headerFormat: '<b>{series.name}</b><br>',
+												pointFormat: '{point.x:%Y-%m-%d %H:%M:%S}: {point.y:.2f}'
+										},
+										legend: {
+												layout: 'vertical',
+												align: 'right',
+												verticalAlign: 'middle',
+												borderWidth: 0
+										},
+										series: [{
+												name: 'Profit',
+												data: [
+														<#list my_vstimes as vstime>
+														[(new Date(${vstime['block_time']?string("##0")}*1000)).valueOf(), parseFloat(${vstime['profit']?string("##0.00000000")})],
+														</#list>
+												],
+										}]
+									});
+									$('#chart_div_2').highcharts({
+										chart: {
+												type: 'line'
+										},
+										title: {
+												text: 'Volume'
+										},
+										xAxis: {
+												type: 'datetime',
+												labels: {
+														formatter: function() {
+																return Highcharts.dateFormat('%Y-%m-%d', this.value);
+														}
+												}
+										},
+										yAxis: [{
+												title: {
+														text: 'Volume (CHA)'
+												},
+												min: 0
+										}, {
+												title: {
+														text: 'Volume (bets)'
+												},
+												min: 0,
+												opposite: true
+										}],
+										tooltip: {
+												headerFormat: '<b>{series.name}</b><br>',
+												pointFormat: '{point.x:%Y-%m-%d %H:%M:%S}: {point.y:.2f}'
+										},
+										legend: {
+												layout: 'vertical',
+												align: 'right',
+												verticalAlign: 'middle',
+												borderWidth: 0
+										},
+										series: [{
+												name: 'Volume (CHA)',
+												yAxis: 0,
+												data: [
+														<#list my_vstimes as vstime>
+														[(new Date(${vstime['block_time']?string("##0")}*1000)).valueOf(), parseFloat(${vstime['volume']?string("##0.00000000")})],
+														</#list>
+												],
+										}, {
+												name: 'Volume (Bets)',
+												yAxis: 1,
+												data: [
+														<#list my_vstimes as vstime>
+														[(new Date(${vstime['block_time']?string("##0")}*1000)).valueOf(), parseFloat(${vstime['bets']?string("##0")})],
+														</#list>
+												],
+										}]
+									});
+								</script>
 						</div>
 						</#if>
 
@@ -154,7 +262,7 @@
 										</thead>
 										<#list winners as winner>
 												<tr>
-														<td><a href="/wallet?address=${winner["source"]}">${winner["source"]}</a></td>
+														<td><a href="?address=${winner["source"]}">${winner["source"]}</a></td>
 														<td>${winner["bet_count"]}</td>
 														<td>${winner["avg_bet"]} CHA</td>
 														<td>${winner["avg_chance"]}%</td>
@@ -179,7 +287,7 @@
 										</thead>
 										<#list high_rollers as high_roller>
 												<tr>
-														<td><a href="/wallet?address=${high_roller["source"]}">${high_roller["source"]}</a></td>
+														<td><a href="?address=${high_roller["source"]}">${high_roller["source"]}</a></td>
 														<td>${high_roller["bet_count"]}</td>
 														<td>${high_roller["sum_bet"]} CHA</td>
 														<td>${high_roller["avg_chance"]}%</td>
@@ -206,7 +314,7 @@
 										</thead>
 										<#list largest_bets as largest_bet>
 											<tr>
-													<td><a href="/wallet?address=${largest_bet["source"]}">${largest_bet["source"]}</a></td>
+													<td><a href="?address=${largest_bet["source"]}">${largest_bet["source"]}</a></td>
 													<td>${largest_bet["block_time"]}</td>
 													<td>${largest_bet["bet"]} CHA</td>
 													<td>${largest_bet["chance"]}%</td>
@@ -241,13 +349,14 @@
 										</tbody>
 								</table>
 						</div>
-						<div class="tab-pane" id="stats">
+
+						<div class="tab-pane" id="house_stats">
 								<h2>Profit</h2>
-								<div id="chart_div_1" style="width: 700px; height: 275px; display: block; margin-bottom: 1em;"></div>
+								<div id="chart_div_3" style="width: 700px; height: 275px; display: block; margin-bottom: 1em;"></div>
 								<h2>Volume</h2>
-								<div id="chart_div_2" style="width: 700px; height: 275px; display: block; margin-bottom: 1em;"></div>
+								<div id="chart_div_4" style="width: 700px; height: 275px; display: block; margin-bottom: 1em;"></div>
 								<script type='text/javascript'>
-									$('#chart_div_1').highcharts({
+									$('#chart_div_3').highcharts({
 				            chart: {
 				                type: 'line'
 				            },
@@ -293,7 +402,7 @@
 				                ],
 				            }]
 			        		});
-									$('#chart_div_2').highcharts({
+									$('#chart_div_4').highcharts({
 										chart: {
 												type: 'line'
 										},

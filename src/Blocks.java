@@ -77,6 +77,8 @@ public class Blocks implements Runnable {
 	public Integer versionCheck = 0;
 	public Integer bitcoinBlock = 0;
 	public Integer chancecoinBlock = 0;
+	public Double priceBTC = 0.0;
+	public Double priceCHA = 0.0;
 	public String statusMessage = "";
 
 	public static Blocks getInstanceSkipVersionCheck() {
@@ -198,6 +200,14 @@ public class Blocks implements Runnable {
 				working = true;
 			}
 			try {
+				//get BTC, CHA prices
+				try {
+					priceCHA = Util.getTradesPoloniex().get(0).rate;
+					priceBTC = Util.getBTCPrice();
+				} catch (Exception e) {
+				}
+				
+				//catch Chancecoin up to Bitcoin
 				Integer blockHeight = blockStore.getChainHead().getHeight();
 				Integer lastBlock = Util.getLastBlock();
 				if (lastBlock == 0) {

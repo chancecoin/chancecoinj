@@ -112,6 +112,9 @@ public class Server implements Runnable {
 					blocks.reparse();
 				}
 				
+				attributes.put("price_BTC", blocks.priceBTC);
+				attributes.put("price_CHA", blocks.priceCHA);
+				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("blocksBTC", blocks.getHeight());
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
@@ -194,7 +197,6 @@ public class Server implements Runnable {
 				}
 				attributes.put("winners", winners);				
 								
-				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
 				return modelAndView(attributes, "index.html");
@@ -291,6 +293,9 @@ public class Server implements Runnable {
 				attributes.put("title", "Exchange");
 				
 				Blocks blocks = Blocks.getInstance();
+				attributes.put("price_BTC", blocks.priceBTC);
+				attributes.put("price_CHA", blocks.priceCHA);
+				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("blocksBTC", blocks.getHeight());
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
@@ -473,6 +478,9 @@ public class Server implements Runnable {
 				attributes.put("title", "Exchange");
 				
 				Blocks blocks = Blocks.getInstance();
+				attributes.put("price_BTC", blocks.priceBTC);
+				attributes.put("price_CHA", blocks.priceCHA);
+				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("blocksBTC", blocks.getHeight());
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
@@ -605,6 +613,9 @@ public class Server implements Runnable {
 				
 				Blocks blocks = Blocks.getInstance();
 				blocks.deletePending();
+				attributes.put("price_BTC", blocks.priceBTC);
+				attributes.put("price_CHA", blocks.priceCHA);
+				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("blocksBTC", blocks.getHeight());
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
@@ -670,6 +681,9 @@ public class Server implements Runnable {
 				attributes.put("title", "Wallet");
 				
 				Blocks blocks = Blocks.getInstance();
+				attributes.put("price_BTC", blocks.priceBTC);
+				attributes.put("price_CHA", blocks.priceCHA);
+				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("blocksBTC", blocks.getHeight());
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
@@ -871,6 +885,9 @@ public class Server implements Runnable {
 				attributes.put("title", "Wallet");
 				
 				Blocks blocks = Blocks.getInstance();
+				attributes.put("price_BTC", blocks.priceBTC);
+				attributes.put("price_CHA", blocks.priceCHA);
+				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("blocksBTC", blocks.getHeight());
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
@@ -1003,6 +1020,9 @@ public class Server implements Runnable {
 				attributes.put("title", "Casino");
 				
 				Blocks blocks = Blocks.getInstance();
+				attributes.put("price_BTC", blocks.priceBTC);
+				attributes.put("price_CHA", blocks.priceCHA);
+				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("blocksBTC", blocks.getHeight());
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
@@ -1037,7 +1057,6 @@ public class Server implements Runnable {
 					}
 				}
 				
-				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("max_profit_percentage", Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
@@ -1075,6 +1094,23 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("vstimes", vstimes);
+				
+				//get my profit by time
+				rs = db.executeQuery("select blocks.block_time as block_time, (select sum(bets2.profit) from bets bets2 where bets2.block_index <= bets1.block_index and bets2.source='"+address+"' ) as profit, (select sum((1-bets2.payout*bets2.chance/100.0)*bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index and bets2.source='"+address+"' ) as expected_profit, (select sum(bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index and bets2.source='"+address+"' ) as volume, (select count(bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index and bets2.source='"+address+"' ) as nbets from bets bets1, blocks blocks where blocks.block_index=bets1.block_index and bets1.source='"+address+"' order by blocks.block_index asc;");
+				ArrayList<HashMap<String, Object>> my_vstimes = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("profit", BigInteger.valueOf(rs.getLong("profit")).doubleValue()/Config.unit.doubleValue());
+						map.put("expected_profit", BigInteger.valueOf(rs.getLong("expected_profit")).doubleValue()/Config.unit.doubleValue());
+						map.put("volume", BigInteger.valueOf(rs.getLong("volume")).doubleValue()/Config.unit.doubleValue());
+						map.put("bets", rs.getLong("nbets"));
+						map.put("block_time", rs.getInt("block_time"));
+						my_vstimes.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("my_vstimes", my_vstimes);				
 				
 				//get top winners
 				rs = db.executeQuery("select source, count(bet) as bet_count, avg(bet) as avg_bet, avg(chance) as avg_chance, sum(profit) as sum_profit from bets where validity='valid' group by source order by sum(profit) desc limit 10;");
@@ -1131,7 +1167,6 @@ public class Server implements Runnable {
 				}
 				attributes.put("largest_bets", bets);
 
-				
 				//get last 200 bets
 				rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 200;");
 				bets = new ArrayList<HashMap<String, Object>>();
@@ -1153,6 +1188,7 @@ public class Server implements Runnable {
 				}
 				attributes.put("bets", bets);
 				
+				//get my bets
 				rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.source='"+address+"' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 200;");
 				bets = new ArrayList<HashMap<String, Object>>();
 				try {
@@ -1199,6 +1235,9 @@ public class Server implements Runnable {
 				attributes.put("title", "Casino");
 				
 				Blocks blocks = Blocks.getInstance();
+				attributes.put("price_BTC", blocks.priceBTC);
+				attributes.put("price_CHA", blocks.priceCHA);
+				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("blocksBTC", blocks.getHeight());
 				attributes.put("blocksCHA", Util.getLastBlock());
 				attributes.put("version", Config.version);
@@ -1256,6 +1295,23 @@ public class Server implements Runnable {
 				}
 				attributes.put("vstimes", vstimes);
 				
+				//get my profit by time
+				rs = db.executeQuery("select blocks.block_time as block_time, (select sum(bets2.profit) from bets bets2 where bets2.block_index <= bets1.block_index and bets2.source='"+address+"' ) as profit, (select sum((1-bets2.payout*bets2.chance/100.0)*bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index and bets2.source='"+address+"' ) as expected_profit, (select sum(bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index and bets2.source='"+address+"' ) as volume, (select count(bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index and bets2.source='"+address+"' ) as nbets from bets bets1, blocks blocks where blocks.block_index=bets1.block_index and bets1.source='"+address+"' order by blocks.block_index asc;");
+				ArrayList<HashMap<String, Object>> my_vstimes = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("profit", BigInteger.valueOf(rs.getLong("profit")).doubleValue()/Config.unit.doubleValue());
+						map.put("expected_profit", BigInteger.valueOf(rs.getLong("expected_profit")).doubleValue()/Config.unit.doubleValue());
+						map.put("volume", BigInteger.valueOf(rs.getLong("volume")).doubleValue()/Config.unit.doubleValue());
+						map.put("bets", rs.getLong("nbets"));
+						map.put("block_time", rs.getInt("block_time"));
+						my_vstimes.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("my_vstimes", my_vstimes);
+				
 				//get top winners
 				rs = db.executeQuery("select source, count(bet) as bet_count, avg(bet) as avg_bet, avg(chance) as avg_chance, sum(profit) as sum_profit from bets where validity='valid' group by source order by sum(profit) desc limit 10;");
 				ArrayList<HashMap<String, Object>> winners = new ArrayList<HashMap<String, Object>>();
@@ -1311,7 +1367,6 @@ public class Server implements Runnable {
 				}
 				attributes.put("largest_bets", bets);
 
-				
 				//get last 200 bets
 				rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 200;");
 				bets = new ArrayList<HashMap<String, Object>>();
@@ -1333,6 +1388,7 @@ public class Server implements Runnable {
 				}
 				attributes.put("bets", bets);
 
+				//get my bets
 				rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.source='"+address+"' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 200;");
 				bets = new ArrayList<HashMap<String, Object>>();
 				try {
