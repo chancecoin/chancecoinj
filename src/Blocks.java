@@ -222,12 +222,12 @@ public class Blocks implements Runnable {
 				}
 				Integer nextBlock = lastBlock + 1;
 
+				logger.info("Bitcoin block height: "+blockHeight);	
+				logger.info("Chancecoin block height: "+lastBlock);
 				if (lastBlock < blockHeight) {
 					//traverse new blocks
 					parsing = true;
 					Database db = Database.getInstance();
-					logger.info("Bitcoin block height: "+blockHeight);	
-					logger.info("Chancecoin block height: "+lastBlock);
 					bitcoinBlock = blockHeight;
 					chancecoinBlock = lastBlock;
 					Integer blocksToScan = blockHeight - lastBlock;
