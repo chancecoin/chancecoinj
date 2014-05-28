@@ -117,15 +117,22 @@ public class Blocks implements Runnable {
 	}
 
 	public void versionCheck() {
+		versionCheck(true);
+	}
+	public void versionCheck(Boolean autoUpdate) {
 		Integer minMajorVersion = Util.getMinMajorVersion();
 		Integer minMinorVersion = Util.getMinMinorVersion();
 		if (Config.majorVersion<minMajorVersion || (Config.majorVersion.equals(minMajorVersion) && Config.minorVersion<minMinorVersion)) {
-			statusMessage = "Version is out of date, updating now"; 
-			logger.info(statusMessage);
-			try {
-				Runtime.getRuntime().exec("java -jar update/update.jar");
-			} catch (Exception ex) {
-				ex.printStackTrace();
+			if (autoUpdate) {
+				statusMessage = "Version is out of date, updating now"; 
+				logger.info(statusMessage);
+				try {
+					Runtime.getRuntime().exec("java -jar update/update.jar");
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			} else {
+				logger.info("Version is out of date. Please upgrade to version "+Util.getMinVersion()+".");
 			}
 			System.exit(0);
 		}
