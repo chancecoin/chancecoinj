@@ -191,7 +191,7 @@ public class Blocks implements Runnable {
 			peerGroup.addEventListener(new ChancecoinPeerEventListener());
 			peerGroup.downloadBlockChain();
 		} catch (Exception e) {
-			logger.error(e.toString());
+			logger.error("Error during init: "+e.toString());
 		}
 	}
 
@@ -260,7 +260,7 @@ public class Blocks implements Runnable {
 					parsing = false;
 				}
 			} catch (Exception e) {
-				logger.error(e.toString());
+				logger.error("Error during follow: "+e.toString());
 			}	
 			if (!force) {
 				working = false;
@@ -400,7 +400,7 @@ public class Blocks implements Runnable {
 					}
 				}
 			} catch (SQLException e) {
-				logger.error(e.toString());
+				logger.error("Error during import transaction: "+e.toString());
 			}
 		}
 	}
@@ -600,7 +600,7 @@ public class Blocks implements Runnable {
 
 			updateMinorVersion();
 		} catch (Exception e) {
-			logger.error(e.toString());
+			logger.error("Error during create tables: "+e.toString());
 		}
 	}
 
@@ -784,7 +784,7 @@ public class Blocks implements Runnable {
 						}
 					}
 				} catch (Exception e) {
-					logger.error(e.toString());
+					logger.error("Error during transaction creation: "+e.toString());
 				}
 			}
 
@@ -842,6 +842,7 @@ public class Blocks implements Runnable {
 			try {
 				logger.info("Broadcasting transaction: "+tx.getHashAsString());
 				future = peerGroup.broadcastTransaction(tx);
+				/*
 				int tries = 10;
 				Boolean success = false;
 				while (tries>0 && !success) {
@@ -854,7 +855,8 @@ public class Blocks implements Runnable {
 				if (!success) {
 					throw new Exception("Transaction timed out. Please try again.");
 				}
-
+				*/
+				
 				//future.get(60, TimeUnit.SECONDS);
 				//} catch (TimeoutException e) {
 				//	logger.error(e.toString());
