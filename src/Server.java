@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,6 +97,85 @@ public class Server implements Runnable {
 					request.session().attribute("chat_open", request.queryParams("chat_open"));	
 				}
 				return request.session().attribute("chat_open");
+			}
+		});
+		post(new Route("/process_bet") {
+			@Override
+			public Object handle(Request request, Response response) {
+				request.session(true);
+				JSONObject results = new JSONObject();
+				Blocks blocks = Blocks.getInstance();
+				if (request.queryParams().contains("form") && request.queryParams("form").equals("bet")) {
+					String source = request.queryParams("source");
+					Double rawBet = Double.parseDouble(request.queryParams("bet"));
+					Double chance = Double.parseDouble(request.queryParams("chance"));
+					Double payout = Double.parseDouble(request.queryParams("payout"));
+					BigInteger bet = new BigDecimal(rawBet*Config.unit).toBigInteger();
+					try {
+						Transaction tx = Bet.create(source, bet, chance, payout);
+						blocks.sendTransaction(source, tx);
+						results.put("message", "Thank you for betting!");
+					} catch (Exception e) {
+						try {
+							results.put("message", e.getMessage());
+						} catch (JSONException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					}
+				}
+				return results.toString();
+			}
+		});
+		post(new Route("/process_import_private_key") {
+			@Override
+			public Object handle(Request request, Response response) {
+				request.session(true);
+				JSONObject results = new JSONObject();
+				if (request.queryParams().contains("form") && request.queryParams("form").equals("import")) {
+					String privateKey = request.queryParams("privatekey");
+					try {
+						String address = Blocks.getInstance().importPrivateKey(privateKey);
+						request.session().attribute("address", address);
+						results.put("address", address);				
+						results.put("message", "Your private key has been imported.");
+					} catch (Exception e) {
+						try {
+							results.put("message", "Error when importing private key: "+e.getMessage());
+						} catch (JSONException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					}
+				}
+				return results.toString();
+			}
+		});
+		post(new Route("/process_send") {
+			@Override
+			public Object handle(Request request, Response response) {
+				request.session(true);
+				JSONObject results = new JSONObject();
+				Blocks blocks = Blocks.getInstance();
+				if (request.queryParams().contains("form") && request.queryParams("form").equals("send")) {
+					String source = request.queryParams("source");
+					String destination = request.queryParams("destination");
+					Double rawQuantity = Double.parseDouble(request.queryParams("quantity"));
+					BigInteger quantity = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
+					try {
+						Transaction tx = Send.create(source, destination, "CHA", quantity);
+						blocks.sendTransaction(source, tx);
+						results.put("message", "You sent CHA successfully.");
+					} catch (Exception e) {
+						try {
+							results.put("message", e.getMessage());
+						} catch (JSONException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					}
+				}
+				return results.toString();
 			}
 		});
 		get(new FreeMarkerRoute("/") {

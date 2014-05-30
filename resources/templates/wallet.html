@@ -32,7 +32,7 @@
 				</div>
 				<div class="col-xs-4 segment one-third">
 						<h2>Import private key</h2>
-						<form action="/wallet" method="post">
+						<form id="import_private_key_form" action="/wallet" method="post">
 								<input type="hidden" name="form" value="import">
 
 								<div class="input-group">
@@ -48,14 +48,14 @@
 
 								<div class="input-group">
 									<span class="input-group-btn">
-										<button class="btn btn-default" type="submit">Import private key</button>
+										<button class="btn btn-default"  onclick="processImportPrivateKey(); return false;">Import private key</button>
 									</span>
 								</div>
 						</form>
 				</div>
 				<div class="col-xs-4 segment one-third">
 						<h2>Send</h2>
-						<form action="/wallet" method="post">
+						<form id="send_cha_form" action="/wallet" method="post">
 				        <input type="hidden" name="form" value="send">
 								<input type="hidden" name="source" value="${address}">
 
@@ -71,7 +71,7 @@
 
 								<div class="input-group">
 						      <span class="input-group-btn">
-						        <button class="btn btn-default" type="submit" <#if !own??>disabled="disabled"</#if>>Send</button>
+						        <button class="btn btn-default" onclick="processSend(); return false;" <#if !own??>disabled="disabled"</#if>>Send</button>
 						      </span>
 						    </div>
 						</form>

@@ -17,6 +17,7 @@
 	<script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 	<script src="http://code.highcharts.com/highcharts.js"></script>
 	<script src="http://code.highcharts.com/modules/exporting.js"></script>
+	<script type="text/javascript" src="/js/ajax.js"></script>
 </head>
 <body>
 	<nav class="navbar navbar-default" role="navigation">
@@ -106,6 +107,10 @@
 	</nav>
 
 	<div class="container-fluid content">
+		<div id="ajax_message" class="row section messages" style="display:none">
+			<div id="ajax_wait_message" class="alert alert-info" style="display:none"></div>
+			<div id="ajax_result_message" class="alert alert-info" style="display:none"></div>
+		</div>
 		<#if info?? || error?? || success?? || warning?? || parsing?? || (version_major?? && version_minor?? && min_version_major?? && min_version_minor?? && (version_major?number<min_version_major?number || (version_major?number==min_version_major?number && version_minor?number<min_version_minor?number)))>
 		<div class="row section messages">
 			<#if info??>
