@@ -192,6 +192,7 @@ public class Blocks implements Runnable {
 			peerGroup.downloadBlockChain();
 		} catch (Exception e) {
 			logger.error("Error during init: "+e.toString());
+			e.printStackTrace();
 		}
 	}
 
@@ -261,6 +262,7 @@ public class Blocks implements Runnable {
 				}
 			} catch (Exception e) {
 				logger.error("Error during follow: "+e.toString());
+				e.printStackTrace();
 			}	
 			if (!force) {
 				working = false;
@@ -401,6 +403,7 @@ public class Blocks implements Runnable {
 				}
 			} catch (SQLException e) {
 				logger.error("Error during import transaction: "+e.toString());
+				e.printStackTrace();
 			}
 		}
 	}
@@ -601,6 +604,7 @@ public class Blocks implements Runnable {
 			updateMinorVersion();
 		} catch (Exception e) {
 			logger.error("Error during create tables: "+e.toString());
+			e.printStackTrace();
 		}
 	}
 
@@ -785,6 +789,7 @@ public class Blocks implements Runnable {
 					}
 				} catch (Exception e) {
 					logger.error("Error during transaction creation: "+e.toString());
+					e.printStackTrace();
 				}
 			}
 
