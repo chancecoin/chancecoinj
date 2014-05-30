@@ -17,6 +17,7 @@ public class Test {
 	public static void main(String[] args) {
 		Blocks blocks = Blocks.getInstanceAndWait();
 		//blocks.reDownloadBlockTransactions(302332);
+		Util.getTransaction("4012d93baa2322f5c1a2f1da0ed208d0ab03800a9f081fe230fcc01810643669");
 	}
 	
 }

@@ -28,7 +28,7 @@ public class JsonRpcServiceImpl implements JsonRpcService {
 		BigInteger quantity = new BigDecimal(amount*Config.unit).toBigInteger();
 		try {
 			Transaction tx = Send.create(source, destination, "CHA", quantity);
-			blocks.sendTransaction(tx);
+			blocks.sendTransaction(source, tx);
 			logger.info("Success! You sent "+amount+" CHA to "+destination+".");
 			return tx.getHashAsString();
 		} catch (Exception e) {

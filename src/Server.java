@@ -334,7 +334,7 @@ public class Server implements Runnable {
 					String txHash = request.queryParams("tx_hash");
 					try {
 						Transaction tx = Cancel.create(txHash);
-						blocks.sendTransaction(tx);
+						blocks.sendTransaction(address,tx);
 						attributes.put("success", "Your order has been cancelled.");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());
@@ -344,7 +344,7 @@ public class Server implements Runnable {
 					String orderMatchId = request.queryParams("order_match_id");
 					try {
 						Transaction tx = BTCPay.create(orderMatchId);
-						blocks.sendTransaction(tx);
+						blocks.sendTransaction(address,tx);
 						attributes.put("success", "Your payment was successful.");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());
@@ -359,7 +359,7 @@ public class Server implements Runnable {
 					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
 					try {
 						Transaction tx = Order.create(source, "BTC", btcQuantity, "CHA", quantity, expiration, BigInteger.ZERO, BigInteger.ZERO);
-						blocks.sendTransaction(tx);
+						blocks.sendTransaction(source,tx);
 						attributes.put("success", "Your order was successful.");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());
@@ -374,7 +374,7 @@ public class Server implements Runnable {
 					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
 					try {
 						Transaction tx = Order.create(source, "CHA", quantity, "BTC", btcQuantity, expiration, BigInteger.ZERO, BigInteger.ZERO);
-						blocks.sendTransaction(tx);
+						blocks.sendTransaction(source,tx);
 						attributes.put("success", "Your order was successful.");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());
@@ -739,7 +739,7 @@ public class Server implements Runnable {
 					BigInteger quantity = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
 					try {
 						Transaction tx = Send.create(source, destination, "CHA", quantity);
-						blocks.sendTransaction(tx);
+						blocks.sendTransaction(source,tx);
 						attributes.put("success", "You sent CHA successfully.");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());
@@ -1069,7 +1069,7 @@ public class Server implements Runnable {
 					BigInteger bet = new BigDecimal(rawBet*Config.unit).toBigInteger();
 					try {
 						Transaction tx = Bet.create(source, bet, chance, payout);
-						blocks.sendTransaction(tx);
+						blocks.sendTransaction(source,tx);
 						attributes.put("success", "Thank you for betting!");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());

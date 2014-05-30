@@ -826,7 +826,7 @@ public class Blocks implements Runnable {
 		return tx;
 	}
 
-	public Boolean sendTransaction(Transaction tx) throws Exception {
+	public Boolean sendTransaction(String source, Transaction tx) throws Exception {
 		try {
 			//System.out.println(tx);
 
@@ -846,9 +846,16 @@ public class Blocks implements Runnable {
 				Boolean success = false;
 				while (tries>0 && !success) {
 					tries--;
-					if (Util.getTransaction(tx.getHashAsString())!=null) {
-						success = true;
+					List<UnspentOutput> unspents = Util.getUnspents(source);
+					for (UnspentOutput unspent : unspents) {
+						if (unspent.txid.equals(tx.getHashAsString())) {
+							success = true;
+							break;
+						}
 					}
+					//if (Util.getTransaction(tx.getHashAsString())!=null) {
+					//	success = true;
+					//}
 					Thread.sleep(5000);
 				}
 				if (!success) {

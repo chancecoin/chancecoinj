@@ -1,9 +1,13 @@
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.SecureRandom;
@@ -50,17 +54,45 @@ import com.google.bitcoin.wallet.WalletTransaction;
 public class Util {
 	static Logger logger = LoggerFactory.getLogger(Util.class);
 
-	public static String getPage(String url_string) {
-		return getPage(url_string, 1);
+	public static String getPage(String urlString) {
+		return getPage(urlString, 1);
 
 	}
 
-	public static String getPage(String url_string, int retries) {
+	public static String getPage(String urlString, int retries) {
+		try {
+			doTrustCertificates();
+			URL url = new URL(urlString);
+			HttpURLConnection connection = null;
+			connection = (HttpURLConnection)url.openConnection();
+			connection.setUseCaches(false);
+			connection.addRequestProperty("User-Agent", Config.appName+" "+Config.version); 
+			connection.setRequestMethod("GET");
+			connection.setDoOutput(true);
+			connection.setReadTimeout(10000);
+			connection.connect();
+
+			BufferedReader rd  = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+			StringBuilder sb = new StringBuilder();
+			String line;
+			
+			while ((line = rd.readLine()) != null)
+			{
+				sb.append(line + '\n');
+			}
+			//System.out.println (sb.toString());
+
+			return sb.toString();
+		} catch (Exception e) {
+			logger.error("Fetch URL error: "+e.toString());
+		}
+		return "";
+		/*
 		URL url;
 		String text = null;
 		try {
 			doTrustCertificates();
-			url = new URL(url_string);
+			url = new URL(urlString);
 			URLConnection urlc = url.openConnection();
 			urlc.setRequestProperty("User-Agent", "Chancecoin "+Config.version);
 			urlc.setDoOutput(false);
@@ -88,6 +120,7 @@ public class Util {
 			}
 		}
 		return text;
+		 */
 	}	
 
 	public static void doTrustCertificates() throws Exception {
@@ -265,14 +298,13 @@ public class Util {
 		}
 		return false;
 	}
-	
+
 	public static String transactionAddress(String txHash) {
 		return "https://api.biteasy.com/blockchain/v1/transactions/"+txHash;
 	}
 
 	public static TransactionInfo getTransaction(String txHash) {
 		String result = getPage(transactionAddress(txHash));
-		System.out.println(result);
 		try {
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -300,7 +332,7 @@ public class Util {
 			return BigInteger.ZERO;
 		}
 	}
-	
+
 	public static BigInteger getBalance(String address, String asset) {
 		Database db = Database.getInstance();
 		Blocks blocks = Blocks.getInstance();
@@ -443,7 +475,7 @@ public class Util {
 	}
 
 	public static Double getBTCPrice() {
-		String result = getPage("http://www.bitstamp.net/api/ticker/");
+		String result = getPage("https://www.bitstamp.net/api/ticker/");
 		try {
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -515,7 +547,7 @@ class AddressInfo {
 
 class TransactionInfo {
 	public Data data;
-	
+
 	public static class Data {
 		public Integer confirmations;
 	}
