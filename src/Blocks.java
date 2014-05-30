@@ -842,7 +842,6 @@ public class Blocks implements Runnable {
 			try {
 				logger.info("Broadcasting transaction: "+tx.getHashAsString());
 				future = peerGroup.broadcastTransaction(tx);
-				/*
 				int tries = 10;
 				Boolean success = false;
 				while (tries>0 && !success) {
@@ -855,7 +854,6 @@ public class Blocks implements Runnable {
 				if (!success) {
 					throw new Exception("Transaction timed out. Please try again.");
 				}
-				*/
 				
 				//future.get(60, TimeUnit.SECONDS);
 				//} catch (TimeoutException e) {
