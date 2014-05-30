@@ -63,6 +63,7 @@ public class Util {
 			url = new URL(url_string);
 			URLConnection urlc = url.openConnection();
 			urlc.setRequestProperty("User-Agent", "Chancecoin "+Config.version);
+			urlc.setDoOutput(false);
 			urlc.connect();
 
 			BufferedInputStream buffer = new BufferedInputStream(urlc.getInputStream());
@@ -264,6 +265,24 @@ public class Util {
 		}
 		return false;
 	}
+	
+	public static String transactionAddress(String txHash) {
+		return "https://api.biteasy.com/blockchain/v1/transactions/"+txHash;
+	}
+
+	public static TransactionInfo getTransaction(String txHash) {
+		String result = getPage(transactionAddress(txHash));
+		System.out.println(result);
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			TransactionInfo transactionInfo = objectMapper.readValue(result, new TypeReference<TransactionInfo>() {});
+			return transactionInfo;
+		} catch (Exception e) {
+			logger.error(e.toString());
+			return null;
+		}
+	}
 
 	public static String BTCBalanceAddress(String address) {
 		return "https://api.biteasy.com/blockchain/v1/addresses/"+address;
@@ -281,7 +300,7 @@ public class Util {
 			return BigInteger.ZERO;
 		}
 	}
-
+	
 	public static BigInteger getBalance(String address, String asset) {
 		Database db = Database.getInstance();
 		Blocks blocks = Blocks.getInstance();
@@ -491,6 +510,14 @@ class AddressInfo {
 
 	public static class Data {
 		public BigInteger balance;
+	}
+}
+
+class TransactionInfo {
+	public Data data;
+	
+	public static class Data {
+		public Integer confirmations;
 	}
 }
 

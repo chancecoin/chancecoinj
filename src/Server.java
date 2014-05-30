@@ -115,8 +115,8 @@ public class Server implements Runnable {
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
-				attributes.put("blocksBTC", blocks.getHeight());
-				attributes.put("blocksCHA", Util.getLastBlock());
+				attributes.put("blocksBTC", blocks.bitcoinBlock);
+				attributes.put("blocksCHA", blocks.chancecoinBlock);
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
 				attributes.put("min_version_major", Util.getMinMajorVersion());
@@ -296,8 +296,8 @@ public class Server implements Runnable {
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
-				attributes.put("blocksBTC", blocks.getHeight());
-				attributes.put("blocksCHA", Util.getLastBlock());
+				attributes.put("blocksBTC", blocks.bitcoinBlock);
+				attributes.put("blocksCHA", blocks.chancecoinBlock);
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
 				attributes.put("min_version_major", Util.getMinMajorVersion());
@@ -481,8 +481,8 @@ public class Server implements Runnable {
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
-				attributes.put("blocksBTC", blocks.getHeight());
-				attributes.put("blocksCHA", Util.getLastBlock());
+				attributes.put("blocksBTC", blocks.bitcoinBlock);
+				attributes.put("blocksCHA", blocks.chancecoinBlock);
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
 				attributes.put("min_version_major", Util.getMinMajorVersion());
@@ -616,8 +616,8 @@ public class Server implements Runnable {
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
-				attributes.put("blocksBTC", blocks.getHeight());
-				attributes.put("blocksCHA", Util.getLastBlock());
+				attributes.put("blocksBTC", blocks.bitcoinBlock);
+				attributes.put("blocksCHA", blocks.chancecoinBlock);
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
 				attributes.put("min_version_major", Util.getMinMajorVersion());
@@ -684,8 +684,8 @@ public class Server implements Runnable {
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
-				attributes.put("blocksBTC", blocks.getHeight());
-				attributes.put("blocksCHA", Util.getLastBlock());
+				attributes.put("blocksBTC", blocks.bitcoinBlock);
+				attributes.put("blocksCHA", blocks.chancecoinBlock);
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
 				attributes.put("min_version_major", Util.getMinMajorVersion());
@@ -888,8 +888,8 @@ public class Server implements Runnable {
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
-				attributes.put("blocksBTC", blocks.getHeight());
-				attributes.put("blocksCHA", Util.getLastBlock());
+				attributes.put("blocksBTC", blocks.bitcoinBlock);
+				attributes.put("blocksCHA", blocks.chancecoinBlock);
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
 				attributes.put("min_version_major", Util.getMinMajorVersion());
@@ -1023,8 +1023,8 @@ public class Server implements Runnable {
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
-				attributes.put("blocksBTC", blocks.getHeight());
-				attributes.put("blocksCHA", Util.getLastBlock());
+				attributes.put("blocksBTC", blocks.bitcoinBlock);
+				attributes.put("blocksCHA", blocks.chancecoinBlock);
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
 				attributes.put("min_version_major", Util.getMinMajorVersion());
@@ -1238,8 +1238,8 @@ public class Server implements Runnable {
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
-				attributes.put("blocksBTC", blocks.getHeight());
-				attributes.put("blocksCHA", Util.getLastBlock());
+				attributes.put("blocksBTC", blocks.bitcoinBlock);
+				attributes.put("blocksCHA", blocks.chancecoinBlock);
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
 				attributes.put("min_version_major", Util.getMinMajorVersion());
