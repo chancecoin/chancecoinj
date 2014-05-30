@@ -217,6 +217,9 @@ public class Blocks implements Runnable {
 				//catch Chancecoin up to Bitcoin
 				Integer blockHeight = blockStore.getChainHead().getHeight();
 				Integer lastBlock = Util.getLastBlock();
+				bitcoinBlock = blockHeight;
+				chancecoinBlock = lastBlock;
+
 				if (lastBlock == 0) {
 					lastBlock = Config.firstBlock - 1;
 				}
@@ -228,8 +231,6 @@ public class Blocks implements Runnable {
 					//traverse new blocks
 					parsing = true;
 					Database db = Database.getInstance();
-					bitcoinBlock = blockHeight;
-					chancecoinBlock = lastBlock;
 					Integer blocksToScan = blockHeight - lastBlock;
 					List<Sha256Hash> blockHashes = new ArrayList<Sha256Hash>();
 
