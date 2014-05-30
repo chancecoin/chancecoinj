@@ -8,15 +8,15 @@ function updateChatStatus() {
 }
 
 function processBet() {
-	processAjaxRequest("/process_bet", "#casino_bet_form", "processing your bet...");
+	processAjaxRequest("/process_bet", "#casino_bet_form", "Processing your bet, please wait...");
 }
 
 function processImportPrivateKey() {
-	processAjaxRequest("/process_import_private_key", "#import_private_key_form", "importing your private key...");
+	processAjaxRequest("/process_import_private_key", "#import_private_key_form", "Importing your private key...");
 }
 
 function processSend() {
-	processAjaxRequest("/process_send", "#send_cha_form", "processing your sending transaction...");
+	processAjaxRequest("/process_send", "#send_cha_form", "Processing your sending transaction...");
 }
 
 function processAjaxRequest(urlString, formName, waitMessage) {
@@ -25,6 +25,8 @@ function processAjaxRequest(urlString, formName, waitMessage) {
 		url: urlString,
 		data: $(formName).serialize(),
 		beforeSend: function() {
+			$(formName+" input").prop("disabled", true);
+			$(formName+" button").prop("disabled", true);
 			$("#ajax_result_message").css("display","none");
 			$("#ajax_result_message").html("");
 			$("#ajax_wait_message").html(waitMessage);
@@ -39,6 +41,9 @@ function processAjaxRequest(urlString, formName, waitMessage) {
 			$("#ajax_result_message").css("display","block");
 			$("#ajax_message").delay(3000);
 			$("#ajax_message").fadeOut(500);
+			$(formName+" input").prop("disabled", false);
+			$(formName+" button").prop("disabled", false);
+			$(formName+" input").val("");
 		}
 	});
 }
