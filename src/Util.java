@@ -454,9 +454,9 @@ public class Util {
 
 	public static String getMinVersion() {
 		String minVersion = getPage(Config.minVersionPage);
-		if (minVersion == null) {
+		if (minVersion == null || minVersion.equals("")) {
 			minVersion = getPage(Config.minVersionPage2).trim();
-			if (minVersion == null) {
+			if (minVersion == null || minVersion.equals("")) {
 				return Config.version;
 			}
 		}

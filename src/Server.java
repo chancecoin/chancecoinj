@@ -160,12 +160,13 @@ public class Server implements Runnable {
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("send")) {
 					String source = request.queryParams("source");
 					String destination = request.queryParams("destination");
+					String asset = request.queryParams("asset");
 					Double rawQuantity = Double.parseDouble(request.queryParams("quantity"));
 					BigInteger quantity = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
 					try {
-						Transaction tx = Send.create(source, destination, "CHA", quantity);
+						Transaction tx = Send.create(source, destination, asset, quantity);
 						blocks.sendTransaction(source, tx);
-						results.put("message", "You sent CHA successfully.");
+						results.put("message", "You sent "+asset+" successfully.");
 					} catch (Exception e) {
 						try {
 							results.put("message", e.getMessage());
@@ -816,12 +817,13 @@ public class Server implements Runnable {
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("send")) {
 					String source = request.queryParams("source");
 					String destination = request.queryParams("destination");
+					String asset = request.queryParams("asset");
 					Double rawQuantity = Double.parseDouble(request.queryParams("quantity"));
 					BigInteger quantity = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
 					try {
-						Transaction tx = Send.create(source, destination, "CHA", quantity);
+						Transaction tx = Send.create(source, destination, asset, quantity);
 						blocks.sendTransaction(source,tx);
-						attributes.put("success", "You sent CHA successfully.");
+						attributes.put("success", "You sent "+asset+" successfully.");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());
 					}
