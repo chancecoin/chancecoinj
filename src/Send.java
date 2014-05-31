@@ -92,6 +92,10 @@ public class Send {
 			} else {
 				throw new Exception("Please send less than your balance.");
 			}
+		} else if (!source.equals("") && !destination.equals("") && asset.equals("BTC") && amount.compareTo(BigInteger.ZERO)>0) {
+			Blocks blocks = Blocks.getInstance();
+			Transaction txBTC = blocks.transaction(source, destination, amount, BigInteger.valueOf(Config.minFee), "");
+			return txBTC;			
 		} else {
 			throw new Exception("Please specify a source address and destination address, and send more than 0 CHA.");
 		}
