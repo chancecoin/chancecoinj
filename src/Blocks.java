@@ -190,20 +190,29 @@ public class Blocks implements Runnable {
 			peerGroup.startAndWait();
 			peerGroup.addEventListener(new ChancecoinPeerEventListener());
 			peerGroup.downloadBlockChain();
-			/*
 			while (!hasChainHead()) {
 				try {
 					logger.info("Blockstore doesn't yet have a chain head, so we are sleeping.");
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
 				}
-			}*/
+			}
 		} catch (Exception e) {
 			logger.error("Error during init: "+e.toString());
 			e.printStackTrace();
+			deleteDatabases();
+			init();
 		}
 	}
 
+	public void deleteDatabases() {
+		logger.info("Deleting Bitcoin and Chancecoin databases");
+		String fileBTCdb = Config.dbPath+Config.appName.toLowerCase()+".h2.db";
+		new File(fileBTCdb).delete();
+		String fileCHAdb = Database.dbFile;
+		new File(fileCHAdb).delete();
+	}
+	
 	public Boolean hasChainHead() {
 		try {
 			Integer blockHeight = blockStore.getChainHead().getHeight();
