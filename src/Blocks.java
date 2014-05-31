@@ -190,12 +190,29 @@ public class Blocks implements Runnable {
 			peerGroup.startAndWait();
 			peerGroup.addEventListener(new ChancecoinPeerEventListener());
 			peerGroup.downloadBlockChain();
+			/*
+			while (!hasChainHead()) {
+				try {
+					logger.info("Blockstore doesn't yet have a chain head, so we are sleeping.");
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+				}
+			}*/
 		} catch (Exception e) {
 			logger.error("Error during init: "+e.toString());
 			e.printStackTrace();
 		}
 	}
 
+	public Boolean hasChainHead() {
+		try {
+			Integer blockHeight = blockStore.getChainHead().getHeight();
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+	
 	public void follow() {
 		follow(false);
 	}

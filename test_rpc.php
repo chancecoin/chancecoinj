@@ -102,11 +102,13 @@ $result = $client->execute('importPrivateKey', array('KybpV7G13H8Yc9G5dRVPqt3KsT
 print_r($result);
 print "\n";
 
-$result = $client->execute('send', array('1GbWCwjHorFdFTuGzGk8tEtLctq4xxxqY9', '1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes', 1000.0));
+while (true) {
+$result = $client->execute('getBalance', array('1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes'));
 print_r($result);
+}
 print "\n";
 
-$result = $client->execute('getBalance', array('1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes'));
+$result = $client->execute('send', array('1GbWCwjHorFdFTuGzGk8tEtLctq4xxxqY9', '1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes', 1000.0));
 print_r($result);
 print "\n";
 

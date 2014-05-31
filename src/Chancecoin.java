@@ -4,7 +4,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Chancecoin {
+	public static Logger logger = LoggerFactory.getLogger(Blocks.class);
+
 	public static void main(String[] args) {
 		Blocks blocks = Blocks.getInstanceSkipVersionCheck();
 		blocks.init();
