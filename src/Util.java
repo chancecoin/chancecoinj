@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -317,7 +318,7 @@ public class Util {
 	}
 
 	public static String BTCBalanceAddress(String address) {
-		return "https://api.biteasy.com/blockchain/v1/addresses/"+address;
+		return "http://api.bitwatch.co/getbalance/"+address+"?minconf=1&maxreqsigs=1";
 	}
 
 	public static BigInteger getBTCBalance(String address) {
@@ -326,7 +327,7 @@ public class Util {
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			AddressInfo addressInfo = objectMapper.readValue(result, new TypeReference<AddressInfo>() {});
-			return addressInfo.data.balance;
+			return BigDecimal.valueOf(addressInfo.result*Config.unit).toBigInteger();
 		} catch (Exception e) {
 			logger.error(e.toString());
 			return BigInteger.ZERO;
@@ -538,11 +539,7 @@ class Ticker {
 }
 
 class AddressInfo {
-	public Data data;
-
-	public static class Data {
-		public BigInteger balance;
-	}
+	public Double result;
 }
 
 class TransactionInfo {
