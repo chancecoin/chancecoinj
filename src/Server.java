@@ -1380,7 +1380,7 @@ public class Server implements Runnable {
 				
 				//poker hands
 				List<List<String>> pokerHands = new ArrayList<List<String>>();
-				for (int i = 0; i<5; i++) {
+				for (int i = 0; i<1; i++) {
 					List<String> hand = new ArrayList<String>();
 					Deck deal = Deck.ShuffleAndDeal(new Random().nextDouble(), null, 9);
 					for (Card c : deal.cards) {
