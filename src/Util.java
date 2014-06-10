@@ -513,6 +513,28 @@ public class Util {
 		}		
 		return null;		
 	}
+	
+	public static BigInteger factorial(BigInteger n) {
+		BigInteger result = BigInteger.ONE;
+
+		while (!n.equals(BigInteger.ZERO)) {
+			result = result.multiply(n);
+			n = n.subtract(BigInteger.ONE);
+		}
+
+		return result;
+	}
+	public static BigInteger combinations(BigInteger n, BigInteger k) {
+		if (k.compareTo(n)>0) {
+			return BigInteger.ZERO;
+		}else{
+			return factorial(n).divide(factorial(k)).divide(factorial(n.subtract(k)));
+		}
+	}	
+	
+	public static int boolToInt(boolean b) {
+	    return b ? 1 : 0;
+	}
 }
 
 class Trade {

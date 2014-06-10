@@ -9,6 +9,7 @@
 	<title>Chancecoin<#if title??> - ${title}</#if></title>
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
 	<link rel="stylesheet" href="/css/style.css">
+	<link rel="stylesheet" href="/css/bootstrap-select.min.css">
 	<link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon">
   <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
 	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
@@ -17,6 +18,15 @@
 	<script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 	<script src="http://code.highcharts.com/highcharts.js"></script>
 	<script src="http://code.highcharts.com/modules/exporting.js"></script>
+	<script type="text/javascript" src="/js/ajax.js"></script>
+	<script type="text/javascript" src="/js/bootstrap-select.min.js"></script>
+	<script type="text/javascript">
+		$(window).on('load', function () {
+				$('.selectpicker').selectpicker({
+						'selectedText': 'cat'
+				});
+		});
+	</script>
 </head>
 <body>
 	<nav class="navbar navbar-default" role="navigation">

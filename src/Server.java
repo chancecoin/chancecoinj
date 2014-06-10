@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -1143,6 +1144,7 @@ public class Server implements Runnable {
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("max_profit_percentage", Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
+				attributes.put("cards", (new Deck()).cardStrings());
 
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("bet")) {
 					String source = request.queryParams("source");
@@ -1160,6 +1162,20 @@ public class Server implements Runnable {
 				}
 				
 				Database db = Database.getInstance();
+				
+				//poker hands
+				List<List<String>> pokerHands = new ArrayList<List<String>>();
+				for (int i = 0; i<5; i++) {
+					List<String> hand = new ArrayList<String>();
+					Deck deal = Deck.ShuffleAndDeal(new Random().nextDouble(), null, 9);
+					for (Card c : deal.cards) {
+						hand.add(c.toString());
+					}
+					hand.set(5, "back");
+					hand.set(6, "back");
+					pokerHands.add(hand);
+				}
+				attributes.put("poker_hands", pokerHands);
 				
 				//get profit by time
 				ResultSet rs = db.executeQuery("select blocks.block_time as block_time, (select -sum(bets2.profit) from bets bets2 where bets2.block_index <= bets1.block_index ) as profit, (select sum((1-bets2.payout*bets2.chance/100.0)*bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index ) as expected_profit, (select sum(bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index ) as volume, (select count(bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index ) as nbets from bets bets1, blocks blocks where blocks.block_index=bets1.block_index order by blocks.block_index asc;");
@@ -1359,7 +1375,22 @@ public class Server implements Runnable {
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("max_profit_percentage", Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
+				attributes.put("cards", (new Deck()).cardStrings());
 				Database db = Database.getInstance();
+				
+				//poker hands
+				List<List<String>> pokerHands = new ArrayList<List<String>>();
+				for (int i = 0; i<5; i++) {
+					List<String> hand = new ArrayList<String>();
+					Deck deal = Deck.ShuffleAndDeal(new Random().nextDouble(), null, 9);
+					for (Card c : deal.cards) {
+						hand.add(c.toString());
+					}
+					hand.set(5, "back");
+					hand.set(6, "back");
+					pokerHands.add(hand);
+				}
+				attributes.put("poker_hands", pokerHands);
 				
 				//get profit by time
 				ResultSet rs = db.executeQuery("select blocks.block_time as block_time, (select -sum(bets2.profit) from bets bets2 where bets2.block_index <= bets1.block_index ) as profit, (select sum((1-bets2.payout*bets2.chance/100.0)*bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index ) as expected_profit, (select sum(bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index ) as volume, (select count(bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index ) as nbets from bets bets1, blocks blocks where blocks.block_index=bets1.block_index order by blocks.block_index asc;");

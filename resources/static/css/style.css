@@ -175,6 +175,17 @@ table {
 	text-align: left;
 }
 
+.card {
+	width: 60px;
+}
+
+.casino-icon {
+	height: 100px;
+	margin-right: 1em;
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+
 #hide_chat {
 	width: 17px;
 	height: 17px;

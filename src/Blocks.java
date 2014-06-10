@@ -278,7 +278,7 @@ public class Blocks implements Runnable {
 
 					if (getDBMinorVersion()<Config.minorVersionDB){
 						reparse(true);
-						updateMinorVersion();		    	
+						db.updateMinorVersion();		    	
 					}else{
 						parseFrom(nextBlock, true);
 					}
@@ -559,80 +559,6 @@ public class Blocks implements Runnable {
 		db.executeUpdate("delete from transactions where block_index<0 and tx_index<(select max(tx_index) from transactions)-10;");
 	}
 
-	public void createTables() {
-		Database db = Database.getInstance();
-		try {
-			// Blocks
-			db.executeUpdate("CREATE TABLE IF NOT EXISTS blocks(block_index INTEGER PRIMARY KEY, block_hash TEXT UNIQUE, block_time INTEGER)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS blocks_block_index_idx ON blocks (block_index)");
-
-			// Transactions
-			db.executeUpdate("CREATE TABLE IF NOT EXISTS transactions(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, block_time INTEGER, source TEXT, destination TEXT, btc_amount INTEGER, fee INTEGER, data BLOB, supported BOOL DEFAULT 1)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS transactions_block_index_idx ON transactions (block_index)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS transactions_tx_index_idx ON transactions (tx_index)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS transactions_tx_hash_idx ON transactions (tx_hash)");
-
-			// (Valid) debits
-			db.executeUpdate("CREATE TABLE IF NOT EXISTS debits(block_index INTEGER, address TEXT, asset TEXT, amount INTEGER, calling_function TEXT, event TEXT)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS debits_address_idx ON debits (address)");
-
-			// (Valid) credits
-			db.executeUpdate("CREATE TABLE IF NOT EXISTS credits(block_index INTEGER, address TEXT, asset TEXT, amount INTEGER, calling_function TEXT, event TEXT)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS credits_address_idx ON credits (address)");
-
-			// Balances
-			db.executeUpdate("CREATE TABLE IF NOT EXISTS balances(address TEXT, asset TEXT, amount INTEGER)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS address_idx ON balances (address)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS asset_idx ON balances (asset)");
-
-			// Sends
-			db.executeUpdate("CREATE TABLE IF NOT EXISTS sends(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, destination TEXT, asset TEXT, amount INTEGER, validity TEXT)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS sends_block_index_idx ON sends (block_index)");
-
-			// Orders
-			db.executeUpdate("CREATE TABLE IF NOT EXISTS orders(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, give_asset TEXT, give_amount INTEGER, give_remaining INTEGER, get_asset TEXT, get_amount INTEGER, get_remaining INTEGER, expiration INTEGER, expire_index INTEGER, fee_required INTEGER, fee_provided INTEGER, fee_remaining INTEGER, validity TEXT)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON orders (block_index)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS expire_index_idx ON orders (expire_index)");
-
-			// Order Matches
-			db.executeUpdate("CREATE TABLE IF NOT EXISTS order_matches(id TEXT PRIMARY KEY, tx0_index INTEGER, tx0_hash TEXT, tx0_address TEXT, tx1_index INTEGER, tx1_hash TEXT, tx1_address TEXT, forward_asset TEXT, forward_amount INTEGER, backward_asset TEXT, backward_amount INTEGER, tx0_block_index INTEGER, tx1_block_index INTEGER, tx0_expiration INTEGER, tx1_expiration INTEGER, match_expire_index INTEGER, validity TEXT)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS match_expire_index_idx ON order_matches (match_expire_index)");
-
-			// BTCpays
-			db.executeUpdate("CREATE TABLE IF NOT EXISTS btcpays(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, destination TEXT, btc_amount INTEGER, order_match_id TEXT, validity TEXT)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON btcpays (block_index)");
-
-			// Bets
-			db.executeUpdate("CREATE TABLE IF NOT EXISTS bets(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, bet INTEGER, chance REAL, payout REAL, profit INTEGER, cha_supply INTEGER, rolla REAL, rollb REAL, roll REAL, resolved TEXT, validity TEXT)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON bets (block_index)");
-
-			// Burns
-			db.executeUpdate("CREATE TABLE IF NOT EXISTS burns(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, burned INTEGER, earned INTEGER, validity TEXT)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS validity_idx ON burns (validity)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS address_idx ON burns (address)");
-
-			// Cancels
-			db.executeUpdate("CREATE TABLE IF NOT EXISTS cancels(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, offer_hash TEXT, validity TEXT)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS cancels_block_index_idx ON cancels (block_index)");
-
-			// Order Expirations
-			db.executeUpdate("CREATE TABLE IF NOT EXISTS order_expirations(order_index INTEGER PRIMARY KEY, order_hash TEXT UNIQUE, source TEXT, block_index INTEGER)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON order_expirations (block_index)");
-
-			// Order Match Expirations
-			db.executeUpdate("CREATE TABLE IF NOT EXISTS order_match_expirations(order_match_id TEXT PRIMARY KEY, tx0_address TEXT, tx1_address TEXT, block_index INTEGER)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON order_match_expirations (block_index)");
-
-			// Messages
-			db.executeUpdate("CREATE TABLE IF NOT EXISTS messages(message_index INTEGER PRIMARY KEY, block_index INTEGER, command TEXT, category TEXT, bindings TEXT)");
-			db.executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON messages (block_index)");
-
-			updateMinorVersion();
-		} catch (Exception e) {
-			logger.error("Error during create tables: "+e.toString());
-			e.printStackTrace();
-		}
-	}
 
 	public Integer getDBMinorVersion() {
 		Database db = Database.getInstance();
@@ -644,12 +570,6 @@ public class Blocks implements Runnable {
 		} catch (SQLException e) {
 		}	
 		return 0;
-	}
-
-	public void updateMinorVersion() {
-		// Update minor version
-		Database db = Database.getInstance();
-		db.executeUpdate("PRAGMA user_version = "+Config.minorVersionDB.toString());
 	}
 
 	public Integer getHeight() {

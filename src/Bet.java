@@ -67,6 +67,35 @@ public class Bet {
 		}
 	}
 
+	public static BetInfo getBetDetails(String source, String txHash, BigInteger bet, Double field1, Double field2) {
+		BetInfo betInfo = new BetInfo();
+		betInfo.source = source;
+		betInfo.txHash = txHash;
+		betInfo.bet = bet;
+		if (field1 > 0.0 && field1<1.0) {
+			betInfo.betType = "dice";
+			betInfo.chance = field1;
+			betInfo.payout = field2;
+		} else if (field1 > 1.0 && field1 < 2.0) {
+			betInfo.betType = "poker";
+			List<String> cards = new ArrayList<String>();
+			field1 = field1 - 1.0;
+			field1 = field1 * 100.0;
+			Deck deck = new Deck();
+			deck.cards.clear();
+			while (field1 > 0.0) {
+				Card card = new Card(field1.intValue());
+				cards.add(card.toString());
+				field1 = (field1-field1.intValue())*100.0;
+				deck.cards.add(card);
+			}
+			betInfo.cards = cards;
+			betInfo.chance = Deck.chanceOfWinning(deck.cards);
+			betInfo.payout = 100.0/betInfo.chance*(1-Config.houseEdge);
+		}
+		return betInfo;
+	}
+
 	public static List<BetInfo> getPending(String source) {
 		Database db = Database.getInstance();
 		ResultSet rs = db.executeQuery("select * from transactions where block_index<0 and source='"+source+"' order by tx_index desc;");
@@ -150,23 +179,6 @@ public class Bet {
 		Transaction tx = blocks.transaction(source, "", BigInteger.ZERO, BigInteger.valueOf(Config.minFee), dataString);
 		return tx;
 	}
-	public static BigInteger factorial(BigInteger n) {
-		BigInteger result = BigInteger.ONE;
-
-		while (!n.equals(BigInteger.ZERO)) {
-			result = result.multiply(n);
-			n = n.subtract(BigInteger.ONE);
-		}
-
-		return result;
-	}
-	public static BigInteger combinations(BigInteger n, BigInteger k) {
-		if (k.compareTo(n)>0) {
-			return BigInteger.ZERO;
-		}else{
-			return factorial(n).divide(factorial(k)).divide(factorial(n.subtract(k)));
-		}
-	}
 	public static Date addDays(Date date, int days)
 	{
 		Calendar cal = Calendar.getInstance();
@@ -228,11 +240,11 @@ public class Bet {
 						Date time = dateFormatDateTimeLotto.parse(draw.date);
 						if (time.after(blockTime)) {
 							logger.info("Found lottery numbers we can use to resolve bet");
-							BigInteger denominator = combinations(BigInteger.valueOf(80),BigInteger.valueOf(20)).subtract(BigInteger.ONE);
+							BigInteger denominator = Util.combinations(BigInteger.valueOf(80),BigInteger.valueOf(20)).subtract(BigInteger.ONE);
 							BigInteger n = BigInteger.ZERO;
 							BigInteger i = BigInteger.ONE;
 							for (BigInteger number : draw.numbersDrawn) {
-								n = n.add(combinations(number.subtract(BigInteger.ONE),i));
+								n = n.add(Util.combinations(number.subtract(BigInteger.ONE),i));
 								i = i.add(BigInteger.ONE);
 							}
 							Double rollA = n.doubleValue() / (denominator.doubleValue());
@@ -283,4 +295,10 @@ class BetInfo {
 	public Double chance;
 	public Double payout;
 	public String txHash;
+	public Boolean valid;
+	public Boolean resolved;
+	public Double profit;
+	public String betType; //"dice", "poker", "roulette", "color_wheel", "blackjack"
+	public List<String> cards;
+	public String selection;
 }

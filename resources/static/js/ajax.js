@@ -7,16 +7,16 @@ function updateChatStatus() {
 	});
 }
 
-function processBet() {
-	processAjaxRequest("/process_bet", "#casino_bet_form", "Processing your bet, please wait...");
+function processBet(formName) {
+	processAjaxRequest("/process_bet", "#"+formName, "Processing your bet, please wait...");
 }
 
-function processImportPrivateKey() {
-	processAjaxRequest("/process_import_private_key", "#import_private_key_form", "Importing your private key...");
+function processImportPrivateKey(formName) {
+	processAjaxRequest("/process_import_private_key", "#"+formName, "Importing your private key...");
 }
 
-function processSend() {
-	processAjaxRequest("/process_send", "#send_cha_form", "Processing your sending transaction...");
+function processSend(formName) {
+	processAjaxRequest("/process_send", "#"+formName, "Processing your sending transaction...");
 }
 
 function processAjaxRequest(urlString, formName, waitMessage) {
@@ -44,6 +44,7 @@ function processAjaxRequest(urlString, formName, waitMessage) {
 			$(formName+" input").prop("disabled", false);
 			$(formName+" button").prop("disabled", false);
 			$(formName+" input").val("");
+			window.location.reload(true); 
 		}
 	});
 }
