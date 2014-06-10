@@ -77,8 +77,19 @@
 												<#else>
 												<span class="help-block" style="color:#fff;">...</span>
 												</#if>
-												<input type="hidden" name="card${card_index+1}" value="${card}">
-												<img src='/images/cards/${card}.png' class='card' />
+												<#if card="back">
+													<select class="selectpicker" name="card${card_index+1}">
+														<option data-content="<img src='/images/cards/back.png' class='card' />" selected="selected">??</option>
+													</select>
+												<#else>
+													<#if cards??>
+													<select class="selectpicker" name="card${card_index+1}">
+														<#list cards as c>
+												    <option data-content="<img src='/images/cards/${c}.png' class='card' />"<#if c=card> selected="selected"</#if>>${c}</option>
+														</#list>
+												  </select>
+													</#if>
+												</#if>
 											</div>
 										</div>
 										<#if card_index=1 || card_index=6>
