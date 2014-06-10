@@ -113,7 +113,7 @@ public class Server implements Runnable {
 					Double payout = Double.parseDouble(request.queryParams("payout"));
 					BigInteger bet = new BigDecimal(rawBet*Config.unit).toBigInteger();
 					try {
-						Transaction tx = Bet.create(source, bet, chance, payout);
+						Transaction tx = Bet.createDiceBet(source, bet, chance, payout);
 						blocks.sendTransaction(source, tx);
 						results.put("message", "Thank you for betting!");
 					} catch (Exception e) {
@@ -1153,7 +1153,7 @@ public class Server implements Runnable {
 					Double payout = Double.parseDouble(request.queryParams("payout"));
 					BigInteger bet = new BigDecimal(rawBet*Config.unit).toBigInteger();
 					try {
-						Transaction tx = Bet.create(source, bet, chance, payout);
+						Transaction tx = Bet.createDiceBet(source, bet, chance, payout);
 						blocks.sendTransaction(source,tx);
 						attributes.put("success", "Thank you for betting!");
 					} catch (Exception e) {

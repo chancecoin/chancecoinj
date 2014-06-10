@@ -150,7 +150,7 @@ public class Bet {
 		return bets;
 	}
 
-	public static Transaction create(String source, BigInteger bet, Double chance, Double payout) throws Exception {
+	public static Transaction createPokerBet(String source, BigInteger bet, Double chance, Double payout) throws Exception {
 		BigInteger chaSupply = Util.chaSupplyForBetting();
 		if (source.equals("")) throw new Exception("Please specify a source address.");
 		if (!(bet.compareTo(BigInteger.ZERO)>0)) throw new Exception("Please bet more than zero.");
@@ -179,6 +179,37 @@ public class Bet {
 		Transaction tx = blocks.transaction(source, "", BigInteger.ZERO, BigInteger.valueOf(Config.minFee), dataString);
 		return tx;
 	}
+	
+	public static Transaction createDiceBet(String source, BigInteger bet, Double chance, Double payout) throws Exception {
+		BigInteger chaSupply = Util.chaSupplyForBetting();
+		if (source.equals("")) throw new Exception("Please specify a source address.");
+		if (!(bet.compareTo(BigInteger.ZERO)>0)) throw new Exception("Please bet more than zero.");
+		if (!(chance>0.0 && chance<100.0)) throw new Exception("Please specify a chance between 0 and 100.");
+		if (!(payout>1.0)) throw new Exception("Please specify a payout greater than 1.");
+		if (!(Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-Config.houseEdge)),6))) throw new Exception("Please specify a chance and payout that are congruent."); 
+		if (!(bet.compareTo(Util.getBalance(source, "CHA"))<=0)) throw new Exception("Please specify a bet that is smaller than your CHA balance.");
+		if (!((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit)) throw new Exception("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
+
+		Blocks blocks = Blocks.getInstance();
+		ByteBuffer byteBuffer = ByteBuffer.allocate(length+4);
+		byteBuffer.putInt(0, id);
+		byteBuffer.putLong(0+4, bet.longValue());
+		byteBuffer.putDouble(8+4, chance);
+		byteBuffer.putDouble(16+4, payout);
+		List<Byte> dataArrayList = Util.toByteArrayList(byteBuffer.array());
+		dataArrayList.addAll(0, Util.toByteArrayList(Config.prefix.getBytes()));
+		byte[] data = Util.toByteArray(dataArrayList);
+
+		String dataString = "";
+		try {
+			dataString = new String(data,"ISO-8859-1");
+		} catch (UnsupportedEncodingException e) {
+		}
+
+		Transaction tx = blocks.transaction(source, "", BigInteger.ZERO, BigInteger.valueOf(Config.minFee), dataString);
+		return tx;
+	}
+	
 	public static Date addDays(Date date, int days)
 	{
 		Calendar cal = Calendar.getInstance();
