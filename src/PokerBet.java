@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.bitcoin.core.Transaction;
 
-public class Bet {
+public class PokerBet {
 	static Logger logger = LoggerFactory.getLogger(Bet.class);
 	public static Integer length = 8+8+8;
 	public static Integer id = 40;
@@ -121,8 +121,52 @@ public class Bet {
 		return bets;
 	}
 
-	public static Transaction createBet(String source, BigInteger bet, Double chance, Double payout) throws Exception {
+	public static Transaction createBet(String source, BigInteger bet, List<String> playerCards, List<String> boardCards, List<String> opponentCards) throws Exception {
+		//cards should be like 2C or 10S, or ?? if they are random
 		BigInteger chaSupply = Util.chaSupplyForBetting();
+		if (playerCards.size()!=2) throw new Exception("Please specify exactly two player cards."); 
+		if (opponentCards.size()!=2) throw new Exception("Please specify exactly two opponent cards."); 
+		if (boardCards.size()!=5) throw new Exception("Please specify exactly five board cards.");
+		Deck deal = new Deck();
+		deal.cards.clear();
+		for (String cardString : playerCards) {
+			Card card = new Card(cardString);
+			if (card.suit>=0 && card.card>=0) {
+				if (deal.cards.contains(card)) throw new Exception("Please make sure each card is unique.");
+				deal.cards.add(card);				
+			} else {
+				throw new Exception("Please specify a complete player hand.");
+			}
+		}
+		for (String cardString : opponentCards) {
+			Card card = new Card(cardString);
+			if (card.suit>=0 && card.card>=0) {
+				if (deal.cards.contains(card)) throw new Exception("Please make sure each card is unique.");
+				deal.cards.add(card);				
+			} else {
+				throw new Exception("Please specify a complete opponent hand.");
+			}
+		}
+		for (String cardString : boardCards) {
+			Card card = new Card(cardString);
+			if (card.suit>=0 && card.card>=0) {
+				if (deal.cards.contains(card)) throw new Exception("Please make sure each card is unique.");
+				deal.cards.add(card);				
+			} else {
+				deal.cards.add(null);
+			}
+		}
+		Double chance = Deck.chanceOfWinning(deal.cards);
+		Double payout = 100.0/chance*(1-Config.houseEdge);
+		
+		Double field1 = 0.0;
+		for (Card card : deal.cards) {
+			field1 += card.cardValue();
+			field1 /= 100.0;
+		}
+		field1 += 1.0;
+		Double field2 = 0.0;
+		
 		if (source.equals("")) throw new Exception("Please specify a source address.");
 		if (!(bet.compareTo(BigInteger.ZERO)>0)) throw new Exception("Please bet more than zero.");
 		if (!(chance>0.0 && chance<100.0)) throw new Exception("Please specify a chance between 0 and 100.");
@@ -135,8 +179,8 @@ public class Bet {
 		ByteBuffer byteBuffer = ByteBuffer.allocate(length+4);
 		byteBuffer.putInt(0, id);
 		byteBuffer.putLong(0+4, bet.longValue());
-		byteBuffer.putDouble(8+4, chance);
-		byteBuffer.putDouble(16+4, payout);
+		byteBuffer.putDouble(8+4, field1);
+		byteBuffer.putDouble(16+4, field2);
 		List<Byte> dataArrayList = Util.toByteArrayList(byteBuffer.array());
 		dataArrayList.addAll(0, Util.toByteArrayList(Config.prefix.getBytes()));
 		byte[] data = Util.toByteArray(dataArrayList);
@@ -243,24 +287,4 @@ public class Bet {
 			logger.error(e.toString());
 		}
 	}
-}
-
-class LottoResult {
-	public List<LottoDraw> draw;
-	public String jsonSearch;
-}
-class LottoDraw {
-	public String date;
-	public List<BigInteger> numbersDrawn;
-}
-
-class BetInfo {
-	public String source;
-	public BigInteger bet;
-	public Double chance;
-	public Double payout;
-	public String txHash;
-	public Boolean valid;
-	public Boolean resolved;
-	public Double profit;
 }

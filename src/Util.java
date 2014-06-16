@@ -20,6 +20,7 @@ import java.text.SimpleDateFormat;
 import java.util.AbstractMap;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -534,6 +535,13 @@ public class Util {
 	
 	public static int boolToInt(boolean b) {
 	    return b ? 1 : 0;
+	}
+	
+	public static Date addDays(Date date, int days) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+		cal.add(Calendar.DATE, days); //minus number would decrement the days
+		return cal.getTime();
 	}
 }
 

@@ -16,7 +16,7 @@ public class Card {
 			this.card = -1;
 		}
 	}
-
+	
 	public Card(String card, String suit) {
 		switch (suit) {
 		case "C":  this.suit = 0;
@@ -26,6 +26,9 @@ public class Card {
 		case "H":  this.suit = 2;
 		break;
 		case "S":  this.suit = 3;
+		break;
+		default:
+		this.suit = -1;
 		break;
 		}
 		switch (card) {
@@ -55,7 +58,16 @@ public class Card {
 		break;
 		case "A":  this.card = 12;
 		break;
+		default:
+		this.suit = -1;
+		break;		
 		}		
+	}
+	
+	public Card(String cardString) {
+		String card = cardString.substring(0, cardString.length()-1);
+		String suit = cardString.substring(cardString.length()-1, cardString.length());
+		new Card(card, suit);
 	}
 	
 	public String cardString() {
@@ -105,9 +117,13 @@ public class Card {
 		return cardString;
 	}
 
+	public int cardValue() {
+    	return suit*4+card;
+	}
+	
     @Override
     public int hashCode() {
-    	return suit*15+card;
+    	return suit*4+card;
     }
     
     @Override
