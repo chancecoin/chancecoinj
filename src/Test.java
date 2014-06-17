@@ -12,6 +12,7 @@
 //TODO: other games
 //TODO: redundancy for downloads.txt on github
 //TODO: let people send BTC with Chancecoin client
+//TODO: keep the db files more up to date, and let people just download them when they want to gamble.
 public class Test {
 
 	public static void main(String[] args) {

@@ -11,6 +11,7 @@ import java.security.CodeSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1377,6 +1378,14 @@ public class Server implements Runnable {
 				attributes.put("house_edge", Config.houseEdge);
 				attributes.put("cards", (new Deck()).cardStrings());
 				Database db = Database.getInstance();
+				
+				//lotto results
+				LottoResult lottoResult = Bet.getLottoResult(Util.getLastBlockTime());
+				List<String> lottoResults = new ArrayList<String>();
+				for (LottoDraw lottoDraw : lottoResult.draw) {
+					lottoResults.add(lottoDraw.dateNY.toString());
+				}
+				attributes.put("poker_hands", lottoResults);
 				
 				//poker hands
 				List<List<String>> pokerHands = new ArrayList<List<String>>();

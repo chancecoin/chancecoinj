@@ -282,10 +282,10 @@ public class Blocks implements Runnable {
 					}else{
 						parseFrom(nextBlock, true);
 					}
-					Bet.resolve();
-					Order.expire();
 					parsing = false;
 				}
+				Bet.resolve();
+				Order.expire();
 			} catch (Exception e) {
 				logger.error("Error during follow: "+e.toString());
 				e.printStackTrace();

@@ -240,6 +240,19 @@ public class Util {
 		return (a / (float)temp);
 	}
 
+	public static Date getLastBlockTime() {
+		Blocks blocks = Blocks.getInstance();
+		Database db = Database.getInstance();
+		ResultSet rs = db.executeQuery("select * from blocks order by block_index desc limit 1;");
+		try {
+			while(rs.next()) {
+				return new Date((long)rs.getLong("block_time")*1000);
+			}
+		} catch (SQLException e) {
+		}	
+		return null;
+	}
+
 	public static Integer getLastBlock() {
 		Blocks blocks = Blocks.getInstance();
 		Database db = Database.getInstance();

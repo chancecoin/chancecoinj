@@ -1,9 +1,11 @@
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -14,7 +16,9 @@ import java.util.TimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.bitcoin.core.Transaction;
 
@@ -151,27 +155,56 @@ public class Bet {
 		return tx;
 	}
 	
+	public static LottoResult getLottoResult(Date date) {
+		SimpleDateFormat dateFormatStandard = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+		SimpleDateFormat dateFormatDateLotto = new SimpleDateFormat("dd/MM/yyyy");
+		SimpleDateFormat dateFormatHour = new SimpleDateFormat("HH");
+		SimpleDateFormat dateFormatMinute = new SimpleDateFormat("mm");
+		SimpleDateFormat dateFormatDateTimeLotto = new SimpleDateFormat("MM/dd/yyyy HH:mm");
+		TimeZone newYork = TimeZone.getTimeZone("America/New_York");
+		TimeZone UTC = TimeZone.getTimeZone("UTC");
+		dateFormatStandard.setTimeZone(UTC);
+		dateFormatDateLotto.setTimeZone(newYork);
+		dateFormatHour.setTimeZone(newYork);
+		dateFormatMinute.setTimeZone(newYork);				
+		dateFormatDateTimeLotto.setTimeZone(newYork);
+		
+		String lottoDate = dateFormatDateLotto.format(date);
+		Integer hour = Integer.parseInt(dateFormatHour.format(date));
+		Integer minute = Integer.parseInt(dateFormatMinute.format(date));
+		if (hour>=23 && minute>=56) {
+			lottoDate = dateFormatDateLotto.format(Util.addDays(date, 1));
+		}
+		String lottoUrl = "http://nylottery.ny.gov/wps/PA_NYSLNumberCruncher/NumbersServlet?game=quick&action=winningnumbers&startSearchDate="+lottoDate+"&endSearchDate=&pageNo=&last=&perPage=999&sort=";
+		String lottoPage = Util.getPage(lottoUrl);
+		logger.info("Getting lottery numbers "+lottoUrl);
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		LottoResult lottoMap = null;
+		try {
+			lottoMap = objectMapper.readValue(lottoPage, LottoResult.class);
+			LottoResult lottoMapNew = new LottoResult();			
+			lottoMapNew.draw = new ArrayList<LottoDraw>();
+			for (LottoDraw lottoDraw : lottoMap.draw) {
+				LottoDraw lottoDrawNew = new LottoDraw();
+				lottoDrawNew.dateNY = dateFormatDateTimeLotto.parse(lottoDraw.date);
+				lottoDrawNew.numbersDrawn = lottoDraw.numbersDrawn;
+				lottoMapNew.draw.add(lottoDrawNew);
+			}
+			return lottoMapNew;
+		} catch (Exception e) {
+			logger.error(e.toString());
+		}
+		return lottoMap;
+	}
+	
 	public static void resolve() {
 		//resolve bets
-
 		logger.info("Resolving bets");
 
 		Database db = Database.getInstance();
 		ResultSet rs = db.executeQuery("select block_time,blocks.block_index as block_index,tx_index,tx_hash,source,bet,payout,chance,cha_supply from bets,blocks where bets.block_index=blocks.block_index and bets.validity='valid' and bets.resolved IS NOT 'true';");
 		//if (true) return;
-
-		SimpleDateFormat dateFormatStandard = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
-		SimpleDateFormat dateFormatDateTimeLotto = new SimpleDateFormat("MM/dd/yyyy HH:mm");
-		SimpleDateFormat dateFormatDateLotto = new SimpleDateFormat("dd/MM/yyyy");
-		SimpleDateFormat dateFormatHour = new SimpleDateFormat("HH");
-		SimpleDateFormat dateFormatMinute = new SimpleDateFormat("mm");
-		TimeZone newYork = TimeZone.getTimeZone("America/New_York");
-		TimeZone UTC = TimeZone.getTimeZone("UTC");
-		dateFormatStandard.setTimeZone(UTC);
-		dateFormatDateLotto.setTimeZone(newYork);
-		dateFormatDateTimeLotto.setTimeZone(newYork);
-		dateFormatHour.setTimeZone(newYork);
-		dateFormatMinute.setTimeZone(newYork);
 
 		try {
 			while (rs.next()) {
@@ -186,24 +219,10 @@ public class Bet {
 				Date blockTime = new Date((long)rs.getLong("block_time")*1000);
 
 				logger.info("Attempting to resolve bet "+txHash);
-
-				String lottoDate = dateFormatDateLotto.format(blockTime);
-				Integer hour = Integer.parseInt(dateFormatHour.format(blockTime));
-				Integer minute = Integer.parseInt(dateFormatMinute.format(blockTime));
-				if (hour>=23 && minute>=56) {
-					lottoDate = dateFormatDateLotto.format(Util.addDays(blockTime, 1));
-				}
-				String lottoUrl = "http://nylottery.ny.gov/wps/PA_NYSLNumberCruncher/NumbersServlet?game=quick&action=winningnumbers&startSearchDate="+lottoDate+"&endSearchDate=&pageNo=&last=&perPage=999&sort=";
-				String lottoPage = Util.getPage(lottoUrl);
-				logger.info("Getting lottery numbers "+lottoUrl);
-				try {
-					ObjectMapper objectMapper = new ObjectMapper();
-					objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-					LottoResult lottoMap = objectMapper.readValue(lottoPage, LottoResult.class);
-
+				LottoResult lottoMap = getLottoResult(blockTime);
+				if (lottoMap != null) {
 					for (LottoDraw draw : lottoMap.draw) {
-						Date time = dateFormatDateTimeLotto.parse(draw.date);
-						if (time.after(blockTime)) {
+						if (draw.dateNY.after(blockTime)) {
 							logger.info("Found lottery numbers we can use to resolve bet");
 							BigInteger denominator = Util.combinations(BigInteger.valueOf(80),BigInteger.valueOf(20)).subtract(BigInteger.ONE);
 							BigInteger n = BigInteger.ZERO;
@@ -235,8 +254,6 @@ public class Bet {
 							break;
 						}
 					}
-				} catch (Exception e) {
-					logger.error(e.toString());
 				}
 			}
 		} catch (SQLException e) {
@@ -247,10 +264,10 @@ public class Bet {
 
 class LottoResult {
 	public List<LottoDraw> draw;
-	public String jsonSearch;
 }
 class LottoDraw {
 	public String date;
+	public Date dateNY;
 	public List<BigInteger> numbersDrawn;
 }
 
