@@ -63,6 +63,7 @@ public class Util {
 
 	public static String getPage(String urlString, int retries) {
 		try {
+			logger.info("Getting URL: "+urlString);
 			doTrustCertificates();
 			URL url = new URL(urlString);
 			HttpURLConnection connection = null;

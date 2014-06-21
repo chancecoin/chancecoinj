@@ -146,7 +146,7 @@ public class Blocks implements Runnable {
 				logger.info("Looping blocks");
 				Thread.sleep(1000*60); //once a minute, we run blocks.follow()
 			} catch (InterruptedException e) {
-				logger.info(e.toString());
+				logger.info("Error during loop: "+e.toString());
 			}
 		}
 	}
