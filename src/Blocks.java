@@ -143,9 +143,9 @@ public class Blocks implements Runnable {
 	@Override
 	public void run() {
 		while (true) {
+			logger.info("Looping blocks");
 			Blocks.getInstance();
 			try {
-				logger.info("Looping blocks");
 				Thread.sleep(1000*60); //once a minute, we run blocks.follow()
 			} catch (InterruptedException e) {
 				logger.error("Error during loop: "+e.toString());
