@@ -62,6 +62,7 @@ public class GUI extends Application {
 			@Override protected Object call() throws InterruptedException {
 				updateMessage("Loading Chancecoin");
 				
+				/*
 				// start Blocks
 				final Blocks blocks = Blocks.getInstanceFresh();
 				
@@ -87,6 +88,7 @@ public class GUI extends Application {
 				blocks.init();
 				blocks.versionCheck();
 				blocks.follow();
+				*/
 				
 				// start Server
 				Server server = new Server();
@@ -94,8 +96,7 @@ public class GUI extends Application {
 				serverThread.setDaemon(true);
 				serverThread.start(); 
 				
-				//updateProgress(0,1);
-				Thread.sleep(3000);
+				Thread.sleep(8000);
 				
 				return null;
 			}

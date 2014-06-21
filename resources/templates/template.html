@@ -119,7 +119,7 @@
 			<div id="ajax_wait_message" class="alert alert-info" style="display:none"></div>
 			<div id="ajax_result_message" class="alert alert-info" style="display:none"></div>
 		</div>
-		<#if info?? || error?? || success?? || warning?? || parsing?? || (version_major?? && version_minor?? && min_version_major?? && min_version_minor?? && (version_major?number<min_version_major?number || (version_major?number==min_version_major?number && version_minor?number<min_version_minor?number)))>
+		<#if info?? || error?? || success?? || warning?? || (parsing?? || blocksCHA!=blocksBTC || blocksBTC=0 || blocksCHA=0) || (version_major?? && version_minor?? && min_version_major?? && min_version_minor?? && (version_major?number<min_version_major?number || (version_major?number==min_version_major?number && version_minor?number<min_version_minor?number)))>
 		<div class="row section messages">
 			<#if info??>
 			<div class="alert alert-info">${info}</div>
@@ -136,7 +136,7 @@
 			<#if version_major?? && version_minor?? && min_version_major?? && min_version_minor?? && (version_major?number<min_version_major?number || (version_major?number==min_version_major?number && version_minor?number<min_version_minor?number))>
 			<div class="alert alert-danger">You must update to the latest version of Chancecoin. Your version is out of date.</div>
 			</#if>
-			<#if parsing??>
+			<#if (parsing?? || blocksCHA!=blocksBTC || blocksBTC=0 || blocksCHA=0)>
 			<div class="alert alert-warning">Chancecoin is parsing transactions. You can still use the software, but the information you see will be out of date.</div>
 			</#if>
 		</div>

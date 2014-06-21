@@ -73,6 +73,8 @@ public class Blocks implements Runnable {
 	public BlockStore blockStore;
 	public Boolean working = false;
 	public Boolean parsing = false;
+	public Boolean initializing = false;
+	public Boolean initialized = false;
 	public Integer parsingBlock = 0;
 	public Integer versionCheck = 0;
 	public Integer bitcoinBlock = 0;
@@ -100,7 +102,7 @@ public class Blocks implements Runnable {
 		if(instance == null) {
 			instance = new Blocks();
 			instance.versionCheck();
-			instance.init();
+			new Thread() { public void run() {instance.init();}}.start();
 		} 
 		instance.follow();
 		return instance;
@@ -110,9 +112,9 @@ public class Blocks implements Runnable {
 		if(instance == null) {
 			instance = new Blocks();
 			instance.versionCheck();
-			instance.init();
+			new Thread() { public void run() {instance.init();}}.start();
 		} 
-		if (!instance.working) {
+		if (!instance.working && instance.initialized) {
 			new Thread() { public void run() {instance.follow();}}.start();
 		}
 		return instance;
@@ -154,56 +156,63 @@ public class Blocks implements Runnable {
 	}
 
 	public void init() {
-		Locale.setDefault(new Locale("en", "US"));
-		params = MainNetParams.get();
-		try {
-			if ((new File(walletFile)).exists()) {
-				statusMessage = "Found wallet file"; 
-				logger.info(statusMessage);
-				wallet = Wallet.loadFromFile(new File(walletFile));
-			} else {
-				statusMessage = "Creating new wallet file"; 
-				logger.info(statusMessage);
-				wallet = new Wallet(params);
-				ECKey newKey = new ECKey();
-				newKey.setCreationTimeSeconds(Config.burnCreationTime);
-				wallet.addKey(newKey);
-			}
-			String fileBTCdb = Config.dbPath+Config.appName.toLowerCase()+".h2.db";
-			if (!new File(fileBTCdb).exists()) {
-				statusMessage = "Downloading BTC database"; 
-				logger.info(statusMessage);
-				Util.downloadToFile(Config.downloadUrl+Config.appName.toLowerCase()+".h2.db", fileBTCdb);
-			}
-			String fileCHAdb = Database.dbFile;
-			if (!new File(fileCHAdb).exists()) {
-				statusMessage = "Downloading CHA database"; 
-				logger.info(statusMessage);
-				Util.downloadToFile(Config.downloadUrl+Config.appName.toLowerCase()+"-"+Config.majorVersionDB.toString()+".db", fileCHAdb);
-			}
-			statusMessage = "Downloading Bitcoin blocks";
-			blockStore = new H2FullPrunedBlockStore(params, Config.dbPath+Config.appName.toLowerCase(), 2000);
-			blockChain = new BlockChain(params, wallet, blockStore);
-			peerGroup = new PeerGroup(params, blockChain);
-			peerGroup.addWallet(wallet);
-			peerGroup.setFastCatchupTimeSecs(Config.burnCreationTime);
-			wallet.autosaveToFile(new File(walletFile), 1, TimeUnit.MINUTES, null);
-			peerGroup.addPeerDiscovery(new DnsDiscovery(params));
-			peerGroup.startAndWait();
-			peerGroup.addEventListener(new ChancecoinPeerEventListener());
-			peerGroup.downloadBlockChain();
-			while (!hasChainHead()) {
-				try {
-					logger.info("Blockstore doesn't yet have a chain head, so we are sleeping.");
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
+		if (!initializing) {
+			initializing = true;
+			Locale.setDefault(new Locale("en", "US"));
+			params = MainNetParams.get();
+			try {
+				if ((new File(walletFile)).exists()) {
+					statusMessage = "Found wallet file"; 
+					logger.info(statusMessage);
+					wallet = Wallet.loadFromFile(new File(walletFile));
+				} else {
+					statusMessage = "Creating new wallet file"; 
+					logger.info(statusMessage);
+					wallet = new Wallet(params);
+					ECKey newKey = new ECKey();
+					newKey.setCreationTimeSeconds(Config.burnCreationTime);
+					wallet.addKey(newKey);
 				}
+				String fileBTCdb = Config.dbPath+Config.appName.toLowerCase()+".h2.db";
+				if (!new File(fileBTCdb).exists()) {
+					statusMessage = "Downloading BTC database"; 
+					logger.info(statusMessage);
+					Util.downloadToFile(Config.downloadUrl+Config.appName.toLowerCase()+".h2.db", fileBTCdb);
+				}
+				String fileCHAdb = Database.dbFile;
+				if (!new File(fileCHAdb).exists()) {
+					statusMessage = "Downloading CHA database"; 
+					logger.info(statusMessage);
+					Util.downloadToFile(Config.downloadUrl+Config.appName.toLowerCase()+"-"+Config.majorVersionDB.toString()+".db", fileCHAdb);
+				}
+				statusMessage = "Downloading Bitcoin blocks";
+				blockStore = new H2FullPrunedBlockStore(params, Config.dbPath+Config.appName.toLowerCase(), 2000);
+				blockChain = new BlockChain(params, wallet, blockStore);
+				peerGroup = new PeerGroup(params, blockChain);
+				peerGroup.addWallet(wallet);
+				peerGroup.setFastCatchupTimeSecs(Config.burnCreationTime);
+				wallet.autosaveToFile(new File(walletFile), 1, TimeUnit.MINUTES, null);
+				peerGroup.addPeerDiscovery(new DnsDiscovery(params));
+				peerGroup.startAndWait();
+				peerGroup.addEventListener(new ChancecoinPeerEventListener());
+				peerGroup.downloadBlockChain();
+				while (!hasChainHead()) {
+					try {
+						logger.info("Blockstore doesn't yet have a chain head, so we are sleeping.");
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+					}
+				}
+			} catch (Exception e) {
+				logger.error("Error during init: "+e.toString());
+				e.printStackTrace();
+				deleteDatabases();
+				initialized = false;
+				initializing = false;
+				init();
 			}
-		} catch (Exception e) {
-			logger.error("Error during init: "+e.toString());
-			e.printStackTrace();
-			deleteDatabases();
-			init();
+			initialized = true;
+			initializing = false;
 		}
 	}
 
@@ -214,7 +223,7 @@ public class Blocks implements Runnable {
 		String fileCHAdb = Database.dbFile;
 		new File(fileCHAdb).delete();
 	}
-	
+
 	public Boolean hasChainHead() {
 		try {
 			Integer blockHeight = blockStore.getChainHead().getHeight();
@@ -223,13 +232,13 @@ public class Blocks implements Runnable {
 			return false;
 		}
 	}
-	
+
 	public void follow() {
 		follow(false);
 	}
 	public void follow(Boolean force) {
 		logger.info("Working status: "+working);
-		if (!working || force) {
+		if ((!working && initialized) || force) {
 			statusMessage = "Checking block height";
 			logger.info(statusMessage);
 			if (!force) {
@@ -241,53 +250,63 @@ public class Blocks implements Runnable {
 				Integer lastBlock = Util.getLastBlock();
 				bitcoinBlock = blockHeight;
 				chancecoinBlock = lastBlock;
-				
-				//get BTC, CHA prices
-				try {
-					priceCHA = Util.getTradesPoloniex().get(0).rate;
-					priceBTC = Util.getBTCPrice();
-				} catch (Exception e) {
-				}
-				
-				if (lastBlock == 0) {
-					lastBlock = Config.firstBlock - 1;
-				}
-				Integer nextBlock = lastBlock + 1;
 
-				logger.info("Bitcoin block height: "+blockHeight);	
-				logger.info("Chancecoin block height: "+lastBlock);
-				if (lastBlock < blockHeight) {
-					//traverse new blocks
-					parsing = true;
-					Database db = Database.getInstance();
-					Integer blocksToScan = blockHeight - lastBlock;
-					List<Sha256Hash> blockHashes = new ArrayList<Sha256Hash>();
+				if (chancecoinBlock>0 && bitcoinBlock>0 && chancecoinBlock < bitcoinBlock-144) { 
+					//if more than 144 blocks out of date (about a day), we re-download the databases
+					deleteDatabases();
+					initialized = false;
+					initializing = false;
+					working = false;
+					init();					
+				} else {
 
-					Block block = peerGroup.getDownloadPeer().getBlock(blockStore.getChainHead().getHeader().getHash()).get(30, TimeUnit.SECONDS);
-					while (blockStore.get(block.getHash()).getHeight()>lastBlock) {
-						blockHashes.add(block.getHash());
-						block = blockStore.get(block.getPrevBlockHash()).getHeader();
+					//get BTC, CHA prices
+					try {
+						priceCHA = Util.getTradesPoloniex().get(0).rate;
+						priceBTC = Util.getBTCPrice();
+					} catch (Exception e) {
 					}
 
-					for (int i = blockHashes.size()-1; i>=0; i--) { //traverse blocks in reverse order
-						block = peerGroup.getDownloadPeer().getBlock(blockHashes.get(i)).get(30, TimeUnit.SECONDS);
-						blockHeight = blockStore.get(block.getHash()).getHeight();
-						chancecoinBlock = blockHeight;
-						statusMessage = "Catching Chancecoin up to Bitcoin "+Util.format((blockHashes.size() - i)/((double) blockHashes.size())*100.0)+"%";	
-						logger.info("Catching Chancecoin up to Bitcoin (block "+blockHeight.toString()+"): "+Util.format((blockHashes.size() - i)/((double) blockHashes.size())*100.0)+"%");	
-						importBlock(block, blockHeight);
+					if (lastBlock == 0) {
+						lastBlock = Config.firstBlock - 1;
 					}
+					Integer nextBlock = lastBlock + 1;
 
-					if (getDBMinorVersion()<Config.minorVersionDB){
-						reparse(true);
-						db.updateMinorVersion();		    	
-					}else{
-						parseFrom(nextBlock, true);
+					logger.info("Bitcoin block height: "+blockHeight);	
+					logger.info("Chancecoin block height: "+lastBlock);
+					if (lastBlock < blockHeight) {
+						//traverse new blocks
+						parsing = true;
+						Database db = Database.getInstance();
+						Integer blocksToScan = blockHeight - lastBlock;
+						List<Sha256Hash> blockHashes = new ArrayList<Sha256Hash>();
+
+						Block block = peerGroup.getDownloadPeer().getBlock(blockStore.getChainHead().getHeader().getHash()).get(30, TimeUnit.SECONDS);
+						while (blockStore.get(block.getHash()).getHeight()>lastBlock) {
+							blockHashes.add(block.getHash());
+							block = blockStore.get(block.getPrevBlockHash()).getHeader();
+						}
+
+						for (int i = blockHashes.size()-1; i>=0; i--) { //traverse blocks in reverse order
+							block = peerGroup.getDownloadPeer().getBlock(blockHashes.get(i)).get(30, TimeUnit.SECONDS);
+							blockHeight = blockStore.get(block.getHash()).getHeight();
+							chancecoinBlock = blockHeight;
+							statusMessage = "Catching Chancecoin up to Bitcoin "+Util.format((blockHashes.size() - i)/((double) blockHashes.size())*100.0)+"%";	
+							logger.info("Catching Chancecoin up to Bitcoin (block "+blockHeight.toString()+"): "+Util.format((blockHashes.size() - i)/((double) blockHashes.size())*100.0)+"%");	
+							importBlock(block, blockHeight);
+						}
+
+						if (getDBMinorVersion()<Config.minorVersionDB){
+							reparse(true);
+							db.updateMinorVersion();		    	
+						}else{
+							parseFrom(nextBlock, true);
+						}
+						parsing = false;
 					}
-					parsing = false;
+					Bet.resolve();
+					Order.expire();
 				}
-				Bet.resolve();
-				Order.expire();
 			} catch (Exception e) {
 				logger.error("Error during follow: "+e.toString());
 				e.printStackTrace();
@@ -555,7 +574,7 @@ public class Blocks implements Runnable {
 			e.printStackTrace();
 		}		
 	}
-	
+
 	public void deletePending() {
 		Database db = Database.getInstance();
 		db.executeUpdate("delete from transactions where block_index<0 and tx_index<(select max(tx_index) from transactions)-10;");
@@ -814,7 +833,7 @@ public class Blocks implements Runnable {
 				if (!success) {
 					throw new Exception("Transaction timed out. Please try again.");
 				}
-				
+
 				//future.get(60, TimeUnit.SECONDS);
 				//} catch (TimeoutException e) {
 				//	logger.error(e.toString());
