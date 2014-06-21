@@ -31,6 +31,7 @@ import spark.template.freemarker.FreeMarkerRoute;
 
 import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.Transaction;
+import com.google.common.collect.Lists;
 
 import freemarker.template.Configuration;
 
@@ -1178,6 +1179,17 @@ public class Server implements Runnable {
 				}
 				attributes.put("poker_hands", pokerHands);
 				
+				//lotto results
+				LottoResult lottoResult = Bet.getLottoResult(Util.getLastBlockTime());
+				ArrayList<HashMap<String, Object>> lottoResults = new ArrayList<HashMap<String, Object>>();				
+				for (LottoDraw lottoDraw : Lists.reverse(lottoResult.draw)) {
+					HashMap<String,Object> map = new HashMap<String,Object>();	
+					map.put("date", Util.timeFormat(lottoDraw.dateNY));
+					map.put("numbers", lottoDraw.numbersDrawn);
+					lottoResults.add(map);
+				}
+				attributes.put("lotto_results", lottoResults);
+								
 				//get profit by time
 				ResultSet rs = db.executeQuery("select blocks.block_time as block_time, (select -sum(bets2.profit) from bets bets2 where bets2.block_index <= bets1.block_index ) as profit, (select sum((1-bets2.payout*bets2.chance/100.0)*bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index ) as expected_profit, (select sum(bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index ) as volume, (select count(bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index ) as nbets from bets bets1, blocks blocks where blocks.block_index=bets1.block_index order by blocks.block_index asc;");
 				ArrayList<HashMap<String, Object>> vstimes = new ArrayList<HashMap<String, Object>>();
@@ -1381,11 +1393,14 @@ public class Server implements Runnable {
 				
 				//lotto results
 				LottoResult lottoResult = Bet.getLottoResult(Util.getLastBlockTime());
-				List<String> lottoResults = new ArrayList<String>();
-				for (LottoDraw lottoDraw : lottoResult.draw) {
-					lottoResults.add(lottoDraw.dateNY.toString());
+				ArrayList<HashMap<String, Object>> lottoResults = new ArrayList<HashMap<String, Object>>();				
+				for (LottoDraw lottoDraw : Lists.reverse(lottoResult.draw)) {
+					HashMap<String,Object> map = new HashMap<String,Object>();	
+					map.put("date", Util.timeFormat(lottoDraw.dateNY));
+					map.put("numbers", lottoDraw.numbersDrawn);
+					lottoResults.add(map);
 				}
-				attributes.put("poker_hands", lottoResults);
+				attributes.put("lotto_results", lottoResults);
 				
 				//poker hands
 				List<List<String>> pokerHands = new ArrayList<List<String>>();

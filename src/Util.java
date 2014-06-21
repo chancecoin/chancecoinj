@@ -225,6 +225,12 @@ public class Util {
 		return (new DecimalFormat(format)).format(input);
 	}
 
+	public static String timeFormat(Date date) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // the format of your date
+		String formattedDate = sdf.format(date);
+		return formattedDate;
+	}
+
 	public static String timeFormat(Integer timestamp) {
 		Date date = new Date(timestamp*1000L); // *1000 is to convert seconds to milliseconds
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // the format of your date

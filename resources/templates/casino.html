@@ -126,6 +126,7 @@
 		        <li><a href="#leaderboard" data-toggle="tab">Leaderboard</a></li>
 						<li><a href="#house_info" data-toggle="tab">House info</a></li>
 						<li><a href="#house_stats" data-toggle="tab">House stats</a></li>
+						<li><a href="#randomness" data-toggle="tab">Randomness</a></li>
 		    </ul>
 
 		    <div id="my-tab-content" class="tab-content">
@@ -337,6 +338,7 @@
 														<th>Total profit</th>
 												</tr>
 										</thead>
+										<tbody>
 										<#list winners as winner>
 												<tr>
 														<td><a href="?address=${winner["source"]}">${winner["source"]}</a></td>
@@ -346,8 +348,6 @@
 														<td>${winner["sum_profit"]} CHA</td>
 												</tr>
 										</#list>
-										<tbody>
-
 										</tbody>
 								</table>
 
@@ -362,6 +362,7 @@
 														<th>Total profit</th>
 												</tr>
 										</thead>
+										<tbody>
 										<#list high_rollers as high_roller>
 												<tr>
 														<td><a href="?address=${high_roller["source"]}">${high_roller["source"]}</a></td>
@@ -371,8 +372,6 @@
 														<td>${high_roller["sum_profit"]} CHA</td>
 												</tr>
 										</#list>
-										<tbody>
-
 										</tbody>
 								</table>
 
@@ -535,6 +534,28 @@
 										}]
 									});
 						    </script>
+						</div>
+
+						<div class="tab-pane" id="randomness">
+								<h2>Randomness</h2>
+								<table class="table table-striped">
+										<thead>
+												<tr>
+														<th>Time</th>
+														<th>Numbers</th>
+												</tr>
+										</thead>
+										<tbody>
+											<#if lotto_results??>
+											<#list lotto_results as lotto_result>
+													<tr>
+															<td>${lotto_result['date']}</td>
+															<td><#list lotto_result['numbers'] as number>${number} </#list></td>
+													</tr>
+											</#list>
+											</#if>
+										</tbody>
+								</table>
 						</div>
 		    </div>
 		</div>

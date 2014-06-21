@@ -90,6 +90,7 @@
 														<th>Total profit</th>
 												</tr>
 										</thead>
+										<tbody>
 										<#list winners as winner>
 												<tr>
 														<td>${winner["source"]}</td>
@@ -99,8 +100,6 @@
 														<td>${winner["sum_profit"]} CHA</td>
 												</tr>
 										</#list>
-										<tbody>
-
 										</tbody>
 								</table>
 
@@ -115,6 +114,7 @@
 														<th>Total profit</th>
 												</tr>
 										</thead>
+										<tbody>
 										<#list high_rollers as high_roller>
 												<tr>
 														<td>${high_roller["source"]}</td>
@@ -124,8 +124,6 @@
 														<td>${high_roller["sum_profit"]} CHA</td>
 												</tr>
 										</#list>
-										<tbody>
-
 										</tbody>
 								</table>
 
@@ -142,6 +140,7 @@
 													<th>Profit</th>
 											</tr>
 										</thead>
+										<tbody>
 										<#list largest_bets as largest_bet>
 											<tr>
 													<td>${largest_bet["source"]}</td>
@@ -153,8 +152,6 @@
 													<td><#if largest_bet["resolved"]?? && largest_bet["resolved"]="true">${largest_bet["profit"]} CHA<#else>Unresolved</#if></td>
 											</tr>
 										</#list>
-										<tbody>
-
 										</tbody>
 								</table>
 						</div>
