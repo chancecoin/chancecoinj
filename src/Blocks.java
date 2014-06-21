@@ -143,7 +143,7 @@ public class Blocks implements Runnable {
 	@Override
 	public void run() {
 		while (true) {
-			Blocks.getInstanceAndWait();
+			Blocks.getInstance();
 			try {
 				logger.info("Looping blocks");
 				Thread.sleep(1000*60); //once a minute, we run blocks.follow()
@@ -236,6 +236,12 @@ public class Blocks implements Runnable {
 				working = true;
 			}
 			try {
+				//catch Chancecoin up to Bitcoin
+				Integer blockHeight = blockStore.getChainHead().getHeight();
+				Integer lastBlock = Util.getLastBlock();
+				bitcoinBlock = blockHeight;
+				chancecoinBlock = lastBlock;
+				
 				//get BTC, CHA prices
 				try {
 					priceCHA = Util.getTradesPoloniex().get(0).rate;
@@ -243,12 +249,6 @@ public class Blocks implements Runnable {
 				} catch (Exception e) {
 				}
 				
-				//catch Chancecoin up to Bitcoin
-				Integer blockHeight = blockStore.getChainHead().getHeight();
-				Integer lastBlock = Util.getLastBlock();
-				bitcoinBlock = blockHeight;
-				chancecoinBlock = lastBlock;
-
 				if (lastBlock == 0) {
 					lastBlock = Config.firstBlock - 1;
 				}
