@@ -261,7 +261,6 @@ public class Util {
 	}
 
 	public static Integer getLastBlock() {
-		Blocks blocks = Blocks.getInstance();
 		Database db = Database.getInstance();
 		ResultSet rs = db.executeQuery("select * from blocks order by block_index desc limit 1;");
 		try {
@@ -269,8 +268,10 @@ public class Util {
 				return rs.getInt("block_index");
 			}
 		} catch (SQLException e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
 		}	
-		return blocks.chancecoinBlock;
+		return 0;
 	}
 
 	public static Integer getLastTxIndex() {

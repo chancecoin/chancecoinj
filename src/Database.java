@@ -88,12 +88,13 @@ public class Database {
 			executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON btcpays (block_index)");
 
 			// Bets (dice)
-			executeUpdate("CREATE TABLE IF NOT EXISTS bets(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, bet INTEGER, chance REAL, payout REAL, profit INTEGER, cha_supply INTEGER, rolla REAL, rollb REAL, roll REAL, resolved TEXT, validity TEXT)");
+			executeUpdate("CREATE TABLE IF NOT EXISTS bets(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, bet INTEGER, chance REAL, payout REAL, profit INTEGER, cha_supply INTEGER, rolla REAL, rollb REAL, roll REAL, resolved TEXT, cards TEXT, validity TEXT)");
 			executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON bets (block_index)");
 
 			// Bets (poker)
-			executeUpdate("CREATE TABLE IF NOT EXISTS bets_poker(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, bet INTEGER, chance REAL, payout REAL, profit INTEGER, cha_supply INTEGER, rolla REAL, rollb REAL, roll REAL, cards TEXT, resolved TEXT, validity TEXT)");
-			executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON bets_poker (block_index)");
+			executeUpdate("ALTER TABLE bets add cards TEXT;");
+			//executeUpdate("CREATE TABLE IF NOT EXISTS bets_poker(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, bet INTEGER, chance REAL, payout REAL, profit INTEGER, cha_supply INTEGER, rolla REAL, rollb REAL, roll REAL, cards TEXT, resolved TEXT, validity TEXT)");
+			//executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON bets_poker (block_index)");
 
 			// Burns
 			executeUpdate("CREATE TABLE IF NOT EXISTS burns(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, burned INTEGER, earned INTEGER, validity TEXT)");

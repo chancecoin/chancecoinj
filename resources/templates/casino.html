@@ -10,7 +10,7 @@
 						<div class="tab-pane active" id="dice">
 								<form id="dice1" action="/casino" class="form-inline" method="post">
 
-										<input type="hidden" name="form" value="bet">
+										<input type="hidden" name="form" value="bet_dice">
 										<input type="hidden" name="source" value="${address}">
 
 										<div class="form-group">
@@ -47,11 +47,10 @@
 								</form>
 						</div>
 						<div class="tab-pane" id="poker">
-								<#if poker_hands??>
-								<#list poker_hands as poker_hand>
-								<form id="poker${poker_hand_index+1}" action="/casino" class="form-inline" method="post">
+								<#if poker_hand??>
+								<form id="poker1" action="/casino" class="form-inline" method="post">
 
-										<input type="hidden" name="form" value="bet">
+										<input type="hidden" name="form" value="bet_poker">
 										<input type="hidden" name="source" value="${address}">
 
 										<div class="form-group">
@@ -68,7 +67,15 @@
 										<div class="form-group">
 											<div class="input-group">
 												<span class="input-group-btn">
-													<button class="btn btn-default" onclick="processBet('poker${poker_hand_index+1}'); return false;" <#if !own??>disabled="disabled"</#if>>Deal</button>
+													<button class="btn btn-default" onclick="processBet('poker1'); return false;" <#if !own??>disabled="disabled"</#if>>Bet</button>
+												</span>
+											</div>
+										</div>
+
+										<div class="form-group">
+											<div class="input-group">
+												<span class="input-group-btn">
+													<button class="btn btn-default" onclick="window.location.reload(true); return false;">Fold</button>
 												</span>
 											</div>
 										</div>
@@ -80,35 +87,30 @@
 										<div class="form-group">
 											<div class="input-group">
 												<#if card_index=0>
-												<span class="help-block" style="width: 100px;">You</span>
+												<span class="help-block">You</span>
 												<#elseif card_index=2>
-												<span class="help-block" style="width: 100px;">Board</span>
+												<span class="help-block">Board</span>
 												<#elseif card_index=7>
-												<span class="help-block" style="width: 100px;">Opponent</span>
+												<span class="help-block">Opponent</span>
 												<#else>
+												<span class="help-block">&nbsp;</span>
 												</#if>
-												<#if card="back">
-													<select class="selectpicker" name="card${card_index+1}">
-														<option data-content="<img src='/images/cards/back.png' class='card' />" selected="selected">??</option>
-													</select>
+												<#if card="??">
+													<input type="hidden" name="card${card_index+1}" value="??">
+													<img src="/images/cards/back.png" class="card" title="Back" />
 												<#else>
-													<#if cards??>
-													<select class="selectpicker" name="card${card_index+1}">
-														<#list cards as c>
-												    <option data-content="<img src='/images/cards/${c}.png' class='card' />"<#if c=card> selected="selected"</#if>>${c}</option>
-														</#list>
-												  </select>
-													</#if>
+													<input type="hidden" name="card${card_index+1}" value="${card}">
+													<img src="/images/cards/${card}.png" class="card" title="${card}" />
 												</#if>
 											</div>
 										</div>
-										<#if card_index=1 || card_index=6>
-										<div class="form-group" style="clear: both; display: block;">
+										<#if card_index=1 || card_index=6 || card_index=8>
+										<div class="form-group" style="clear: both; width: 4em;">
 										</div>
 										</#if>
 										</#list>
+										<p>Chance of winning: ${poker_chance}%</p>
 								</form>
-								</#list>
 								</#if>
 						</div>
 				</div>
@@ -126,7 +128,6 @@
 		        <li><a href="#leaderboard" data-toggle="tab">Leaderboard</a></li>
 						<li><a href="#house_info" data-toggle="tab">House info</a></li>
 						<li><a href="#house_stats" data-toggle="tab">House stats</a></li>
-						<li><a href="#randomness" data-toggle="tab">Randomness</a></li>
 		    </ul>
 
 		    <div id="my-tab-content" class="tab-content">
@@ -139,9 +140,8 @@
 														<th>Source address</th>
 														<th>Time</th>
 														<th>Bet size</th>
-														<th>Chance to win</th>
-														<th>Payout multiplier</th>
-														<th>Roll</th>
+														<th>Chance to win / payout multiplier</th>
+														<th>Result</th>
 														<th>Profit</th>
 												</tr>
 										</thead>
@@ -153,9 +153,28 @@
 															<td><a href="?address=${bet["source"]}">${bet["source"]}</a></td>
 															<td>Pending</td>
 															<td>${bet["bet"]} CHA</td>
-															<td>${bet["chance"]}%</td>
-															<td>${bet["payout"]}X</td>
-															<td>?</td>
+															<td>${bet["chance"]}% / ${bet["payout"]}X</td>
+
+															<#if bet["cards"]??>
+															<td>
+															<#list bet["cards"]?split(" ") as card>
+															<#if card="??">
+															<img src="/images/cards/back.png" style="height: 75px; display: inline;" title="back" />
+															<#else>
+															<img src="/images/cards/${card}.png" style="height: 75px; display: inline;" title="${card}" />
+															</#if>
+															<#if card_index=1 || card_index=6>
+															<div style="clear: both;"></div>
+															</#if>
+															</#list>
+															<#if bet["cards_result"]??>
+															<p>${bet["cards_result"]}</p>
+															</#if>
+															</td>
+															<#else>
+															<td><img src="/images/dice.png" style="height: 25px; display: inline;" /> ?</td>
+															</#if>
+
 															<td>?</td>
 													</tr>
 											</#list>
@@ -165,9 +184,28 @@
 															<td><a href="?address=${bet["source"]}">${bet["source"]}</a></td>
 															<td>${bet["block_time"]}</td>
 															<td>${bet["bet"]} CHA</td>
-															<td>${bet["chance"]}%</td>
-															<td>${bet["payout"]}X</td>
-															<td><#if bet["resolved"]??>${bet["roll"]}<#else>?</#if></td>
+															<td>${bet["chance"]}% / ${bet["payout"]}X</td>
+
+															<#if bet["cards"]??>
+															<td>
+															<#list bet["cards"]?split(" ") as card>
+															<#if card="??">
+															<img src="/images/cards/back.png" style="height: 75px; display: inline;" title="back" />
+															<#else>
+															<img src="/images/cards/${card}.png" style="height: 75px; display: inline;" title="${card}" />
+															</#if>
+															<#if card_index=1 || card_index=6>
+															<div style="clear: both;"></div>
+															</#if>
+															</#list>
+															<#if bet["cards_result"]??>
+															<p>${bet["cards_result"]}</p>
+															</#if>
+															</td>
+															<#else>
+															<td><img src="/images/dice.png" style="height: 25px; display: inline;" /> <#if bet["resolved"]??>${bet["roll"]}<#else>?</#if></td>
+															</#if>
+
 															<td><#if bet["resolved"]?? && bet["resolved"]="true">${bet["profit"]} CHA<#else>Unresolved</#if></td>
 													</tr>
 											</#list>
@@ -185,9 +223,8 @@
 														<th>Source address</th>
 														<th>Time</th>
 														<th>Bet size</th>
-														<th>Chance to win</th>
-														<th>Payout multiplier</th>
-														<th>Roll</th>
+														<th>Chance to win / payout multiplier</th>
+														<th>Result</th>
 														<th>Profit</th>
 												</tr>
 										</thead>
@@ -198,9 +235,28 @@
 															<td><a href="/wallet?address=${bet["source"]}">${bet["source"]}</a></td>
 															<td>Pending</td>
 															<td>${bet["bet"]} CHA</td>
-															<td>${bet["chance"]}%</td>
-															<td>${bet["payout"]}X</td>
-															<td>?</td>
+															<td>${bet["chance"]}% / ${bet["payout"]}X</td>
+
+															<#if bet["cards"]??>
+															<td>
+															<#list bet["cards"]?split(" ") as card>
+															<#if card="??">
+															<img src="/images/cards/back.png" style="height: 75px; display: inline;" title="back" />
+															<#else>
+															<img src="/images/cards/${card}.png" style="height: 75px; display: inline;" title="${card}" />
+															</#if>
+															<#if card_index=1 || card_index=6>
+															<div style="clear: both;"></div>
+															</#if>
+															</#list>
+															<#if bet["cards_result"]??>
+															<p>${bet["cards_result"]}</p>
+															</#if>
+															</td>
+															<#else>
+															<td><img src="/images/dice.png" style="height: 25px; display: inline;" /> ?</td>
+															</#if>
+
 															<td>?</td>
 													</tr>
 											</#list>
@@ -210,9 +266,28 @@
 															<td><a href="?address=${bet["source"]}">${bet["source"]}</a></td>
 															<td>${bet["block_time"]}</td>
 															<td>${bet["bet"]} CHA</td>
-															<td>${bet["chance"]}%</td>
-															<td>${bet["payout"]}X</td>
-															<td><#if bet["resolved"]??>${bet["roll"]}<#else>?</#if></td>
+															<td>${bet["chance"]}% / ${bet["payout"]}X</td>
+
+															<#if bet["cards"]??>
+															<td>
+															<#list bet["cards"]?split(" ") as card>
+															<#if card="??">
+															<img src="/images/cards/back.png" style="height: 75px; display: inline;" title="back" />
+															<#else>
+															<img src="/images/cards/${card}.png" style="height: 75px; display: inline;" title="${card}" />
+															</#if>
+															<#if card_index=1 || card_index=6>
+															<div style="clear: both;"></div>
+															</#if>
+															</#list>
+															<#if bet["cards_result"]??>
+															<p>${bet["cards_result"]}</p>
+															</#if>
+															</td>
+															<#else>
+															<td><img src="/images/dice.png" style="height: 25px; display: inline;" /> <#if bet["resolved"]??>${bet["roll"]}<#else>?</#if></td>
+															</#if>
+
 															<td><#if bet["resolved"]?? && bet["resolved"]="true">${bet["profit"]} CHA<#else>Unresolved</#if></td>
 													</tr>
 											</#list>
@@ -382,21 +457,39 @@
 													<th>Source address</th>
 													<th>Time</th>
 													<th>Bet size</th>
-													<th>Chance to win</th>
-													<th>Payout multiplier</th>
-													<th>Roll</th>
+													<th>Chance to win / payout multiplier</th>
+													<th>Result</th>
 													<th>Profit</th>
 											</tr>
 										</thead>
-										<#list largest_bets as largest_bet>
+										<#list largest_bets as bet>
 											<tr>
-													<td><a href="?address=${largest_bet["source"]}">${largest_bet["source"]}</a></td>
-													<td>${largest_bet["block_time"]}</td>
-													<td>${largest_bet["bet"]} CHA</td>
-													<td>${largest_bet["chance"]}%</td>
-													<td>${largest_bet["payout"]}X</td>
-													<td><#if largest_bet["resolved"]??>${largest_bet["roll"]}<#else>?</#if></td>
-													<td><#if largest_bet["resolved"]?? && largest_bet["resolved"]="true">${largest_bet["profit"]} CHA<#else>Unresolved</#if></td>
+													<td><a href="?address=${bet["source"]}">${bet["source"]}</a></td>
+													<td>${bet["block_time"]}</td>
+													<td>${bet["bet"]} CHA</td>
+													<td>${bet["chance"]}% / ${bet["payout"]}X</td>
+
+													<#if bet["cards"]??>
+													<td>
+													<#list bet["cards"]?split(" ") as card>
+													<#if card="??">
+													<img src="/images/cards/back.png" style="height: 75px; display: inline;" title="back" />
+													<#else>
+													<img src="/images/cards/${card}.png" style="height: 75px; display: inline;" title="${card}" />
+													</#if>
+													<#if card_index=1 || card_index=6>
+													<div style="clear: both;"></div>
+													</#if>
+													</#list>
+													<#if bet["cards_result"]??>
+													<p>${bet["cards_result"]}</p>
+													</#if>
+													</td>
+													<#else>
+													<td><img src="/images/dice.png" style="height: 25px; display: inline;" /> <#if bet["resolved"]??>${bet["roll"]}<#else>?</#if></td>
+													</#if>
+
+													<td><#if bet["resolved"]?? && bet["resolved"]="true">${bet["profit"]} CHA<#else>Unresolved</#if></td>
 											</tr>
 										</#list>
 										<tbody>
@@ -534,28 +627,6 @@
 										}]
 									});
 						    </script>
-						</div>
-
-						<div class="tab-pane" id="randomness">
-								<h2>Randomness</h2>
-								<table class="table table-striped">
-										<thead>
-												<tr>
-														<th>Time</th>
-														<th>Numbers</th>
-												</tr>
-										</thead>
-										<tbody>
-											<#if lotto_results??>
-											<#list lotto_results as lotto_result>
-													<tr>
-															<td>${lotto_result['date']}</td>
-															<td><#list lotto_result['numbers'] as number>${number} </#list></td>
-													</tr>
-											</#list>
-											</#if>
-										</tbody>
-								</table>
 						</div>
 		    </div>
 		</div>

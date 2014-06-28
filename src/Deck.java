@@ -2,6 +2,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import ca.ualberta.cs.poker.Hand;
 import ca.ualberta.cs.poker.HandEvaluator;
@@ -15,6 +16,18 @@ public class Deck {
 			for (int s = 0; s<=3; s++) {
 				cards.add(new Card(c,s));
 			}
+		}
+	}
+	
+	public Deck(String cards) {
+		for (String card : cards.split(" ")){
+			this.cards.add(new Card(card));
+		}
+	}
+	
+	public Deck(List<Card> cards) {
+		for (Card card : cards){
+			this.cards.add(card);
 		}
 	}
 
@@ -102,6 +115,21 @@ public class Deck {
 		return shuffled;
 	}
 	
+	public static String result(List<Card> cards) {
+		//cards must be in a list, [p1, p2, b1, b2, b3, b4, b5, o1, o2]
+		if (cards.size()==9) {
+			return HandEvaluator.nameHand(new Hand(new Deck(cards.subList(0, 7)).toString())) + " vs " + HandEvaluator.nameHand(new Hand(new Deck(cards.subList(2, 9)).toString()));
+		}
+		return null;
+	}
+	
+	public static Boolean didWin(List<Card> cards) {
+		//cards must be in a list, [p1, p2, b1, b2, b3, b4, b5, o1, o2]
+		if (cards.size()==9) {
+			return didWin(cards.get(0), cards.get(1), cards.get(2), cards.get(3), cards.get(4), cards.get(5), cards.get(6), cards.get(7), cards.get(8));
+		} 
+		return null;
+	}	
 	public static Boolean didWin(Card p1, Card p2, Card b1, Card b2, Card b3, Card b4, Card b5, Card o1, Card o2) {
 		HandEvaluator handEval = new HandEvaluator();
 		Deck pDeck = new Deck();
@@ -154,7 +182,7 @@ public class Deck {
 		Deck deck = new Deck();
 		int unknown = 0;
 		for (Card card : cards) {
-			if (card != null && card.toString()!="??") {
+			if (card != null && !card.toString().equals("??")) {
 				deck.cards.remove(card);
 			} else {
 				unknown++;
@@ -167,7 +195,7 @@ public class Deck {
 			denominator++;
 			List<Card> cardsFilledIn = new ArrayList<Card>();
 			for (Card card : cards) {
-				if (card != null) {
+				if (card != null && !card.toString().equals("??")) {
 					cardsFilledIn.add(card);
 				} else {
 					cardsFilledIn.add(deckCombination.cards.remove(0));			
@@ -183,14 +211,18 @@ public class Deck {
 	}
 
 	public static void main(String[] args) {
-		HandEvaluator handEval = new HandEvaluator();
-		Deck deal = Deck.ShuffleAndDeal(40.75435347598734589734895734895/100.0, null, 5);
+		Deck deal = Deck.ShuffleAndDeal(new Random().nextDouble(), null, 9);
+		deal.cards.set(5, new Card("??"));
+		deal.cards.set(6, new Card("??"));
+		Deck playerHand = new Deck();
+		playerHand.cards.clear();
+		for (int i = 0; i<5; i++) {
+			playerHand.cards.add(deal.cards.get(i));
+		}
 		System.out.println(deal.toString());
-		System.out.println(handEval.nameHand(new Hand(deal.toString())));
-		deal.cards.add(null);
-		deal.cards.add(null);
-		deal.cards.add(null);
-		deal.cards.add(null);
+		Hand playerHandForEval = new Hand(playerHand.toString());
+		System.out.println(playerHandForEval.toString());
+		System.out.println(HandEvaluator.nameHand(playerHandForEval));
 		Double chance = chanceOfWinning(deal.cards);
 		System.out.println(chance);
 	}

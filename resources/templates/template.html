@@ -26,6 +26,18 @@
             'selectedText': 'cat'
         });
     });
+		$(document).ready(function() {
+			if(location.hash) {
+				$('a[href=' + location.hash + ']').tab('show');
+			}
+			$(document.body).on("click", "a[data-toggle]", function(event) {
+				location.hash = this.getAttribute("href");
+			});
+		});
+		$(window).on('popstate', function() {
+			var anchor = location.hash || $("a[data-toggle=tab]").first().attr("href");
+			$('a[href=' + anchor + ']').tab('show');
+		});
 	</script>
 </head>
 <body>
@@ -119,7 +131,7 @@
 			<div id="ajax_wait_message" class="alert alert-info" style="display:none"></div>
 			<div id="ajax_result_message" class="alert alert-info" style="display:none"></div>
 		</div>
-		<#if info?? || error?? || success?? || warning?? || (parsing?? || blocksCHA!=blocksBTC || blocksBTC=0 || blocksCHA=0) || (version_major?? && version_minor?? && min_version_major?? && min_version_minor?? && (version_major?number<min_version_major?number || (version_major?number==min_version_major?number && version_minor?number<min_version_minor?number)))>
+		<#if info?? || error?? || success?? || warning?? || (parsing?? || ((blocksCHA?? && blocksBTC??) && (blocksCHA!=blocksBTC || blocksBTC=0 || blocksCHA=0))) || (version_major?? && version_minor?? && min_version_major?? && min_version_minor?? && (version_major?number<min_version_major?number || (version_major?number==min_version_major?number && version_minor?number<min_version_minor?number)))>
 		<div class="row section messages">
 			<#if info??>
 			<div class="alert alert-info">${info}</div>
@@ -136,7 +148,7 @@
 			<#if version_major?? && version_minor?? && min_version_major?? && min_version_minor?? && (version_major?number<min_version_major?number || (version_major?number==min_version_major?number && version_minor?number<min_version_minor?number))>
 			<div class="alert alert-danger">You must update to the latest version of Chancecoin. Your version is out of date.</div>
 			</#if>
-			<#if (parsing?? || blocksCHA!=blocksBTC || blocksBTC=0 || blocksCHA=0)>
+			<#if (parsing?? || ((blocksCHA?? && blocksBTC??) && (blocksCHA!=blocksBTC || blocksBTC=0 || blocksCHA=0)))>
 			<div class="alert alert-warning">Chancecoin is parsing transactions. You can still use the software, but the information you see will be out of date.</div>
 			</#if>
 		</div>

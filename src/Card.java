@@ -1,6 +1,6 @@
 public class Card {
 
-	public int card; //0-12 = 2-10, J, Q, K, A
+	public int card; //0-12 = 2-9, T, J, Q, K, A
 	public int suit; //0-3 = C,D,H,S
 
 	public Card(int card, int  suit) {
@@ -9,8 +9,8 @@ public class Card {
 	}
 	
 	public Card(int card) {
-		this.card = card % 4;
-		this.suit = card/4;
+		this.card = card % 13;
+		this.suit = card/13;
 		if (card>51 || card<0) {
 			this.suit = -1;
 			this.card = -1;
@@ -27,8 +27,9 @@ public class Card {
 		break;
 		case "S":  this.suit = 3;
 		break;
-		default:
-		this.suit = -1;
+		case "?":  this.suit = -1;
+		break;
+		default:   this.suit = -1;
 		break;
 		}
 		switch (card) {
@@ -48,7 +49,7 @@ public class Card {
 		break;
 		case "9":  this.card = 7;
 		break;
-		case "10":  this.card = 8;
+		case "T":  this.card = 8;
 		break;
 		case "J":  this.card = 9;
 		break;
@@ -58,8 +59,9 @@ public class Card {
 		break;
 		case "A":  this.card = 12;
 		break;
-		default:
-		this.suit = -1;
+		case "?":  this.card = -1;
+		break;
+		default:   this.suit = -1;
 		break;		
 		}		
 	}
@@ -67,7 +69,52 @@ public class Card {
 	public Card(String cardString) {
 		String card = cardString.substring(0, cardString.length()-1);
 		String suit = cardString.substring(cardString.length()-1, cardString.length());
-		new Card(card, suit);
+		switch (suit) {
+		case "C":  this.suit = 0;
+		break;
+		case "D":  this.suit = 1;
+		break;
+		case "H":  this.suit = 2;
+		break;
+		case "S":  this.suit = 3;
+		break;
+		case "?":  this.suit = -1;
+		break;
+		default:   this.suit = -1;
+		break;
+		}
+		switch (card) {
+		case "2":  this.card = 0;
+		break;
+		case "3":  this.card = 1;
+		break;
+		case "4":  this.card = 2;
+		break;
+		case "5":  this.card = 3;
+		break;
+		case "6":  this.card = 4;
+		break;
+		case "7":  this.card = 5;
+		break;
+		case "8":  this.card = 6;
+		break;
+		case "9":  this.card = 7;
+		break;
+		case "T":  this.card = 8;
+		break;
+		case "J":  this.card = 9;
+		break;
+		case "Q":  this.card = 10;
+		break;
+		case "K":  this.card = 11;
+		break;
+		case "A":  this.card = 12;
+		break;
+		case "?":  this.card = -1;
+		break;
+		default:   this.suit = -1;
+		break;		
+		}	
 	}
 	
 	public String cardString() {
@@ -89,7 +136,7 @@ public class Card {
 		break;
 		case 7: cardString+="9";
 		break;
-		case 8: cardString+="10";
+		case 8: cardString+="T";
 		break;
 		case 9: cardString+="J";
 		break;
@@ -118,12 +165,16 @@ public class Card {
 	}
 
 	public int cardValue() {
-    	return suit*4+card;
+		if (suit>=0 && suit<=4 && card>=0 && card<=12) {
+			return suit*13+card;
+		}else{
+			return -1;
+		}
 	}
 	
     @Override
     public int hashCode() {
-    	return suit*4+card;
+    	return cardValue();
     }
     
     @Override
@@ -139,5 +190,8 @@ public class Card {
 	@Override
 	public String toString() {
 		return cardString();
+	}
+	
+	public static void main(String[] args) {
 	}
 }

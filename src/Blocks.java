@@ -102,7 +102,7 @@ public class Blocks implements Runnable {
 		if(instance == null) {
 			instance = new Blocks();
 			instance.versionCheck();
-			new Thread() { public void run() {instance.init();}}.start();
+			instance.init();
 		} 
 		instance.follow();
 		return instance;
@@ -175,15 +175,17 @@ public class Blocks implements Runnable {
 				}
 				String fileBTCdb = Config.dbPath+Config.appName.toLowerCase()+".h2.db";
 				if (!new File(fileBTCdb).exists()) {
+					deleteDatabases();
 					statusMessage = "Downloading BTC database"; 
 					logger.info(statusMessage);
 					Util.downloadToFile(Config.downloadUrl+Config.appName.toLowerCase()+".h2.db", fileBTCdb);
-				}
-				String fileCHAdb = Database.dbFile;
-				if (!new File(fileCHAdb).exists()) {
+					logger.info("Finished downloading BTC database");
+					String fileCHAdb = Database.dbFile;	
 					statusMessage = "Downloading CHA database"; 
 					logger.info(statusMessage);
 					Util.downloadToFile(Config.downloadUrl+Config.appName.toLowerCase()+"-"+Config.majorVersionDB.toString()+".db", fileCHAdb);
+					logger.info("Finished downloading CHA database");
+					Database.getInstance().init();
 				}
 				statusMessage = "Downloading Bitcoin blocks";
 				blockStore = new H2FullPrunedBlockStore(params, Config.dbPath+Config.appName.toLowerCase(), 2000);
@@ -272,6 +274,7 @@ public class Blocks implements Runnable {
 					}
 					Integer nextBlock = lastBlock + 1;
 
+					chancecoinBlock = lastBlock;
 					logger.info("Bitcoin block height: "+blockHeight);	
 					logger.info("Chancecoin block height: "+lastBlock);
 					if (lastBlock < blockHeight) {
@@ -468,6 +471,7 @@ public class Blocks implements Runnable {
 		db.executeUpdate("delete from order_matches;");
 		db.executeUpdate("delete from btcpays;");
 		db.executeUpdate("delete from bets;");
+		db.executeUpdate("delete from bets_poker;");
 		db.executeUpdate("delete from burns;");
 		db.executeUpdate("delete from cancels;");
 		db.executeUpdate("delete from order_expirations;");
@@ -505,7 +509,7 @@ public class Blocks implements Runnable {
 		}
 	}
 
-	public List<Byte> getMessageFromTransaction(String txDataString) {
+	public static List<Byte> getMessageFromTransaction(String txDataString) {
 		byte[] data;
 		List<Byte> message = null;
 		try {
@@ -519,7 +523,7 @@ public class Blocks implements Runnable {
 		return message;
 	}
 
-	public List<Byte> getMessageTypeFromTransaction(String txDataString) {
+	public static List<Byte> getMessageTypeFromTransaction(String txDataString) {
 		byte[] data;
 		List<Byte> messageType = null;
 		try {
@@ -555,7 +559,7 @@ public class Blocks implements Runnable {
 					List<Byte> message = getMessageFromTransaction(dataString);
 
 					if (messageType!=null && messageType.size()>=4 && message!=null) {
-						if (messageType.get(3)==Bet.id.byteValue()) {
+						if (messageType.get(3)==Bet.idDice.byteValue() || messageType.get(3)==Bet.idPoker.byteValue()) {
 							Bet.parse(txIndex, message);
 						} else if (messageType.get(3)==Send.id.byteValue()) {
 							Send.parse(txIndex, message);
@@ -812,9 +816,9 @@ public class Blocks implements Runnable {
 			//blocks.wallet.commitTx(txBet);
 			ListenableFuture<Transaction> future = null;
 			try {
-				logger.info("Broadcasting transaction: "+tx.getHashAsString());
+				logger.info("Broadcasting transaction: "+tx.getHashAsString());				
 				future = peerGroup.broadcastTransaction(tx);
-				int tries = 10;
+				int tries = 10;				
 				Boolean success = false;
 				while (tries>0 && !success) {
 					tries--;

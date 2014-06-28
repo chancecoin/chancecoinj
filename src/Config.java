@@ -43,7 +43,7 @@ public class Config {
 	public static Double maxProfit = 0.01;
 	
 	//bitcoin
-	public static Integer dustSize = 5430*2;
+	public static Integer dustSize = 780;
 	public static Integer minFee = 10000;
 	public static Integer dataValue = 0;
 	

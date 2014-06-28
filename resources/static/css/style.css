@@ -171,6 +171,10 @@ blockquote p {
 	padding-top: 2em;
 }
 
+.tab-pane {
+	padding-bottom: 2em;
+}
+
 table {
 	text-align: left;
 }
