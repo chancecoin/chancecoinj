@@ -1,6 +1,9 @@
+import java.awt.List;
 import java.math.BigInteger;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 //TODO: allow people to verify NY Lottery number calculation easily
 //TODO: force locale to avoid decimals, commas issue
@@ -36,11 +39,11 @@ public class Test {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
-//		Blocks blocks = Blocks.getInstanceAndWait();
-//		blocks.reDownloadBlockTransactions(308002);
-//		blocks.parseBlock(308002);
-//		blocks.reDownloadBlockTransactions(308023);
-//		blocks.parseBlock(308023);
+		Blocks blocks = Blocks.getInstanceAndWait();
+		for (Integer block : Arrays.asList(308218,308023,308002,308318)) {
+			blocks.reDownloadBlockTransactions(block);
+			blocks.parseBlock(block);
+		}
 	}
 	
 }
