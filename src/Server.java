@@ -277,7 +277,7 @@ public class Server implements Runnable {
 				attributes.put("balances", balances);
 				
 				//get recent bets
-				rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index and bets.profit!=0 order by bets.block_index desc, bets.tx_index desc limit 10;");
+				rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,cards,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index and bets.profit!=0 order by bets.block_index desc, bets.tx_index desc limit 10;");
 				ArrayList<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -288,6 +288,10 @@ public class Server implements Runnable {
 						map.put("payout", rs.getDouble("payout"));
 						map.put("tx_hash", rs.getString("tx_hash"));
 						map.put("roll", rs.getDouble("roll"));
+						map.put("cards", rs.getString("cards"));
+						if (rs.getString("cards")!=null && rs.getString("resolved")!=null && rs.getString("resolved").equals("true")) {
+							map.put("cards_result", Deck.result(new Deck(rs.getString("cards")).cards));
+						}
 						map.put("resolved", rs.getString("resolved"));
 						map.put("block_time", Util.timeFormat(rs.getInt("block_time")));
 						map.put("profit", BigInteger.valueOf(rs.getLong("profit")).doubleValue()/Config.unit.doubleValue());

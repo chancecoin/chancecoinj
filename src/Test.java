@@ -39,11 +39,11 @@ public class Test {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
-		Blocks blocks = Blocks.getInstanceAndWait();
-		for (Integer block : Arrays.asList(308218,308023,308002,308318)) {
-			blocks.reDownloadBlockTransactions(block);
-			blocks.parseBlock(block);
-		}
+//		Blocks blocks = Blocks.getInstanceAndWait();
+//		for (Integer block : Arrays.asList(308218,308023,308002,308318)) {
+//			blocks.reDownloadBlockTransactions(block);
+//			blocks.parseBlock(block);
+//		}
 	}
 	
 }

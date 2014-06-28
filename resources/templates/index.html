@@ -167,7 +167,7 @@
 									</#if>
 									</td>
 									<#else>
-									<td><img src="/images/dice.png" style="height: 25px; display: inline;" /> ?</td>
+									<td><img src="/images/dice.png" style="height: 25px; display: inline;" /> <#if bet["resolved"]??>${bet["roll"]}<#else>?</#if></td>
 									</#if>
 
 									<td><#if bet["resolved"]?? && bet["resolved"]="true">${bet["profit"]} CHA<#else>Unresolved</#if></td>
