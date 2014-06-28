@@ -39,7 +39,7 @@
 										<div class="form-group">
 											<div class="input-group">
 												<span class="input-group-btn">
-													<button class="btn btn-default" onclick="processBet('dice1'); return false;" <#if !own??>disabled="disabled"</#if>>Roll dice</button>
+													<button class="btn btn-default" onclick="processBet('dice1'); return false;" <#if !own?? || read_only??>disabled="disabled"</#if>>Roll dice</button>
 												</span>
 											</div>
 										</div>
@@ -67,7 +67,7 @@
 										<div class="form-group">
 											<div class="input-group">
 												<span class="input-group-btn">
-													<button class="btn btn-default" onclick="processBet('poker1'); return false;" <#if !own??>disabled="disabled"</#if>>Bet</button>
+													<button class="btn btn-default" onclick="processBet('poker1'); return false;" <#if !own?? || read_only??>disabled="disabled"</#if>>Bet</button>
 												</span>
 											</div>
 										</div>

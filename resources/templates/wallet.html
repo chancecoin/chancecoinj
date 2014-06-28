@@ -17,7 +17,7 @@
 						</li>
 						</#if>
 						</ul>
-						<#if own??>
+						<#if own?? && !read_only??>
 						<div class="alert alert-info">You own this address.</div>
 						<form class="pure-form pure-form-stacked" action="/wallet" method="post">
 								<div class="input-group">
@@ -48,7 +48,7 @@
 
 								<div class="input-group">
 									<span class="input-group-btn">
-										<button class="btn btn-default" type="submit">Import private key</button>
+										<button class="btn btn-default" type="submit" <#if read_only??>disabled="disabled"</#if>>Import private key</button>
 									</span>
 								</div>
 						</form>
@@ -78,7 +78,7 @@
 
 								<div class="input-group">
 						      <span class="input-group-btn">
-						        <button class="btn btn-default" onclick="processSend('send_cha_form'); return false;" <#if !own??>disabled="disabled"</#if>>Send</button>
+						        <button class="btn btn-default" onclick="processSend('send_cha_form'); return false;" <#if !own?? || read_only??>disabled="disabled"</#if>>Send</button>
 						      </span>
 						    </div>
 						</form>

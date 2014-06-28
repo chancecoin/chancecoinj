@@ -21,6 +21,7 @@ public class Config {
 	public static String RPCPassword = "";
 	public static Integer serverPort = 8080;
 	public static String ConfigFile = "./resources/chancecoin.conf";
+	public static Boolean readOnly = false;
 	
 	//version
 	public static Integer majorVersion = 2;
@@ -62,8 +63,18 @@ public class Config {
 			input = new FileInputStream(ConfigFile);
 			Properties prop = new Properties();
 			prop.load(input);
-			RPCUsername = prop.getProperty("RPCUsername");
-			RPCPassword = prop.getProperty("RPCPassword");
+			if (prop.getProperty("RPCUsername")!=null && prop.getProperty("RPCPassword")!=null) {
+				RPCUsername = prop.getProperty("RPCUsername");
+				RPCPassword = prop.getProperty("RPCPassword");				
+			}
+			if (prop.getProperty("serverPort")!=null) {
+				serverPort = Integer.parseInt(prop.getProperty("serverPort"));
+			}
+			if (prop.getProperty("readOnly")!=null) {
+				if (prop.getProperty("readOnly").equals("true")) {
+					readOnly = true;
+				}
+			}
 		} catch (IOException e) {
 		}		
 	}

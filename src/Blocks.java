@@ -171,7 +171,6 @@ public class Blocks implements Runnable {
 					wallet = new Wallet(params);
 					ECKey newKey = new ECKey();
 					newKey.setCreationTimeSeconds(Config.burnCreationTime);
-					wallet.addKey(newKey);
 				}
 				String fileBTCdb = Config.dbPath+Config.appName.toLowerCase()+".h2.db";
 				if (!new File(fileBTCdb).exists()) {
@@ -191,13 +190,13 @@ public class Blocks implements Runnable {
 				blockStore = new H2FullPrunedBlockStore(params, Config.dbPath+Config.appName.toLowerCase(), 2000);
 				blockChain = new BlockChain(params, wallet, blockStore);
 				peerGroup = new PeerGroup(params, blockChain);
-				
+
 				//check the block heights
-				Integer blockHeight = blockStore.getChainHead().getHeight();
+				Integer blockHeight = getHeight();
 				Integer lastBlock = Util.getLastBlock();
 				bitcoinBlock = blockHeight;
 				chancecoinBlock = lastBlock;
-				
+
 				peerGroup.addWallet(wallet);
 				peerGroup.setFastCatchupTimeSecs(Config.burnCreationTime);
 				wallet.autosaveToFile(new File(walletFile), 1, TimeUnit.MINUTES, null);
@@ -255,7 +254,7 @@ public class Blocks implements Runnable {
 			}
 			try {
 				//catch Chancecoin up to Bitcoin
-				Integer blockHeight = blockStore.getChainHead().getHeight();
+				Integer blockHeight = getHeight();
 				Integer lastBlock = Util.getLastBlock();
 				bitcoinBlock = blockHeight;
 				chancecoinBlock = lastBlock;
@@ -475,7 +474,6 @@ public class Blocks implements Runnable {
 		db.executeUpdate("delete from order_matches;");
 		db.executeUpdate("delete from btcpays;");
 		db.executeUpdate("delete from bets;");
-		db.executeUpdate("delete from bets_poker;");
 		db.executeUpdate("delete from burns;");
 		db.executeUpdate("delete from cancels;");
 		db.executeUpdate("delete from order_expirations;");
@@ -610,35 +608,65 @@ public class Blocks implements Runnable {
 		return 0;
 	}
 
+	public void deleteAddress(String address) throws Exception {
+		if (!Config.readOnly) {
+			ECKey deleteKey = null;
+			String deleteAddress = address;
+			for (ECKey key : wallet.getKeys()) {
+				if (key.toAddress(params).toString().equals(deleteAddress)) {
+					deleteKey = key;
+				}
+			}
+			if (deleteKey != null) {
+				logger.info("Deleting private key");
+				wallet.removeKey(deleteKey);
+				if (wallet.getKeys().size()<=0) {
+					ECKey newKey = new ECKey();
+					wallet.addKey(newKey);
+				}
+			} 
+		} else {
+			throw new Exception("Chancecoin is in read only mode.");			
+		}
+	}
+
 	public String importPrivateKey(ECKey key) throws Exception {
-		String address = "";
-		logger.info("Importing private key");
-		address = key.toAddress(params).toString();
-		logger.info("Importing address "+address);
-		if (wallet.getKeys().contains(key)) {
-			wallet.removeKey(key);
+		if (!Config.readOnly) {
+			String address = "";
+			logger.info("Importing private key");
+			address = key.toAddress(params).toString();
+			logger.info("Importing address "+address);
+			if (wallet.getKeys().contains(key)) {
+				wallet.removeKey(key);
+			}
+			wallet.addKey(key);
+			/*
+			try {
+				importTransactionsFromAddress(address);
+			} catch (Exception e) {
+				throw new Exception(e.getMessage());
+			}
+			 */
+			return address;	
+		} else {
+			throw new Exception("Chancecoin is in read only mode.");			
 		}
-		wallet.addKey(key);
-		/*
-		try {
-			importTransactionsFromAddress(address);
-		} catch (Exception e) {
-			throw new Exception(e.getMessage());
-		}
-		 */
-		return address;		
 	}
 	public String importPrivateKey(String privateKey) throws Exception {
-		DumpedPrivateKey dumpedPrivateKey;
-		String address = "";
-		ECKey key = null;
-		logger.info("Importing private key");
-		try {
-			dumpedPrivateKey = new DumpedPrivateKey(params, privateKey);
-			key = dumpedPrivateKey.getKey();
-			return importPrivateKey(key);
-		} catch (AddressFormatException e) {
-			throw new Exception(e.getMessage());
+		if (!Config.readOnly) {
+			DumpedPrivateKey dumpedPrivateKey;
+			String address = "";
+			ECKey key = null;
+			logger.info("Importing private key");
+			try {
+				dumpedPrivateKey = new DumpedPrivateKey(params, privateKey);
+				key = dumpedPrivateKey.getKey();
+				return importPrivateKey(key);
+			} catch (AddressFormatException e) {
+				throw new Exception(e.getMessage());
+			}
+		} else {
+			throw new Exception("Chancecoin is in read only mode.");			
 		}
 	}
 
@@ -807,53 +835,57 @@ public class Blocks implements Runnable {
 	}
 
 	public Boolean sendTransaction(String source, Transaction tx) throws Exception {
-		try {
-			//System.out.println(tx);
-
-			byte[] rawTxBytes = tx.bitcoinSerialize();
-			String rawTx = new BigInteger(1, rawTxBytes).toString(16);
-			rawTx = "0" + rawTx;
-			//System.out.println(rawTx);
-			//System.exit(0);
-
-			Blocks blocks = Blocks.getInstance();
-			//blocks.wallet.commitTx(txBet);
-			ListenableFuture<Transaction> future = null;
+		if (!Config.readOnly) {
 			try {
-				logger.info("Broadcasting transaction: "+tx.getHashAsString());				
-				future = peerGroup.broadcastTransaction(tx);
-				int tries = 10;				
-				Boolean success = false;
-				while (tries>0 && !success) {
-					tries--;
-					List<UnspentOutput> unspents = Util.getUnspents(source);
-					for (UnspentOutput unspent : unspents) {
-						if (unspent.txid.equals(tx.getHashAsString())) {
-							success = true;
-							break;
+				//System.out.println(tx);
+
+				byte[] rawTxBytes = tx.bitcoinSerialize();
+				String rawTx = new BigInteger(1, rawTxBytes).toString(16);
+				rawTx = "0" + rawTx;
+				//System.out.println(rawTx);
+				//System.exit(0);
+
+				Blocks blocks = Blocks.getInstance();
+				//blocks.wallet.commitTx(txBet);
+				ListenableFuture<Transaction> future = null;
+				try {
+					logger.info("Broadcasting transaction: "+tx.getHashAsString());				
+					future = peerGroup.broadcastTransaction(tx);
+					int tries = 10;				
+					Boolean success = false;
+					while (tries>0 && !success) {
+						tries--;
+						List<UnspentOutput> unspents = Util.getUnspents(source);
+						for (UnspentOutput unspent : unspents) {
+							if (unspent.txid.equals(tx.getHashAsString())) {
+								success = true;
+								break;
+							}
 						}
+						//if (Util.getTransaction(tx.getHashAsString())!=null) {
+						//	success = true;
+						//}
+						Thread.sleep(5000);
 					}
-					//if (Util.getTransaction(tx.getHashAsString())!=null) {
-					//	success = true;
-					//}
-					Thread.sleep(5000);
-				}
-				if (!success) {
+					if (!success) {
+						throw new Exception("Transaction timed out. Please try again.");
+					}
+
+					//future.get(60, TimeUnit.SECONDS);
+					//} catch (TimeoutException e) {
+					//	logger.error(e.toString());
+					//	future.cancel(true);
+				} catch (Exception e) {
 					throw new Exception("Transaction timed out. Please try again.");
 				}
-
-				//future.get(60, TimeUnit.SECONDS);
-				//} catch (TimeoutException e) {
-				//	logger.error(e.toString());
-				//	future.cancel(true);
+				logger.info("Importing transaction (assigning block number -1)");
+				blocks.importTransaction(tx, null, null);
+				return true;
 			} catch (Exception e) {
-				throw new Exception("Transaction timed out. Please try again.");
-			}
-			logger.info("Importing transaction (assigning block number -1)");
-			blocks.importTransaction(tx, null, null);
-			return true;
-		} catch (Exception e) {
-			throw new Exception(e.getMessage());
-		}		
+				throw new Exception(e.getMessage());
+			}		
+		} else {
+			throw new Exception("Chancecoin is in read only mode.");			
+		}
 	}
 }

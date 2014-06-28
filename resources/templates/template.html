@@ -93,11 +93,13 @@
 					<#if addresses??>
 	        <li class="dropdown">
 	          <a href="#" class="dropdown-toggle" data-toggle="dropdown">${address?substring(0,6)}... <b class="caret"></b></a>
+						<#if !read_only??>
 	          <ul class="dropdown-menu">
 								<#list addresses as addr>
 									<li><a href="?address=${addr["address"]}"><#if addr["address"]==address><strong>${addr["address"]}</strong><#else>${addr["address"]}</#if> <span class="badge">${addr["balance_CHA"]} CHA</span></a></li>
 								</#list>
 	          </ul>
+						</#if>
 	        </li>
 					</#if>
 					<#if blocksBTC?? && blocksCHA?? && version??>
@@ -115,7 +117,7 @@
 							</#if>
 							<li><a href="#">BTC blocks <span class="badge">${blocksBTC}</span></a></li>
 							<li><a href="#">Version <span class="badge">${version}</span></a></li>
-							<#if !parsing??>
+							<#if !parsing?? && !read_only??>
 							<li><a href="/?reparse">Reparse transactions</a></li>
 							</#if>
 						</ul>
@@ -131,7 +133,7 @@
 			<div id="ajax_wait_message" class="alert alert-info" style="display:none"></div>
 			<div id="ajax_result_message" class="alert alert-info" style="display:none"></div>
 		</div>
-		<#if info?? || error?? || success?? || warning?? || (parsing?? || ((blocksCHA?? && blocksBTC??) && (blocksCHA!=blocksBTC || blocksBTC=0 || blocksCHA=0))) || (version_major?? && version_minor?? && min_version_major?? && min_version_minor?? && (version_major?number<min_version_major?number || (version_major?number==min_version_major?number && version_minor?number<min_version_minor?number)))>
+		<#if read_only?? || info?? || error?? || success?? || warning?? || (!read_only?? && (parsing?? || ((blocksCHA?? && blocksBTC??) && (blocksCHA!=blocksBTC || blocksBTC=0 || blocksCHA=0)))) || (version_major?? && version_minor?? && min_version_major?? && min_version_minor?? && (version_major?number<min_version_major?number || (version_major?number==min_version_major?number && version_minor?number<min_version_minor?number)))>
 		<div class="row section messages">
 			<#if info??>
 			<div class="alert alert-info">${info}</div>
@@ -148,7 +150,10 @@
 			<#if version_major?? && version_minor?? && min_version_major?? && min_version_minor?? && (version_major?number<min_version_major?number || (version_major?number==min_version_major?number && version_minor?number<min_version_minor?number))>
 			<div class="alert alert-danger">You must update to the latest version of Chancecoin. Your version is out of date.</div>
 			</#if>
-			<#if (parsing?? || ((blocksCHA?? && blocksBTC??) && (blocksCHA!=blocksBTC || blocksBTC=0 || blocksCHA=0)))>
+			<#if read_only??>
+			<div class="alert alert-warning">This is a read-only version of Chancecoin. To use Chancecoin, download the software <a href="/participate">here</a>.</div>
+			</#if>
+			<#if (!read_only?? && (parsing?? || ((blocksCHA?? && blocksBTC??) && (blocksCHA!=blocksBTC || blocksBTC=0 || blocksCHA=0))))>
 			<div class="alert alert-warning">Chancecoin is parsing transactions. You can still use the software, but the information you see will be out of date.</div>
 			</#if>
 		</div>

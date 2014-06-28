@@ -62,6 +62,7 @@ public class Server implements Runnable {
 		Thread blocksThread = new Thread(blocks);
 		blocksThread.setDaemon(true);
 		blocksThread.start(); 
+		Config.loadUserDefined();
 		
 		boolean inJar = false;
 		try {
@@ -218,10 +219,11 @@ public class Server implements Runnable {
 				request.session(true);
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "A coin for betting in a decentralized casino");
+				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
 
 				Blocks blocks = Blocks.getInstance();
 				
-				if (request.queryParams().contains("reparse")) {
+				if (request.queryParams().contains("reparse") && !Config.readOnly) {
 					blocks.reparse();
 				}
 				
@@ -258,6 +260,7 @@ public class Server implements Runnable {
 				attributes.put("address", address);				
 				attributes.put("addresses", addresses);
 				
+				//get top balances
 				Database db = Database.getInstance();
 				ResultSet rs = db.executeQuery("select address,amount as balance,amount*100.0/(select sum(amount) from balances) as share from balances where asset='CHA' group by address order by amount desc limit 10;");
 				ArrayList<HashMap<String, Object>> balances = new ArrayList<HashMap<String, Object>>();
@@ -273,6 +276,7 @@ public class Server implements Runnable {
 				}
 				attributes.put("balances", balances);
 				
+				//get recent bets
 				rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index and bets.profit!=0 order by bets.block_index desc, bets.tx_index desc limit 10;");
 				ArrayList<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
 				try {
@@ -308,7 +312,18 @@ public class Server implements Runnable {
 					}
 				} catch (SQLException e) {
 				}
-				attributes.put("winners", winners);				
+				attributes.put("winners", winners);	
+				
+				//poker hand
+				List<String> pokerHand = new ArrayList<String>();
+				Deck deal = Deck.ShuffleAndDeal(new Random().nextDouble(), null, 9);
+				deal.cards.set(5, new Card("??"));
+				deal.cards.set(6, new Card("??"));
+				for (Card c : deal.cards) {
+					pokerHand.add(c.toString());
+				}
+				attributes.put("poker_chance", Deck.chanceOfWinning(deal.cards)*100.0);
+				attributes.put("poker_hand", pokerHand);
 								
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
@@ -323,6 +338,7 @@ public class Server implements Runnable {
 				request.session(true);
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Participate");
+				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
 				attributes.put("min_version_major", Util.getMinMajorVersion());
@@ -342,6 +358,7 @@ public class Server implements Runnable {
 				request.session(true);
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Technical");
+				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());	
 				attributes.put("min_version_major", Util.getMinMajorVersion());
@@ -371,6 +388,7 @@ public class Server implements Runnable {
 				request.session(true);
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Balances");
+				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
 				attributes.put("version", Config.version);
 				attributes.put("min_version", Util.getMinVersion());
 				attributes.put("min_version_major", Util.getMinMajorVersion());
@@ -404,6 +422,7 @@ public class Server implements Runnable {
 				request.session(true);
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Exchange");
+				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
 				
 				Blocks blocks = Blocks.getInstance();
 				attributes.put("price_BTC", blocks.priceBTC);
@@ -589,6 +608,7 @@ public class Server implements Runnable {
 				request.session(true);
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Exchange");
+				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
 				
 				Blocks blocks = Blocks.getInstance();
 				attributes.put("price_BTC", blocks.priceBTC);
@@ -723,6 +743,7 @@ public class Server implements Runnable {
 				request.session(true);
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Unspents");
+				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
 				
 				Blocks blocks = Blocks.getInstance();
 				blocks.deletePending();
@@ -792,6 +813,7 @@ public class Server implements Runnable {
 				request.session(true);
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Wallet");
+				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
 				
 				Blocks blocks = Blocks.getInstance();
 				attributes.put("price_BTC", blocks.priceBTC);
@@ -809,39 +831,11 @@ public class Server implements Runnable {
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("delete")) {
-					ECKey deleteKey = null;
-					String deleteAddress = request.queryParams("address");
-					for (ECKey key : blocks.wallet.getKeys()) {
-						if (key.toAddress(blocks.params).toString().equals(deleteAddress)) {
-							deleteKey = key;
-						}
-					}
-					if (deleteKey != null) {
-						logger.info("Deleting private key");
-						blocks.wallet.removeKey(deleteKey);
+					try {
+						Blocks.getInstance().deleteAddress(request.queryParams("address"));
 						attributes.put("success", "Your private key has been deleted. You can no longer transact from this address.");							
-						if (blocks.wallet.getKeys().size()<=0) {
-							ECKey newKey = new ECKey();
-							blocks.wallet.addKey(newKey);
-						}
-					} 
-				}
-				if (request.queryParams().contains("form") && request.queryParams("form").equals("reimport")) {
-					ECKey importKey = null;
-					String deleteAddress = request.queryParams("address");
-					for (ECKey key : blocks.wallet.getKeys()) {
-						if (key.toAddress(blocks.params).toString().equals(deleteAddress)) {
-							importKey = key;
-						}
-					}
-					if (importKey != null) {
-						logger.info("Reimporting private key transactions");
-						try {
-							blocks.importPrivateKey(importKey);
-							attributes.put("success", "Your transactions have been reimported.");
-						} catch (Exception e) {
-							attributes.put("error", "Error when reimporting transactions: "+e.getMessage());
-						}
+					} catch (Exception e) {
+						attributes.put("error", "Error when deleting address: "+e.getMessage());
 					}
 				}
 								
@@ -997,6 +991,7 @@ public class Server implements Runnable {
 				request.session(true);
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Wallet");
+				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
 				
 				Blocks blocks = Blocks.getInstance();
 				attributes.put("price_BTC", blocks.priceBTC);
@@ -1132,6 +1127,7 @@ public class Server implements Runnable {
 				request.session(true);
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Casino");
+				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
 				
 				Blocks blocks = Blocks.getInstance();
 				attributes.put("price_BTC", blocks.priceBTC);
@@ -1383,6 +1379,7 @@ public class Server implements Runnable {
 				request.session(true);
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Casino");
+				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
 				
 				Blocks blocks = Blocks.getInstance();
 				attributes.put("price_BTC", blocks.priceBTC);
@@ -1606,6 +1603,7 @@ public class Server implements Runnable {
 				setConfiguration(configuration);
 				Map<String, Object> attributes = new HashMap<String, Object>();
 				attributes.put("title", "Error");
+				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
 				return modelAndView(attributes, "error.html");
 			}
 		});

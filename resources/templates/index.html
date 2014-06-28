@@ -13,39 +13,119 @@
 </div>
 
 <div class="row section">
-		<h2>Roll dice</h2>
-		<form action="/casino" class="form-inline" method="post">
+		<ul id="tabs" class="nav nav-tabs" data-tabs="tabs" style="margin-top: 2em;">
+				<li class="active"><a href="#dice" data-toggle="tab">Dice</a></li>
+				<li><a href="#poker" data-toggle="tab">Poker</a></li>
+		</ul>
 
-				<input type="hidden" name="form" value="bet">
-				<input type="hidden" name="source" value="${address}">
+		<div id="my-tab-content1" class="tab-content">
+				<div class="tab-pane active" id="dice">
+						<form id="dice1" action="/casino" class="form-inline" method="post">
 
-				<div class="form-group">
-					<div class="input-group">
-						<span class="input-group-addon">#</span>
-						<input type="text" placeholder="bet size (CHA)" name="bet">
-					</div>
-				</div>
-				<div class="form-group">
-					<div class="input-group">
-						<span class="input-group-addon">%</span>
-						<input type="text" placeholder="chance to win" name="chance" onchange="document.getElementsByName('payout')[0].value=100/parseFloat(document.getElementsByName('chance')[0].value)*(${1-house_edge});">
-					</div>
-				</div>
-				<div class="form-group">
-					<div class="input-group">
-						<span class="input-group-addon">X</span>
-						<input type="text" placeholder="payout" name="payout" onchange="document.getElementsByName('chance')[0].value=100/(parseFloat(document.getElementsByName('payout')[0].value)/(${1-house_edge}));">
-					</div>
-				</div>
-				<div class="form-group">
-					<div class="input-group">
-						<span class="input-group-btn">
-							<button class="btn btn-default" type="submit">Roll dice</button>
-						</span>
-					</div>
-				</div>
+								<input type="hidden" name="form" value="bet_dice">
+								<input type="hidden" name="source" value="${address}">
 
-		</form>
+								<div class="form-group">
+									<img src="/images/dice.png" class="casino-icon" />
+								</div>
+
+								<div class="form-group">
+									<div class="input-group">
+										<span class="input-group-addon">#</span>
+										<input type="text" placeholder="bet size (CHA)" name="bet">
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="input-group">
+										<span class="input-group-addon">%</span>
+										<input type="text" placeholder="chance to win" name="chance" onchange="document.getElementsByName('payout')[0].value=100/parseFloat(document.getElementsByName('chance')[0].value)*(${1-house_edge});">
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="input-group">
+										<span class="input-group-addon">X</span>
+										<input type="text" placeholder="payout" name="payout" onchange="document.getElementsByName('chance')[0].value=100/(parseFloat(document.getElementsByName('payout')[0].value)/(${1-house_edge}));">
+									</div>
+								</div>
+
+								<div class="form-group">
+									<div class="input-group">
+										<span class="input-group-btn">
+											<button class="btn btn-default" onclick="processBet('dice1'); return false;" <#if !own?? || read_only??>disabled="disabled"</#if>>Roll dice</button>
+										</span>
+									</div>
+								</div>
+
+						</form>
+				</div>
+				<div class="tab-pane" id="poker">
+						<#if poker_hand??>
+						<form id="poker1" action="/casino" class="form-inline" method="post">
+
+								<input type="hidden" name="form" value="bet_poker">
+								<input type="hidden" name="source" value="${address}">
+
+								<div class="form-group">
+									<img src="/images/poker.png" class="casino-icon" />
+								</div>
+
+								<div class="form-group">
+									<div class="input-group">
+										<span class="input-group-addon">#</span>
+										<input type="text" placeholder="bet size (CHA)" name="bet">
+									</div>
+								</div>
+
+								<div class="form-group">
+									<div class="input-group">
+										<span class="input-group-btn">
+											<button class="btn btn-default" onclick="processBet('poker1'); return false;" <#if !own?? || read_only??>disabled="disabled"</#if>>Bet</button>
+										</span>
+									</div>
+								</div>
+
+								<div class="form-group">
+									<div class="input-group">
+										<span class="input-group-btn">
+											<button class="btn btn-default" onclick="window.location.reload(true); return false;">Fold</button>
+										</span>
+									</div>
+								</div>
+
+								<div class="form-group" style="clear: both; display: block;">
+								</div>
+
+								<#list poker_hand as card>
+								<div class="form-group">
+									<div class="input-group">
+										<#if card_index=0>
+										<span class="help-block">You</span>
+										<#elseif card_index=2>
+										<span class="help-block">Board</span>
+										<#elseif card_index=7>
+										<span class="help-block">Opponent</span>
+										<#else>
+										<span class="help-block">&nbsp;</span>
+										</#if>
+										<#if card="??">
+											<input type="hidden" name="card${card_index+1}" value="??">
+											<img src="/images/cards/back.png" class="card" title="Back" />
+										<#else>
+											<input type="hidden" name="card${card_index+1}" value="${card}">
+											<img src="/images/cards/${card}.png" class="card" title="${card}" />
+										</#if>
+									</div>
+								</div>
+								<#if card_index=1 || card_index=6 || card_index=8>
+								<div class="form-group" style="clear: both; width: 4em;">
+								</div>
+								</#if>
+								</#list>
+								<p>Chance of winning: ${poker_chance}%</p>
+						</form>
+						</#if>
+				</div>
+		</div>
 </div>
 
 <div class="row section">
@@ -56,9 +136,8 @@
 								<th>Source address</th>
 								<th>Time</th>
 								<th>Bet size</th>
-								<th>Chance to win</th>
-								<th>Payout multiplier</th>
-								<th>Roll</th>
+								<th>Chance to win / payout multiplier</th>
+								<th>Result</th>
 								<th>Profit</th>
 						</tr>
 				</thead>
@@ -69,9 +148,28 @@
 									<td><a href="/wallet?address=${bet["source"]}">${bet["source"]}</a></td>
 									<td>${bet["block_time"]}</td>
 									<td>${bet["bet"]} CHA</td>
-									<td>${bet["chance"]}%</td>
-									<td>${bet["payout"]}X</td>
-									<td><#if bet["resolved"]??>${bet["roll"]}<#else>?</#if></td>
+									<td>${bet["chance"]}% / ${bet["payout"]}X</td>
+
+									<#if bet["cards"]??>
+									<td>
+									<#list bet["cards"]?split(" ") as card>
+									<#if card="??">
+									<img src="/images/cards/back.png" style="height: 75px; display: inline;" title="back" />
+									<#else>
+									<img src="/images/cards/${card}.png" style="height: 75px; display: inline;" title="${card}" />
+									</#if>
+									<#if card_index=1 || card_index=6>
+									<div style="clear: both;"></div>
+									</#if>
+									</#list>
+									<#if bet["cards_result"]??>
+									<p>${bet["cards_result"]}</p>
+									</#if>
+									</td>
+									<#else>
+									<td><img src="/images/dice.png" style="height: 25px; display: inline;" /> ?</td>
+									</#if>
+
 									<td><#if bet["resolved"]?? && bet["resolved"]="true">${bet["profit"]} CHA<#else>Unresolved</#if></td>
 							</tr>
 					</#list>
