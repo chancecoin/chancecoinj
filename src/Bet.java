@@ -355,12 +355,13 @@ public class Bet {
 		logger.info("Resolving bets");
 
 		Database db = Database.getInstance();
-		ResultSet rs = db.executeQuery("select block_time,blocks.block_index as block_index,tx_index,tx_hash,source,bet,payout,chance,cha_supply,cards from bets,blocks where bets.block_index=blocks.block_index and bets.validity='valid' and bets.resolved IS NOT 'true';");
+		ResultSet rs = db.executeQuery("select block_time,blocks.block_index as block_index,blocks.block_hash as block_hash,tx_index,tx_hash,source,bet,payout,chance,cha_supply,cards from bets,blocks where bets.block_index=blocks.block_index and bets.validity='valid' and bets.resolved IS NOT 'true';");
 
 		try {
 			while (rs.next()) {
 				String source = rs.getString("source");
 				String txHash = rs.getString("tx_hash");
+				String blockHash = rs.getString("block_hash");
 				Integer txIndex = rs.getInt("tx_index");
 				Integer blockIndex = rs.getInt("block_index");
 				BigInteger bet = BigInteger.valueOf(rs.getLong("bet"));
@@ -371,22 +372,42 @@ public class Bet {
 				Date blockTime = new Date((long)rs.getLong("block_time")*1000);
 
 				logger.info("Attempting to resolve bet "+txHash);
-				List<BigInteger> lottoNumbers = getLottoNumbersAfterDate(blockTime);
-				if (lottoNumbers != null) {
-					logger.info("Found lottery numbers we can use to resolve bet");
-					BigInteger denominator = Util.combinations(BigInteger.valueOf(80),BigInteger.valueOf(20)).subtract(BigInteger.ONE);
-					BigInteger n = BigInteger.ZERO;
-					BigInteger i = BigInteger.ONE;
-					for (BigInteger number : lottoNumbers) {
-						n = n.add(Util.combinations(number.subtract(BigInteger.ONE),i));
-						i = i.add(BigInteger.ONE);
+				ResultSet rsCouldWin = db.executeQuery("select sum(bet*(payout-1)) as total from bets,blocks where bets.block_index=blocks.block_index and bets.validity='valid' and blocks.block_index='"+blockIndex.toString()+"';");
+				Double couldWin = rsCouldWin.getDouble("total");
+				couldWin = couldWin / Config.unit;
+
+				Double rollA = null;
+				Double rollC = 0.0;
+				
+				if (couldWin>20000.0 || blockIndex<308400) { //we must use NY Lottery numbers
+					List<BigInteger> lottoNumbers = getLottoNumbersAfterDate(blockTime);
+					if (lottoNumbers != null) {
+						logger.info("Found lottery numbers we can use to resolve bet");
+						BigInteger denominator = Util.combinations(BigInteger.valueOf(80),BigInteger.valueOf(20)).subtract(BigInteger.ONE);
+						BigInteger n = BigInteger.ZERO;
+						BigInteger i = BigInteger.ONE;
+						for (BigInteger number : lottoNumbers) {
+							n = n.add(Util.combinations(number.subtract(BigInteger.ONE),i));
+							i = i.add(BigInteger.ONE);
+						}
+						rollA = n.doubleValue() / (denominator.doubleValue());
 					}
-					Double rollA = n.doubleValue() / (denominator.doubleValue());
+				}else{ //we can just use the blockhash for randomness
+					rollA = 0.0;
+				}
+				if (blockIndex<308400) {
+					rollC = (new BigInteger(blockHash,16)).mod(BigInteger.valueOf(1000000000)).doubleValue()/1000000000.0;					
+				}
+
+				if (rollA != null) {
+					//PROTOCOL CHANGE:
+					// if block is less than 308400, then rollA uses lotto numbers, rollB uses txHash, rollC is 0
+					// if block is greater than 308400, then rollA uses lotto number if block could win more than 20,000 CHA, rollB uses txHash, rollC uses block hash
 					Double rollB = (new BigInteger(txHash.substring(10, txHash.length()),16)).mod(BigInteger.valueOf(1000000000)).doubleValue()/1000000000.0;
-					Double roll = (rollA + rollB) % 1.0;
+					Double roll = (rollA + rollB + rollC) % 1.0;
 					roll = roll * 100.0;
 
-					if (cards.length()>0) { //poker bet
+					if (cards!=null && cards.length()>0) { //poker bet
 						Deck dealtSoFar = new Deck();
 						dealtSoFar.cards.clear();
 						Deck removedCards = new Deck();
@@ -421,7 +442,7 @@ public class Bet {
 						db.executeUpdate("update bets set cards='"+dealtSoFar.toString()+"',profit='"+profit.toString()+"', rolla='"+(rollA*100.0)+"', rollb='"+(rollB*100.0)+"', roll='"+roll+"', resolved='true' where tx_index='"+txIndex+"';");						
 					} else { //dice bet
 						logger.info("Roll = "+roll.toString()+", chance = "+chance.toString());
-	
+
 						BigInteger profit = BigInteger.ZERO;
 						if (roll<chance) {
 							logger.info("The bet is a winner");

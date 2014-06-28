@@ -1,3 +1,7 @@
+import java.math.BigInteger;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 //TODO: allow people to verify NY Lottery number calculation easily
 //TODO: force locale to avoid decimals, commas issue
 //TODO: encrypt wallet
@@ -16,13 +20,23 @@
 //TODO: use NAS's blockchain download stuff if it's better than bitcoinj
 //TODO: other ways to transactions/bet resolving faster?
 //TODO: scratch ticket solution: lock in randomness and bet offline
-//TODO: NY lottery numbers only if block can win > 20,000 CHA. otherwise, use blockhash.
 //TODO: use n-of-3 multisig as per dexx7's suggestions
 //TODO: make chancecoin.com live
 public class Test {
 
 	public static void main(String[] args) {
-		Blocks blocks = Blocks.getInstanceAndWait();
+//		Database db = Database.getInstance();
+//		ResultSet rs = db.executeQuery("select block_hash from blocks;");
+//		try {
+//			while (rs.next()) {
+//				Double rollA = (new BigInteger(rs.getString("block_hash"),16)).mod(BigInteger.valueOf(1000000000)).doubleValue()/1000000000.0;
+//				System.out.println(rollA);			
+//			}
+//		} catch (SQLException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		Blocks blocks = Blocks.getInstanceAndWait();
 //		blocks.reDownloadBlockTransactions(308002);
 //		blocks.parseBlock(308002);
 //		blocks.reDownloadBlockTransactions(308023);

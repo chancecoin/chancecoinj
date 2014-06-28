@@ -72,7 +72,7 @@ public class Server implements Runnable {
 			e.printStackTrace();
 		}
 		
-		setPort(8080);    
+		setPort(Config.serverPort);    
 		
 		final Configuration configuration = new Configuration();
 		try {

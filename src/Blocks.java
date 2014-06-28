@@ -191,6 +191,13 @@ public class Blocks implements Runnable {
 				blockStore = new H2FullPrunedBlockStore(params, Config.dbPath+Config.appName.toLowerCase(), 2000);
 				blockChain = new BlockChain(params, wallet, blockStore);
 				peerGroup = new PeerGroup(params, blockChain);
+				
+				//check the block heights
+				Integer blockHeight = blockStore.getChainHead().getHeight();
+				Integer lastBlock = Util.getLastBlock();
+				bitcoinBlock = blockHeight;
+				chancecoinBlock = lastBlock;
+				
 				peerGroup.addWallet(wallet);
 				peerGroup.setFastCatchupTimeSecs(Config.burnCreationTime);
 				wallet.autosaveToFile(new File(walletFile), 1, TimeUnit.MINUTES, null);
@@ -269,9 +276,6 @@ public class Blocks implements Runnable {
 					} catch (Exception e) {
 					}
 
-					if (lastBlock == 0) {
-						lastBlock = Config.firstBlock - 1;
-					}
 					Integer nextBlock = lastBlock + 1;
 
 					chancecoinBlock = lastBlock;

@@ -271,7 +271,7 @@ public class Util {
 			System.out.println(e.toString());
 			e.printStackTrace();
 		}	
-		return 0;
+		return Config.firstBlock - 1;
 	}
 
 	public static Integer getLastTxIndex() {
