@@ -173,7 +173,13 @@ public class Blocks implements Runnable {
 					newKey.setCreationTimeSeconds(Config.burnCreationTime);
 				}
 				String fileBTCdb = Config.dbPath+Config.appName.toLowerCase()+".h2.db";
-				if (!new File(fileBTCdb).exists()) {
+				Database db = Database.getInstance();
+				
+				//reasons to redownload:
+				ResultSet rsPokerBets = db.executeQuery("select * from bets where cards is not null;");
+				Boolean shouldReDownload = !new File(fileBTCdb).exists() || !rsPokerBets.next();
+
+				if (shouldReDownload) {
 					deleteDatabases();
 					statusMessage = "Downloading BTC database"; 
 					logger.info(statusMessage);

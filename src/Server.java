@@ -226,6 +226,11 @@ public class Server implements Runnable {
 				if (request.queryParams().contains("reparse") && !Config.readOnly) {
 					blocks.reparse();
 				}
+				if (request.queryParams().contains("redownload") && !Config.readOnly) {
+					blocks.deleteDatabases();
+					blocks.initialized = false;
+					blocks.init();
+				}
 				
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);

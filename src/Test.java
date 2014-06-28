@@ -18,8 +18,6 @@ import java.util.Arrays;
 //TODO: test betting with 0 bet size
 //TODO: other games
 //TODO: redundancy for downloads.txt on github
-//TODO: let people send BTC with Chancecoin client
-//TODO: keep the db files more up to date, and let people just download them when they want to gamble.
 //TODO: use NAS's blockchain download stuff if it's better than bitcoinj
 //TODO: other ways to transactions/bet resolving faster?
 //TODO: scratch ticket solution: lock in randomness and bet offline
