@@ -379,7 +379,8 @@ public class Bet {
 				Double rollA = null;
 				Double rollC = 0.0;
 				
-				if (couldWin>20000.0 || blockIndex<308400) { //we must use NY Lottery numbers
+				Integer block1 = 308500;
+				if (couldWin>20000.0 || blockIndex<block1) { //we must use NY Lottery numbers
 					List<BigInteger> lottoNumbers = getLottoNumbersAfterDate(blockTime);
 					if (lottoNumbers != null) {
 						logger.info("Found lottery numbers we can use to resolve bet");
@@ -395,14 +396,14 @@ public class Bet {
 				}else{ //we can just use the blockhash for randomness
 					rollA = 0.0;
 				}
-				if (blockIndex<308400) {
+				if (blockIndex<block1) {
 					rollC = (new BigInteger(blockHash,16)).mod(BigInteger.valueOf(1000000000)).doubleValue()/1000000000.0;					
 				}
 
 				if (rollA != null) {
 					//PROTOCOL CHANGE:
-					// if block is less than 308400, then rollA uses lotto numbers, rollB uses txHash, rollC is 0
-					// if block is greater than 308400, then rollA uses lotto number if block could win more than 20,000 CHA, rollB uses txHash, rollC uses block hash
+					// if block is less than 308500, then rollA uses lotto numbers, rollB uses txHash, rollC is 0
+					// if block is greater than 308500, then rollA uses lotto number if block could win more than 20,000 CHA, rollB uses txHash, rollC uses block hash
 					Double rollB = (new BigInteger(txHash.substring(10, txHash.length()),16)).mod(BigInteger.valueOf(1000000000)).doubleValue()/1000000000.0;
 					Double roll = (rollA + rollB + rollC) % 1.0;
 					roll = roll * 100.0;
