@@ -13,7 +13,7 @@ public class Chancecoin {
 	public static void main(String[] args) {
 		Blocks blocks = Blocks.getInstanceSkipVersionCheck();
 		blocks.init();
-		blocks.versionCheck(false);
+		//blocks.versionCheck(false);
 		JsonRpcServletEngine engine = new JsonRpcServletEngine();
 		try {
 			engine.startup();
