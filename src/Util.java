@@ -436,6 +436,9 @@ public class Util {
 		for(ECKey key : keys) {
 			addresses.add(key.toAddress(blocks.params).toString());
 		}
+		if (addresses.size()<=0) {
+			
+		}
 		return addresses;
 	}
 

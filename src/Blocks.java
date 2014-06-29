@@ -171,6 +171,7 @@ public class Blocks implements Runnable {
 					wallet = new Wallet(params);
 					ECKey newKey = new ECKey();
 					newKey.setCreationTimeSeconds(Config.burnCreationTime);
+					wallet.addKey(newKey);
 				}
 				String fileBTCdb = Config.dbPath+Config.appName.toLowerCase()+".h2.db";
 				Database db = Database.getInstance();
