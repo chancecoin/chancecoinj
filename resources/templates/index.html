@@ -153,10 +153,16 @@
 									<#if bet["cards"]??>
 									<td>
 									<#list bet["cards"]?split(" ") as card>
+									<#if card_index=0>
+									<div style="float: left; padding-top: 1.25em; padding-right: 2.5em;">Player</div>
+									</#if>
+									<#if card_index=7>
+									<div style="float: left; padding-top: 1.25em; padding-right: 1em;">Opponent</div>
+									</#if>
 									<#if card="??">
-									<img src="/images/cards/back.png" style="height: 75px; display: inline;" title="back" />
+									<img src="/images/cards/back.png" style="height: 75px; display: inline; margin-bottom: 0.5em;" title="back" />
 									<#else>
-									<img src="/images/cards/${card}.png" style="height: 75px; display: inline;" title="${card}" />
+									<img src="/images/cards/${card}.png" style="height: 75px; display: inline; margin-bottom: 0.5em;" title="${card}" />
 									</#if>
 									<#if card_index=1 || card_index=6>
 									<div style="clear: both;"></div>
