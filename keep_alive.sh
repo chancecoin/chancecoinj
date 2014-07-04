@@ -1,0 +1,7 @@
+ps -ef | grep -v grep | grep Server
+if [ $? -eq 1 ]
+then
+/var/www/chancecoin.com/chancecoinj/start_server.sh
+else
+echo "Already running"
+fi
