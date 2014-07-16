@@ -115,8 +115,14 @@ public class Server implements Runnable {
 					Double chance = Double.parseDouble(request.queryParams("chance"));
 					Double payout = Double.parseDouble(request.queryParams("payout"));
 					BigInteger bet = new BigDecimal(rawBet*Config.unit).toBigInteger();
+					String asset = request.queryParams("asset");
+					String resolution = request.queryParams("resolution");
+					String destination = "";
+					if (asset.equals("BTC") || asset.equals("BTC2")) {
+						destination = Config.marketMakingAddress;
+					}
 					try {
-						Transaction tx = Bet.createDiceBet(source, bet, chance, payout);
+						Transaction tx = Bet.createDiceBet(source, destination, asset, resolution, bet, chance, payout);
 						blocks.sendTransaction(source, tx);
 						results.put("message", "Thank you for betting!");
 					} catch (Exception e) {
@@ -143,8 +149,14 @@ public class Server implements Runnable {
 					boardCards.add(request.queryParams("card7"));
 					opponentCards.add(request.queryParams("card8"));
 					opponentCards.add(request.queryParams("card9"));
+					String asset = request.queryParams("asset");
+					String resolution = request.queryParams("resolution");
+					String destination = "";
+					if (asset.equals("BTC") || asset.equals("BTC2")) {
+						destination = Config.marketMakingAddress;
+					}
 					try {
-						Transaction tx = Bet.createPokerBet(source, bet, playerCards, boardCards, opponentCards);
+						Transaction tx = Bet.createPokerBet(source, destination, asset, resolution, bet, playerCards, boardCards, opponentCards);
 						blocks.sendTransaction(source, tx);
 						results.put("message", "Thank you for betting!");
 					} catch (Exception e) {
@@ -263,7 +275,12 @@ public class Server implements Runnable {
 					addresses.add(map);
 				}
 				attributes.put("address", address);				
-				attributes.put("addresses", addresses);
+				attributes.put("addresses", addresses);				
+				for (ECKey key : blocks.wallet.getKeys()) {
+					if (key.toAddress(blocks.params).toString().equals(address)) {
+						attributes.put("own", true);
+					}
+				}
 				
 				//get top balances
 				Database db = Database.getInstance();
@@ -445,6 +462,8 @@ public class Server implements Runnable {
 				attributes.put("min_version_minor", Util.getMinMinorVersion());
 				attributes.put("version_major", Config.majorVersion);
 				attributes.put("version_minor", Config.minorVersion);
+				attributes.put("max_width", Config.maxWidth);
+				attributes.put("market_making_address", Config.marketMakingAddress);				
 				Blocks.getInstance().versionCheck();
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
@@ -491,6 +510,23 @@ public class Server implements Runnable {
 						attributes.put("error", e.getMessage());
 					}
 				}
+				if (request.queryParams().contains("form") && request.queryParams("form").equals("quote")) {
+					String source = request.queryParams("source");
+					Double price = Double.parseDouble(request.queryParams("price"));
+					Double width = Double.parseDouble(request.queryParams("width"));
+					Double rawQuantity = Double.parseDouble(request.queryParams("quantity"));
+					BigInteger chaQuote = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
+					BigInteger btcQuote = new BigDecimal(chaQuote.doubleValue() * price).toBigInteger();
+					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
+					String destination = Config.marketMakingAddress;
+					try {
+						Transaction tx = Quote.create(source, destination, btcQuote, chaQuote, width, expiration);
+						blocks.sendTransaction(source,tx);
+						attributes.put("success", "Your quote was successful.");
+					} catch (Exception e) {
+						attributes.put("error", e.getMessage());
+					}					
+				}
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("buy")) {
 					String source = request.queryParams("source");
 					Double price = Double.parseDouble(request.queryParams("price"));
@@ -527,8 +563,33 @@ public class Server implements Runnable {
 				
 				Database db = Database.getInstance();
 				
+				//get quotes
+				ResultSet rs = db.executeQuery("select * from quotes where validity='valid';");
+				ArrayList<HashMap<String, Object>> quotes = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("cha_amount", BigInteger.valueOf(rs.getLong("cha_amount")).doubleValue()/Config.unit.doubleValue());
+						map.put("btc_amount", BigInteger.valueOf(rs.getLong("btc_amount")).doubleValue()/Config.unit.doubleValue());
+						map.put("cha_remaining", BigInteger.valueOf(rs.getLong("cha_remaining")).doubleValue()/Config.unit.doubleValue());
+						map.put("btc_remaining", BigInteger.valueOf(rs.getLong("btc_remaining")).doubleValue()/Config.unit.doubleValue());
+						Double price = BigInteger.valueOf(rs.getLong("btc_amount")).doubleValue()/BigInteger.valueOf(rs.getLong("cha_amount")).doubleValue();						
+						Double width = rs.getDouble("width");
+						map.put("price", price);						
+						map.put("bid", price*(1-width/2.0));
+						map.put("offer", price*(1+width/2.0));						
+						map.put("width", width);
+						map.put("source", rs.getString("source"));
+						map.put("destination", rs.getString("destination"));
+						map.put("tx_hash", rs.getString("tx_hash"));
+						quotes.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("quotes", quotes);				
+				
 				//get buy orders
-				ResultSet rs = db.executeQuery("select 1.0*give_amount/get_amount as price, get_remaining as quantity,tx_hash from orders where get_asset='CHA' and give_asset='BTC' and validity='valid' and give_remaining>0 and get_remaining>0 order by price desc, quantity desc;");
+				rs = db.executeQuery("select 1.0*give_amount/get_amount as price, get_remaining as quantity,tx_hash from orders where get_asset='CHA' and give_asset='BTC' and validity='valid' and give_remaining>0 and get_remaining>0 order by price desc, quantity desc;");
 				ArrayList<HashMap<String, Object>> ordersBuy = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -631,6 +692,8 @@ public class Server implements Runnable {
 				attributes.put("min_version_minor", Util.getMinMinorVersion());
 				attributes.put("version_major", Config.majorVersion);
 				attributes.put("version_minor", Config.minorVersion);
+				attributes.put("max_width", Config.maxWidth);
+				attributes.put("market_making_address", Config.marketMakingAddress);								
 				Blocks.getInstance().versionCheck();
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 				
@@ -662,8 +725,33 @@ public class Server implements Runnable {
 				
 				Database db = Database.getInstance();
 				
+				//get quotes
+				ResultSet rs = db.executeQuery("select * from quotes where validity='valid';");
+				ArrayList<HashMap<String, Object>> quotes = new ArrayList<HashMap<String, Object>>();
+				try {
+					while (rs.next()) {
+						HashMap<String,Object> map = new HashMap<String,Object>();
+						map.put("cha_amount", BigInteger.valueOf(rs.getLong("cha_amount")).doubleValue()/Config.unit.doubleValue());
+						map.put("btc_amount", BigInteger.valueOf(rs.getLong("btc_amount")).doubleValue()/Config.unit.doubleValue());
+						map.put("cha_remaining", BigInteger.valueOf(rs.getLong("cha_remaining")).doubleValue()/Config.unit.doubleValue());
+						map.put("btc_remaining", BigInteger.valueOf(rs.getLong("btc_remaining")).doubleValue()/Config.unit.doubleValue());
+						Double price = BigInteger.valueOf(rs.getLong("btc_amount")).doubleValue()/BigInteger.valueOf(rs.getLong("cha_amount")).doubleValue();						
+						Double width = rs.getDouble("width");
+						map.put("price", price);						
+						map.put("bid", price*(1-width/2.0));
+						map.put("offer", price*(1+width/2.0));						
+						map.put("width", width);
+						map.put("source", rs.getString("source"));
+						map.put("destination", rs.getString("destination"));
+						map.put("tx_hash", rs.getString("tx_hash"));
+						quotes.add(map);
+					}
+				} catch (SQLException e) {
+				}
+				attributes.put("quotes", quotes);				
+				
 				//get buy orders
-				ResultSet rs = db.executeQuery("select 1.0*give_amount/get_amount as price, get_remaining as quantity,tx_hash from orders where get_asset='CHA' and give_asset='BTC' and validity='valid' and give_remaining>0 and get_remaining>0 order by price desc, quantity desc;");
+				rs = db.executeQuery("select 1.0*give_amount/get_amount as price, get_remaining as quantity,tx_hash from orders where get_asset='CHA' and give_asset='BTC' and validity='valid' and give_remaining>0 and get_remaining>0 order by price desc, quantity desc;");
 				ArrayList<HashMap<String, Object>> ordersBuy = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -1180,21 +1268,6 @@ public class Server implements Runnable {
 				attributes.put("max_profit_percentage", Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
 				attributes.put("cards", (new Deck()).cardStrings());
-
-				if (request.queryParams().contains("form") && request.queryParams("form").equals("bet")) {
-					String source = request.queryParams("source");
-					Double rawBet = Double.parseDouble(request.queryParams("bet"));
-					Double chance = Double.parseDouble(request.queryParams("chance"));
-					Double payout = Double.parseDouble(request.queryParams("payout"));
-					BigInteger bet = new BigDecimal(rawBet*Config.unit).toBigInteger();
-					try {
-						Transaction tx = Bet.createDiceBet(source, bet, chance, payout);
-						blocks.sendTransaction(source,tx);
-						attributes.put("success", "Thank you for betting!");
-					} catch (Exception e) {
-						attributes.put("error", e.getMessage());
-					}
-				}
 				
 				Database db = Database.getInstance();
 				

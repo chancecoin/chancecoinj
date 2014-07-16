@@ -22,6 +22,7 @@ public class Config {
 	public static Integer serverPort = 8080;
 	public static String ConfigFile = "./resources/chancecoin.conf";
 	public static Boolean readOnly = false;
+	public static String donationAddress = "1CHANCeWHSRAfvfi4rwo8v6NEY64RfZYqB";
 	
 	//version
 	public static Integer majorVersion = 2;
@@ -39,6 +40,14 @@ public class Config {
 	public static Integer multiplier = 1000;
 	public static Integer multiplierInitial = 1500;
 	public static long burnCreationTime = 1395508676-1;
+	
+	//market making address
+	public static String marketMakingAddress = "1CHABTCsWGp25zjfDWjYrhejgP5V97Zv9r";
+	public static Double maxWidth = 0.05; //5%
+	
+	//fee address
+	public static String feeAddress = "1CHACHAGuuxTr8Yo9b9SQmUGLg9X5iSeKX";
+	public static Integer feeAddressFee = 20000;
 	
 	//casino
 	public static Double houseEdge = 0.01; //was 0.02 before block 298340

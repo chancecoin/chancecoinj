@@ -20,9 +20,32 @@
 										<div class="form-group">
 											<div class="input-group">
 												<span class="input-group-addon">#</span>
-												<input type="text" placeholder="bet size (CHA)" name="bet">
+												<input type="text" placeholder="bet size" name="bet">
 											</div>
 										</div>
+										<input type="hidden" name="resolution" value="instant">
+										<!--
+										<div class="form-group">
+											<div class="input-group">
+												<select name="resolution">
+													<option value="instant" selected="selected">Instant</option>
+													<option value="regular">Regular</option>
+												</select>
+											</div>
+										</div>
+										-->
+										<input type="hidden" name="asset" value="CHA">
+										<!--
+										<div class="form-group">
+											<div class="input-group">
+												<select name="asset">
+													<option value="BTC" selected="selected">BTC</option>
+													<option value="CHA">CHA</option>
+													<option value="BTC2">BTC and back</option>
+												</select>
+											</div>
+										</div>
+										-->
 										<div class="form-group">
 											<div class="input-group">
 												<span class="input-group-addon">%</span>
@@ -35,7 +58,6 @@
 												<input type="text" placeholder="payout" name="payout" onchange="document.getElementsByName('chance')[0].value=100/(parseFloat(document.getElementsByName('payout')[0].value)/(${1-house_edge}));">
 											</div>
 										</div>
-
 										<div class="form-group">
 											<div class="input-group">
 												<span class="input-group-btn">
@@ -60,10 +82,32 @@
 										<div class="form-group">
 											<div class="input-group">
 												<span class="input-group-addon">#</span>
-												<input type="text" placeholder="bet size (CHA)" name="bet">
+												<input type="text" placeholder="bet size" name="bet">
 											</div>
 										</div>
-
+										<input type="hidden" name="resolution" value="instant">
+										<!--
+										<div class="form-group">
+											<div class="input-group">
+												<select name="resolution">
+													<option value="instant" selected="selected">Instant</option>
+													<option value="regular">Regular</option>
+												</select>
+											</div>
+										</div>
+										-->
+										<input type="hidden" name="asset" value="CHA">
+										<!--
+										<div class="form-group">
+											<div class="input-group">
+												<select name="asset">
+													<option value="BTC" selected="selected">BTC</option>
+													<option value="CHA">CHA</option>
+													<option value="BTC2">BTC and back</option>
+												</select>
+											</div>
+										</div>
+										-->
 										<div class="form-group">
 											<div class="input-group">
 												<span class="input-group-btn">

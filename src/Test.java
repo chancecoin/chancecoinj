@@ -1,9 +1,16 @@
 import java.awt.List;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+
+import com.lambdaworks.crypto.SCrypt;
+import com.lambdaworks.crypto.SCryptUtil;
 
 //TODO: allow people to verify NY Lottery number calculation easily
 //TODO: force locale to avoid decimals, commas issue
@@ -22,9 +29,44 @@ import java.util.Arrays;
 //TODO: other ways to transactions/bet resolving faster?
 //TODO: scratch ticket solution: lock in randomness and bet offline
 //TODO: use n-of-3 multisig as per dexx7's suggestions
-//TODO: make chancecoin.com live
+//TODO: bet with BTC
+//TODO: make a wallet that just connects to chancecoin.com api instead of downloading blockchain
+//TODO: transaction chaining
 public class Test {
 
+	public static String solveScryptPuzzle(String betDescription) {
+		Date start = new Date();
+		String password = betDescription;
+		MessageDigest digest;
+		BigInteger bestValue = BigInteger.valueOf(16).pow(64);
+		BigInteger goal = bestValue.divide(BigInteger.valueOf(25000));
+		String scrypt = "";
+		while (bestValue.compareTo(goal)>=0) {
+			try {
+				scrypt = SCryptUtil.scrypt(password, 2048, 1, 1);
+				//System.out.println(scrypt);
+				digest = MessageDigest.getInstance("SHA-256");
+				byte[] hashBytes = digest.digest(scrypt.getBytes("UTF-8"));
+				BigInteger hashInteger = new BigInteger(1, hashBytes);
+				if (hashInteger.compareTo(bestValue)<0) {
+					bestValue = hashInteger;
+				}
+				String hash = hashInteger.toString(16);
+			} catch (Exception e1) {
+			}
+		}
+		Date end = new Date();
+		long timeDifference = end.getTime()-start.getTime();
+		System.out.println(timeDifference/1000);
+		return scrypt;
+	}
+	
+	public static Boolean checkScryptPuzzle(String scrypt, String betDescription) {
+		String password = betDescription;
+		Boolean result = SCryptUtil.check(password, scrypt);
+		return result;
+	}
+	
 	public static void main(String[] args) {
 //		Database db = Database.getInstance();
 //		ResultSet rs = db.executeQuery("select block_hash from blocks;");
@@ -42,6 +84,10 @@ public class Test {
 //			blocks.reDownloadBlockTransactions(block);
 //			blocks.parseBlock(block);
 //		}
+		String betDescription = "hi";
+		String scrypt = solveScryptPuzzle(betDescription);
+		System.out.println(scrypt);
+		System.out.println(checkScryptPuzzle(scrypt,betDescription));
 	}
 	
 }

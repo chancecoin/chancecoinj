@@ -317,8 +317,10 @@ public class Blocks implements Runnable {
 						}
 						parsing = false;
 					}
-					Bet.resolve();
 					Order.expire();
+					Quote.expire();
+					QuotePay.pay();
+					Bet.resolve();
 				}
 			} catch (Exception e) {
 				logger.error("Error during follow: "+e.toString());
@@ -358,8 +360,10 @@ public class Blocks implements Runnable {
 			for (Transaction tx : block.getTransactions()) {
 				importTransaction(tx, block, blockHeight);
 			}
-			Bet.resolve();
 			Order.expire();
+			Quote.expire();
+			QuotePay.pay();
+			Bet.resolve();
 		} catch (SQLException e) {
 		}
 	}
@@ -504,8 +508,10 @@ public class Blocks implements Runnable {
 				while (rs.next()) {
 					Integer blockIndex = rs.getInt("block_index");
 					parseBlock(blockIndex);
-					Bet.resolve();
 					Order.expire(blockIndex);
+					Quote.expire(blockIndex);
+					QuotePay.pay();
+					Bet.resolve();
 				}
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
@@ -578,6 +584,10 @@ public class Blocks implements Runnable {
 							Cancel.parse(txIndex, message);
 						} else if (messageType.get(3)==BTCPay.id.byteValue()) {
 							BTCPay.parse(txIndex, message);
+						} else if (messageType.get(3)==Quote.id.byteValue()) {
+							Quote.parse(txIndex, message);
+						} else if (messageType.get(3)==QuotePay.id.byteValue()) {
+							QuotePay.parse(txIndex, message);
 						}						
 					}
 				}
@@ -854,36 +864,10 @@ public class Blocks implements Runnable {
 
 				Blocks blocks = Blocks.getInstance();
 				//blocks.wallet.commitTx(txBet);
-				ListenableFuture<Transaction> future = null;
-				try {
-					logger.info("Broadcasting transaction: "+tx.getHashAsString());				
-					future = peerGroup.broadcastTransaction(tx);
-					int tries = 10;				
-					Boolean success = false;
-					while (tries>0 && !success) {
-						tries--;
-						List<UnspentOutput> unspents = Util.getUnspents(source);
-						for (UnspentOutput unspent : unspents) {
-							if (unspent.txid.equals(tx.getHashAsString())) {
-								success = true;
-								break;
-							}
-						}
-						//if (Util.getTransaction(tx.getHashAsString())!=null) {
-						//	success = true;
-						//}
-						Thread.sleep(5000);
-					}
-					if (!success) {
-						throw new Exception("Transaction timed out. Please try again.");
-					}
-
-					//future.get(60, TimeUnit.SECONDS);
-					//} catch (TimeoutException e) {
-					//	logger.error(e.toString());
-					//	future.cancel(true);
-				} catch (Exception e) {
-					throw new Exception("Transaction timed out. Please try again.");
+				if (Util.pushTx(rawTx)) {
+					
+				} else {
+					throw new Exception("The transaction did not go through successfully. Please try again.");	
 				}
 				logger.info("Importing transaction (assigning block number -1)");
 				blocks.importTransaction(tx, null, null);

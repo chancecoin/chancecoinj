@@ -47,18 +47,93 @@ public class Bet {
 				ResultSet rsCheck = db.executeQuery("select * from bets where tx_index='"+txIndex.toString()+"'");
 				if (rsCheck.next()) return;
 
+				BigInteger bet = BigInteger.ZERO;
+				Double chance = 0.0;
+				Double payout = 0.0;
+				ByteBuffer byteBuffer = null;
 				if (messageType.get(3) == idDice.byteValue() && message.size() == lengthDice) {
-					ByteBuffer byteBuffer = ByteBuffer.allocate(lengthDice);
+					byteBuffer = ByteBuffer.allocate(lengthDice);
 					for (byte b : message) {
 						byteBuffer.put(b);
 					}			
-					BigInteger bet = BigInteger.valueOf(byteBuffer.getLong(0));
-					Double chance = byteBuffer.getDouble(8);
-					Double payout = byteBuffer.getDouble(16);
-					Double houseEdge = Config.houseEdge;
+					bet = BigInteger.valueOf(byteBuffer.getLong(0));
+				} else if (messageType.get(3) == idPoker.byteValue() && message.size() == lengthPoker) {
+					byteBuffer = ByteBuffer.allocate(lengthPoker);
+					for (byte b : message) {
+						byteBuffer.put(b);
+					}			
+					bet = BigInteger.valueOf(byteBuffer.getLong(0));
+				}
+
+				String asset = "CHA";
+				String getBTCBack = "";
+				if (!destination.equals("")) {
+					asset = "BTC";
+					ResultSet rsAvailableCHAInBTC = db.executeQuery("select sum(btc_amount/cha_amount*(1+width/2)*cha_remaining) as available_cha_in_btc from quotes where validity='valid' and destination='"+destination+"' and cha_remaining>0 order by btc_amount/cha_amount*(1+width/2) asc, tx_index asc");
+					if (rsAvailableCHAInBTC.next() && BigInteger.valueOf(rsAvailableCHAInBTC.getLong("available_cha_in_btc")).compareTo(btcAmount)>=0) {
+						ResultSet rsQuotes = db.executeQuery("select * from quotes where validity='valid' and destination='"+destination+"' and cha_remaining>0 order by btc_amount/cha_amount*(1+width/2) asc, tx_index asc");
+						BigInteger btcFilled = BigInteger.ZERO;
+						BigInteger chaFilled = BigInteger.ZERO;
+						try {
+							while (rsQuotes.next()) {
+								String quoteTxIndex = rsQuotes.getString("tx_index");
+								String quoteTxHash = rsQuotes.getString("tx_hash");
+								String quoteSource = rsQuotes.getString("source");
+								String quoteDestination = rsQuotes.getString("destination");
+								BigInteger chaRemaining = BigInteger.valueOf(rs.getLong("cha_remaining"));
+								BigInteger btcQuote = BigInteger.valueOf(rs.getLong("btc_amount"));
+								BigInteger chaQuote = BigInteger.valueOf(rs.getLong("cha_amount"));
+								Double width = rs.getDouble("width");
+								Double price = btcQuote.doubleValue() / chaQuote.doubleValue() * (1+width/2);
+								BigInteger availableCHAInBTC = new BigDecimal(price * chaRemaining.doubleValue()).toBigInteger();
+								if (availableCHAInBTC.compareTo(btcAmount.subtract(btcFilled))<0) {
+									//we take down all of the quote
+									BigInteger btcToFill = availableCHAInBTC;
+									BigInteger chaToFill = chaRemaining;
+									btcFilled = btcFilled.add(btcToFill);
+									chaFilled = chaFilled.add(chaToFill);
+									chaRemaining = BigInteger.ZERO;
+									db.executeUpdate("update quotes set cha_available='"+chaRemaining+"' where tx_index = '"+quoteTxIndex+"'");
+									Util.credit(source, "CHA", chaToFill, "Quote fill", txHash, blockIndex);
+									Util.debit(quoteDestination, "CHA", chaToFill, "Quote fill", txHash, blockIndex);
+									String quotePayId = txHash + quoteTxHash;
+									db.executeUpdate("insert into quotepays (id,tx_hash_buy,tx_hash_sell,source,destination,btc_amount,validity) values('"+quotePayId+"','"+txHash+"','"+quoteTxHash+"','"+destination+"','"+quoteSource+"','"+btcToFill+"','pending')");
+								} else {
+									//we take down a fraction of the quote, and we are done
+									BigInteger btcToFill = btcAmount.subtract(btcFilled);
+									BigInteger chaToFill = new BigDecimal(btcFilled.doubleValue() / price).toBigInteger();
+									btcFilled = btcFilled.add(btcToFill);
+									chaFilled = chaFilled.add(chaToFill);
+									chaRemaining = chaRemaining.subtract(chaToFill);
+									db.executeUpdate("update quotes set cha_available='"+chaRemaining+"' where tx_index = '"+quoteTxIndex+"'");
+									Util.credit(source, "CHA", chaToFill, "Quote fill", txHash, blockIndex);
+									Util.debit(quoteDestination, "CHA", chaToFill, "Quote fill", txHash, blockIndex);
+									String quotePayId = txHash + quoteTxHash;
+									db.executeUpdate("insert into quotepays (id,tx_hash_buy,tx_hash_sell,source,destination,btc_amount,validity) values('"+quotePayId+"','"+txHash+"','"+quoteTxHash+"','"+destination+"','"+quoteSource+"','"+btcToFill+"','pending')");
+									break;
+								}
+							}
+						} catch (SQLException e) {	
+						}
+						if (bet.compareTo(BigInteger.ZERO)<=0) {
+							getBTCBack = "true";
+						}
+						//convert the BTC bet to CHA
+						bet = chaFilled;
+					} else {
+						//not enough available CHA on quotes, must return BTC
+						db.executeUpdate("insert into quotepays (id,tx_hash_buy,tx_hash_sell,source,destination,btc_amount,validity) values('"+txHash+txHash+"','"+txHash+"','"+txHash+"','"+destination+"','"+source+"','"+btcAmount+"','pending')");
+						return;
+					}
+				}
+
+				if (messageType.get(3) == idDice.byteValue() && message.size() == lengthDice) {
+					chance = byteBuffer.getDouble(8);
+					payout = byteBuffer.getDouble(16);
+
 					//PROTOCOL CHANGE
 					Double oldHouseEdge = 0.02;
-					Boolean payoutChanceCongruent = Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-houseEdge)),6) || Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-oldHouseEdge)),6);
+					Boolean payoutChanceCongruent = Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-Config.houseEdge)),6) || Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-oldHouseEdge)),6);
 					BigInteger chaSupply = Util.chaSupplyForBetting();
 					String validity = "invalid";
 					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
@@ -69,13 +144,8 @@ public class Bet {
 							}
 						}
 					}
-					db.executeUpdate("insert into bets(tx_index, tx_hash, block_index, source, bet, chance, payout, profit, cha_supply, validity) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+bet.toString()+"','"+chance.toString()+"','"+payout.toString()+"','0','"+chaSupply.toString()+"','"+validity+"')");					
+					db.executeUpdate("insert into bets(tx_index, tx_hash, block_index, source, bet, chance, payout, profit, cha_supply, validity, get_btc_back) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+bet.toString()+"','"+chance.toString()+"','"+payout.toString()+"','0','"+chaSupply.toString()+"','"+validity+"','"+getBTCBack+"')");					
 				} else if (messageType.get(3) == idPoker.byteValue() && message.size() == lengthPoker) {
-					ByteBuffer byteBuffer = ByteBuffer.allocate(lengthPoker);
-					for (byte b : message) {
-						byteBuffer.put(b);
-					}			
-					BigInteger bet = BigInteger.valueOf(byteBuffer.getLong(0));
 					Deck deal = new Deck();
 					deal.cards.clear();
 					for (int i = 0; i < 9; i++) {
@@ -86,8 +156,8 @@ public class Bet {
 						deal.cards.add(card);
 					}
 
-					Double chance = Deck.chanceOfWinning(deal.cards)*100.0;
-					Double payout = 100.0/chance*(1-Config.houseEdge);
+					chance = Deck.chanceOfWinning(deal.cards)*100.0;
+					payout = 100.0/chance*(1-Config.houseEdge);
 					Boolean payoutChanceCongruent = Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-Config.houseEdge)),6);
 					BigInteger chaSupply = Util.chaSupplyForBetting();
 					String validity = "invalid";
@@ -99,7 +169,7 @@ public class Bet {
 							}
 						}
 					}
-					db.executeUpdate("insert into bets(tx_index, tx_hash, block_index, source, bet, chance, payout, profit, cha_supply, validity, cards) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+bet.toString()+"','"+chance.toString()+"','"+payout.toString()+"','0','"+chaSupply.toString()+"','"+validity+"','"+deal.toString()+"')");
+					db.executeUpdate("insert into bets(tx_index, tx_hash, block_index, source, destination, bet, chance, payout, profit, cha_supply, validity, cards, get_btc_back) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+destination+"','"+bet.toString()+"','"+chance.toString()+"','"+payout.toString()+"','0','"+chaSupply.toString()+"','"+validity+"','"+deal.toString()+"','"+getBTCBack+"')");
 				}
 			}
 		} catch (SQLException e) {	
@@ -194,7 +264,7 @@ public class Bet {
 		return bets;
 	}
 
-	public static Transaction createDiceBet(String source, BigInteger bet, Double chance, Double payout) throws Exception {
+	public static Transaction createDiceBet(String source, String destination, String asset, String resolution, BigInteger bet, Double chance, Double payout) throws Exception {
 		BigInteger chaSupply = Util.chaSupplyForBetting();
 		if (source.equals("")) throw new Exception("Please specify a source address.");
 		if (!(bet.compareTo(BigInteger.ZERO)>0)) throw new Exception("Please bet more than zero.");
@@ -203,6 +273,21 @@ public class Bet {
 		if (!(Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-Config.houseEdge)),6))) throw new Exception("Please specify a chance and payout that are congruent."); 
 		if (!(bet.compareTo(Util.getBalance(source, "CHA"))<=0)) throw new Exception("Please specify a bet that is smaller than your CHA balance.");
 		if (!((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit)) throw new Exception("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
+
+		BigInteger btcAmount = BigInteger.ZERO;
+		if (asset.equals("BTC") && !destination.equals("")) { // bet with BTC, expect return in CHA
+			btcAmount = bet;
+		} else if (asset.equals("BTC2") && !destination.equals("")) { // bet with BTC, expect return in BTC
+			btcAmount = bet;
+			bet = bet.negate();
+		} else { // bet with CHA
+			destination = "";
+		}
+		
+		if (destination.equals("") && resolution.equals("instant")) {
+			destination = Config.feeAddress;
+			btcAmount = BigInteger.valueOf(Config.feeAddressFee);
+		}
 
 		Blocks blocks = Blocks.getInstance();
 		ByteBuffer byteBuffer = ByteBuffer.allocate(lengthDice+4);
@@ -220,11 +305,11 @@ public class Bet {
 		} catch (UnsupportedEncodingException e) {
 		}
 
-		Transaction tx = blocks.transaction(source, "", BigInteger.ZERO, BigInteger.valueOf(Config.minFee), dataString);
+		Transaction tx = blocks.transaction(source, destination, btcAmount, BigInteger.valueOf(Config.minFee), dataString);
 		return tx;
 	}
 
-	public static Transaction createPokerBet(String source, BigInteger bet, List<String> playerCards, List<String> boardCards, List<String> opponentCards) throws Exception {
+	public static Transaction createPokerBet(String source, String destination, String asset, String resolution, BigInteger bet, List<String> playerCards, List<String> boardCards, List<String> opponentCards) throws Exception {
 		//cards should be like 2C or TS, or ?? if they are random
 
 		BigInteger chaSupply = Util.chaSupplyForBetting();
@@ -272,6 +357,21 @@ public class Bet {
 		if (!(bet.compareTo(Util.getBalance(source, "CHA"))<=0)) throw new Exception("Please specify a bet that is smaller than your CHA balance.");
 		if (!((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit)) throw new Exception("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
 
+		BigInteger btcAmount = BigInteger.ZERO;
+		if (asset.equals("BTC") && !destination.equals("")) { // bet with BTC, expect return in CHA
+			btcAmount = bet;
+		} else if (asset.equals("BTC2") && !destination.equals("")) { // bet with BTC, expect return in BTC
+			btcAmount = bet;
+			bet = bet.negate();
+		} else { // bet with CHA
+			destination = "";
+		}
+		
+		if (destination.equals("") && resolution.equals("instant")) {
+			destination = Config.feeAddress;
+			btcAmount = BigInteger.valueOf(Config.feeAddressFee);
+		}
+
 		Blocks blocks = Blocks.getInstance();
 		ByteBuffer byteBuffer = ByteBuffer.allocate(lengthPoker+4);
 
@@ -291,7 +391,7 @@ public class Bet {
 		} catch (UnsupportedEncodingException e) {
 		}
 
-		Transaction tx = blocks.transaction(source, "", BigInteger.ZERO, BigInteger.valueOf(Config.minFee), dataString);
+		Transaction tx = blocks.transaction(source, destination, btcAmount, BigInteger.valueOf(Config.minFee), dataString);
 		return tx;
 	}	
 
@@ -349,17 +449,18 @@ public class Bet {
 		}
 		return null;
 	}
-
+	
 	public static void resolve() {
 		//resolve bets
 		logger.info("Resolving bets");
 
 		Database db = Database.getInstance();
-		ResultSet rs = db.executeQuery("select block_time,blocks.block_index as block_index,blocks.block_hash as block_hash,tx_index,tx_hash,source,bet,payout,chance,cha_supply,cards from bets,blocks where bets.block_index=blocks.block_index and bets.validity='valid' and bets.resolved IS NOT 'true';");
+		ResultSet rs = db.executeQuery("select block_time,blocks.block_index as block_index,blocks.block_hash as block_hash,tx_index,tx_hash,source,destination,bet,payout,chance,cha_supply,cards,get_btc_back from bets,blocks where bets.block_index=blocks.block_index and bets.validity='valid' and bets.resolved IS NOT 'true';");
 
 		try {
 			while (rs.next()) {
 				String source = rs.getString("source");
+				String destination = rs.getString("destination");
 				String txHash = rs.getString("tx_hash");
 				String blockHash = rs.getString("block_hash");
 				Integer txIndex = rs.getInt("tx_index");
@@ -368,6 +469,7 @@ public class Bet {
 				Double payout = rs.getDouble("payout");
 				Double chance = rs.getDouble("chance");
 				String cards = rs.getString("cards");
+				String getBTCBack = rs.getString("get_btc_back");
 				BigInteger chaSupply = BigInteger.valueOf(rs.getLong("cha_supply"));
 				Date blockTime = new Date((long)rs.getLong("block_time")*1000);
 
@@ -378,7 +480,7 @@ public class Bet {
 
 				Double rollA = null;
 				Double rollC = 0.0;
-				
+
 				Integer block1 = 308500;
 				if (couldWin>20000.0 || blockIndex<block1) { //we must use NY Lottery numbers
 					List<BigInteger> lottoNumbers = getLottoNumbersAfterDate(blockTime);
@@ -400,6 +502,7 @@ public class Bet {
 					rollC = (new BigInteger(blockHash,16)).mod(BigInteger.valueOf(1000000000)).doubleValue()/1000000000.0;					
 				}
 
+				BigInteger chaCredit = BigInteger.ZERO;				
 				if (rollA != null) {
 					//PROTOCOL CHANGE:
 					// if block is less than 308500, then rollA uses lotto numbers, rollB uses txHash, rollC is 0
@@ -434,7 +537,7 @@ public class Bet {
 							//win
 							profit = new BigDecimal(bet.doubleValue()*(payout.doubleValue()-1.0)*chaSupply.doubleValue()/(chaSupply.doubleValue()-bet.doubleValue()*payout.doubleValue())).toBigInteger();
 							BigInteger credit = profit.add(bet);
-							Util.credit(source, "CHA", credit, "Bet won", txHash, blockIndex);
+							chaCredit = credit;
 						} else {
 							logger.info("The bet is a loser");
 							//lose
@@ -450,13 +553,69 @@ public class Bet {
 							//win
 							profit = new BigDecimal(bet.doubleValue()*(payout.doubleValue()-1.0)*chaSupply.doubleValue()/(chaSupply.doubleValue()-bet.doubleValue()*payout.doubleValue())).toBigInteger();
 							BigInteger credit = profit.add(bet);
-							Util.credit(source, "CHA", credit, "Bet won", txHash, blockIndex);
+							chaCredit = credit;
 						} else {
 							logger.info("The bet is a loser");
 							//lose
 							profit = bet.multiply(BigInteger.valueOf(-1));
 						}
 						db.executeUpdate("update bets set profit='"+profit.toString()+"', rolla='"+(rollA*100.0)+"', rollb='"+(rollB*100.0)+"', roll='"+roll+"', resolved='true' where tx_index='"+txIndex+"';");
+					}
+					if (chaCredit.compareTo(BigInteger.ZERO)>0) {
+						if (getBTCBack.equals("true")) {
+							ResultSet rsAvailableBTCInCHA = db.executeQuery("select sum(btc_remaining/(btc_amount/cha_amount*(1-width/2))) as available_btc_in_cha from quotes where validity='valid' and destination='"+destination+"' and btc_remaining>0 order by btc_amount/cha_amount*(1-width/2) desc, tx_index asc");
+							if (rsAvailableBTCInCHA.next() && BigInteger.valueOf(rsAvailableBTCInCHA.getLong("available_btc_in_cha")).compareTo(chaCredit)>=0) {
+								ResultSet rsQuotes = db.executeQuery("select * from quotes where validity='valid' and destination='"+destination+"' and btc_remaining>0 order by btc_amount/cha_amount*(1-width/2) desc, tx_index asc");
+								BigInteger btcFilled = BigInteger.ZERO;
+								BigInteger chaFilled = BigInteger.ZERO;
+								try {
+									while (rsQuotes.next()) {
+										String quoteTxIndex = rsQuotes.getString("tx_index");
+										String quoteTxHash = rsQuotes.getString("tx_hash");
+										String quoteSource = rsQuotes.getString("source");
+										String quoteDestination = rsQuotes.getString("destination");
+										BigInteger btcRemaining = BigInteger.valueOf(rs.getLong("btc_remaining"));
+										BigInteger btcQuote = BigInteger.valueOf(rs.getLong("btc_amount"));
+										BigInteger chaQuote = BigInteger.valueOf(rs.getLong("cha_amount"));
+										Double width = rs.getDouble("width");
+										Double price = btcQuote.doubleValue() / chaQuote.doubleValue() * (1-width/2);
+										BigInteger availableBTCInCHA = new BigDecimal(btcRemaining.doubleValue() / price).toBigInteger();
+										if (availableBTCInCHA.compareTo(chaCredit.subtract(chaFilled))<0) {
+											//we take down all of the quote
+											BigInteger btcToFill = btcRemaining;
+											BigInteger chaToFill = availableBTCInCHA;
+											btcFilled = btcFilled.add(btcToFill);
+											chaFilled = chaFilled.add(chaToFill);
+											btcRemaining = BigInteger.ZERO;
+											db.executeUpdate("update quotes set btc_available='"+btcRemaining+"' where tx_index = '"+quoteTxIndex+"'");
+											Util.credit(quoteSource, "CHA", chaToFill, "Quote fill", txHash, blockIndex);
+											Util.debit(quoteDestination, "CHA", chaToFill, "Quote fill", txHash, blockIndex);
+											String quotePayId = quoteTxHash + txHash;
+											db.executeUpdate("insert into quotepays (id,tx_hash_buy,tx_hash_sell,buysell,source,destination,btc_amount,validity) values('"+quotePayId+"','"+quoteTxHash+"','"+txHash+"','"+destination+"','"+source+"','"+btcToFill+"','pending')");
+										} else {
+											//we take down a fraction of the quote, and we are done
+											BigInteger chaToFill = chaCredit.subtract(chaFilled);
+											BigInteger btcToFill = new BigDecimal(price * chaToFill.doubleValue()).toBigInteger();
+											btcFilled = btcFilled.add(btcToFill);
+											chaFilled = chaFilled.add(chaToFill);
+											btcRemaining = btcRemaining.subtract(btcToFill);
+											db.executeUpdate("update quotes set btc_available='"+btcRemaining+"' where tx_index = '"+quoteTxIndex+"'");
+											Util.credit(quoteSource, "CHA", chaToFill, "Quote fill", txHash, blockIndex);
+											Util.debit(quoteDestination, "CHA", chaToFill, "Quote fill", txHash, blockIndex);
+											String quotePayId = quoteTxHash + txHash;
+											db.executeUpdate("insert into quotepays (id,tx_hash_buy,tx_hash_sell,buysell,source,destination,btc_amount,validity) values('"+quotePayId+"','"+quoteTxHash+"','"+txHash+"','"+destination+"','"+quoteSource+"','"+btcToFill+"','pending')");
+											break;
+										}
+									}
+								} catch (SQLException e) {	
+								}
+							} else {
+								//not enough available BTC on quotes, must credit CHA instead
+								Util.credit(source, "CHA", chaCredit, "Bet won", txHash, blockIndex);
+							}
+						} else {
+							Util.credit(source, "CHA", chaCredit, "Bet won", txHash, blockIndex);
+						}
 					}
 				}
 			}

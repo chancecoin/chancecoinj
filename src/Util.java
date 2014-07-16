@@ -355,6 +355,23 @@ public class Util {
 			return BigInteger.ZERO;
 		}
 	}
+	
+	public static Boolean pushTx(String txHex) {
+		String result = getPage("http://api.bitwatch.co/pushtx/"+txHex);
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			PushTxResult pushTxResult = objectMapper.readValue(result, new TypeReference<PushTxResult>() {});
+			if (pushTxResult.status.equals("200") && pushTxResult.result.length()>10) {
+				return true;				 
+			} else {
+				return false;
+			}
+		} catch (Exception e) {
+			logger.error(e.toString());
+			return false;
+		}		
+	}
 
 	public static BigInteger getBalance(String address, String asset) {
 		Database db = Database.getInstance();
@@ -440,6 +457,14 @@ public class Util {
 			
 		}
 		return addresses;
+	}
+	
+	public static Boolean isOwnAddress(String address) {
+		List<String> addresses = getAddresses();
+		if (addresses.contains(address)) {
+			return true;
+		}
+		return false;
 	}
 
 	public static Integer getAssetId(String asset) {
@@ -594,6 +619,11 @@ class Ticker {
 
 class AddressInfo {
 	public Double result;
+}
+
+class PushTxResult {
+	public String status;
+	public String result;
 }
 
 class TransactionInfo {
