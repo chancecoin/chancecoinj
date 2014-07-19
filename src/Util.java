@@ -322,16 +322,33 @@ public class Util {
 		return false;
 	}
 
+	public static String transactionDetailAddress(String txHash) {
+		return "http://insight.bitpay.com/api/tx/"+txHash;
+	}
+
+	public static TransactionInfoInsight getTransactionInsight(String txHash) {
+		String result = getPage(transactionDetailAddress(txHash));
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			TransactionInfoInsight transactionInfo = objectMapper.readValue(result, new TypeReference<TransactionInfoInsight>() {});
+			return transactionInfo;
+		} catch (Exception e) {
+			logger.error(e.toString());
+			return null;
+		}
+	}	
+	
 	public static String transactionAddress(String txHash) {
 		return "https://api.biteasy.com/blockchain/v1/transactions/"+txHash;
 	}
 
-	public static TransactionInfo getTransaction(String txHash) {
+	public static TransactionInfoBiteasy getTransactionBiteasy(String txHash) {
 		String result = getPage(transactionAddress(txHash));
 		try {
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			TransactionInfo transactionInfo = objectMapper.readValue(result, new TypeReference<TransactionInfo>() {});
+			TransactionInfoBiteasy transactionInfo = objectMapper.readValue(result, new TypeReference<TransactionInfoBiteasy>() {});
 			return transactionInfo;
 		} catch (Exception e) {
 			logger.error(e.toString());
@@ -626,7 +643,7 @@ class PushTxResult {
 	public String result;
 }
 
-class TransactionInfo {
+class TransactionInfoBiteasy {
 	public Data data;
 
 	public static class Data {
@@ -634,6 +651,51 @@ class TransactionInfo {
 	}
 }
 
+class TransactionInfoInsight {
+	public String txid;
+	public List<Vin> vin;
+	public List<Vout> vout;
+}
+
+class Vin {
+	public String txid;
+	public Integer vout;
+	public ScriptSig scriptSig;
+	public String sequence;
+	public Integer n;
+	public String addr;
+	public Integer valueSat;
+	public Double value;
+}
+class Vout {
+	public Double value;
+	public Integer n;
+	public ScriptPubKey scriptPubKey;
+}
+class ScriptSig {
+	public String asm;
+}
+class ScriptPubKey {
+	public String asm;
+	public Integer reqSigs;
+	public String type;
+	public List<String> addresses;
+}
+
 class UnspentOutputs {
 	public List<UnspentOutput> result;
+}
+
+class UnspentOutput {
+    public Double amount;
+    public String txid;
+    public Integer vout;
+    public String type;
+    public Integer confirmations;
+    public ScriptPubKey scriptPubKey;
+    
+    public class ScriptPubKey {
+    	public String asm;
+    	public String hex;
+    }
 }

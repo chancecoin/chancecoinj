@@ -99,7 +99,7 @@ public class Database {
 			executeUpdate("ALTER TABLE bets add destination TEXT;");
 
 			// Rolls
-			executeUpdate("CREATE TABLE IF NOT EXISTS rolls(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, destination TEXT, roll_tx_hash TEXT, validity TEXT)");
+			executeUpdate("CREATE TABLE IF NOT EXISTS rolls(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, destination TEXT, roll_tx_hash TEXT, roll REAL, validity TEXT)");
 			executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON rolls (block_index)");
 
 			// Quotes for market making book

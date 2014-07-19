@@ -67,7 +67,7 @@ public class Bet {
 
 				String asset = "CHA";
 				String getBTCBack = "";
-				if (!destination.equals("")) {
+				if (!destination.equals("") && !destination.equals(Config.feeAddress)) {
 					asset = "BTC";
 					ResultSet rsAvailableCHAInBTC = db.executeQuery("select sum(btc_amount/cha_amount*(1+width/2)*cha_remaining) as available_cha_in_btc from quotes where validity='valid' and destination='"+destination+"' and cha_remaining>0 order by btc_amount/cha_amount*(1+width/2) asc, tx_index asc");
 					if (rsAvailableCHAInBTC.next() && BigInteger.valueOf(rsAvailableCHAInBTC.getLong("available_cha_in_btc")).compareTo(btcAmount)>=0) {
@@ -196,6 +196,14 @@ public class Bet {
 					List<Byte> messageType = blocks.getMessageTypeFromTransaction(dataString);
 					List<Byte> message = blocks.getMessageFromTransaction(dataString);
 
+					//check for pending roll
+					for (UnspentOutput unspent : Util.getUnspents(Config.donationAddress)) {
+						if (unspent.confirmations.equals(0)) {
+							TransactionInfoInsight txInfo = Util.getTransactionInsight(unspent.txid);
+							
+						}
+					}
+					
 					if (messageType.get(3)==Bet.idDice.byteValue() && message.size() == lengthDice) {
 						ByteBuffer byteBuffer = ByteBuffer.allocate(lengthDice);
 						for (byte b : message) {

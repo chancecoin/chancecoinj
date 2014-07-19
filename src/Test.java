@@ -68,6 +68,10 @@ public class Test {
 	}
 	
 	public static void main(String[] args) {
+		Blocks blocks = Blocks.getInstanceAndWait();
+		blocks.reDownloadBlockTransactions(311084);
+		blocks.parseBlock(311084);
+
 //		Database db = Database.getInstance();
 //		ResultSet rs = db.executeQuery("select block_hash from blocks;");
 //		try {
@@ -84,10 +88,10 @@ public class Test {
 //			blocks.reDownloadBlockTransactions(block);
 //			blocks.parseBlock(block);
 //		}
-		String betDescription = "hi";
-		String scrypt = solveScryptPuzzle(betDescription);
-		System.out.println(scrypt);
-		System.out.println(checkScryptPuzzle(scrypt,betDescription));
+//		String betDescription = "hi";
+//		String scrypt = solveScryptPuzzle(betDescription);
+//		System.out.println(scrypt);
+//		System.out.println(checkScryptPuzzle(scrypt,betDescription));
 	}
 	
 }
