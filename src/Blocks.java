@@ -370,6 +370,43 @@ public class Blocks implements Runnable {
 		}
 	}
 
+	public List<Byte> scriptToDataArrayList(Script script) {
+		return scriptToDataArrayList(script, null);
+	}
+	public List<Byte> scriptToDataArrayList(Script script, List<Byte> dataArrayList) {
+		if (dataArrayList == null) {
+			dataArrayList = new ArrayList<Byte>(); 
+		}
+		List<ScriptChunk> asm = script.getChunks();
+		if (asm.size()==2 && asm.get(0).equalsOpCode(106)) { //OP_RETURN
+			for (byte b : asm.get(1).data) dataArrayList.add(b);
+		} else if (asm.size()>=5 && asm.get(0).equalsOpCode(81) && asm.get(3).equalsOpCode(82) && asm.get(4).equalsOpCode(174)) { //MULTISIG
+			for (int i=1; i<asm.get(2).data[0]+1; i++) dataArrayList.add(asm.get(2).data[i]);
+		}
+		return dataArrayList;
+	}
+	
+	public byte[] dataArrayListToDataArray(List<Byte> dataArrayList) {
+		byte[] data = null;
+		byte[] prefixBytes = Config.prefix.getBytes();
+		byte[] dataPrefixBytes = Util.toByteArray(dataArrayList.subList(0, Config.prefix.length()));
+		dataArrayList = dataArrayList.subList(Config.prefix.length(), dataArrayList.size());
+		data = Util.toByteArray(dataArrayList);
+		if (!Arrays.equals(prefixBytes,dataPrefixBytes)) {
+			return null;
+		}
+		return data;
+	}
+	
+	public String dataArrayToString(byte[] data) {
+		String dataString = "";
+		try {
+			dataString = new String(data,"ISO-8859-1");
+		} catch (UnsupportedEncodingException e) {
+		}
+		return dataString;
+	}
+	
 	public void importTransaction(Transaction tx, Block block, Integer blockHeight) {
 		BigInteger fee = BigInteger.ZERO;
 		String destination = "";
@@ -397,14 +434,7 @@ public class Blocks implements Runnable {
 			//fee = fee.subtract(out.getValue()); //TODO, turn this on
 			try {
 				Script script = out.getScriptPubKey();
-				System.out.println(script.toString());
-				List<ScriptChunk> asm = script.getChunks();
-				System.out.println(asm.toString());
-				if (asm.size()==2 && asm.get(0).equalsOpCode(106)) { //OP_RETURN
-					for (byte b : asm.get(1).data) dataArrayList.add(b);
-				} else if (asm.size()>=5 && asm.get(0).equalsOpCode(81) && asm.get(3).equalsOpCode(82) && asm.get(4).equalsOpCode(174)) { //MULTISIG
-					for (int i=1; i<asm.get(2).data[0]+1; i++) dataArrayList.add(asm.get(2).data[i]);
-				}
+				dataArrayList = scriptToDataArrayList(script, dataArrayList);
 
 				if (destination.equals("") && btcAmount==BigInteger.ZERO && dataArrayList.size()==0) {
 					Address address = script.getToAddress(params);
@@ -416,11 +446,8 @@ public class Blocks implements Runnable {
 		}
 		if (destination.equals(Config.burnAddress)) {
 		} else if (dataArrayList.size()>Config.prefix.length()) {
-			byte[] prefixBytes = Config.prefix.getBytes();
-			byte[] dataPrefixBytes = Util.toByteArray(dataArrayList.subList(0, Config.prefix.length()));
-			dataArrayList = dataArrayList.subList(Config.prefix.length(), dataArrayList.size());
-			data = Util.toByteArray(dataArrayList);
-			if (!Arrays.equals(prefixBytes,dataPrefixBytes)) {
+			data = dataArrayListToDataArray(dataArrayList);
+			if (data==null) {
 				return;
 			}
 		} else {
@@ -450,10 +477,7 @@ public class Blocks implements Runnable {
 			String dataString = "";
 			if (destination.equals(Config.burnAddress)) {
 			}else{
-				try {
-					dataString = new String(data,"ISO-8859-1");
-				} catch (UnsupportedEncodingException e) {
-				}
+				dataString = dataArrayToString(data);
 			}
 			db.executeUpdate("delete from transactions where tx_hash='"+tx.getHashAsString()+"' and block_index<0");
 			ResultSet rs = db.executeQuery("select * from transactions where tx_hash='"+tx.getHashAsString()+"';");

@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
 
+import javax.xml.bind.DatatypeConverter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +24,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.script.Script;
+import com.google.bitcoin.script.ScriptBuilder;
+import com.google.bitcoin.script.ScriptOpCodes;
 
 public class Bet {
 	static Logger logger = LoggerFactory.getLogger(Bet.class);
@@ -196,14 +201,55 @@ public class Bet {
 					List<Byte> messageType = blocks.getMessageTypeFromTransaction(dataString);
 					List<Byte> message = blocks.getMessageFromTransaction(dataString);
 
+					Double roll = null;
 					//check for pending roll
 					for (UnspentOutput unspent : Util.getUnspents(Config.donationAddress)) {
 						if (unspent.confirmations.equals(0)) {
 							TransactionInfoInsight txInfo = Util.getTransactionInsight(unspent.txid);
-							
+							List<Byte> dataArrayList = null;
+							if (txInfo != null && txInfo.vout != null && txInfo.vout.size()>0) {
+								for (Vout vout : txInfo.vout) {
+									ScriptBuilder sb = new ScriptBuilder();
+									String asm = vout.scriptPubKey.asm;
+									for (String opcode : asm.split(" ")) {
+										if (opcode.equals("1")) {
+											sb.op(ScriptOpCodes.OP_1);							
+										} else if (opcode.equals("2")) {
+											sb.op(ScriptOpCodes.OP_2);							
+										} else if (opcode.equals("OP_CHECKMULTISIG")) {
+											sb.op(ScriptOpCodes.OP_CHECKMULTISIG);							
+										} else {
+											try {
+												byte[] bytes = DatatypeConverter.parseHexBinary(opcode);
+												sb.data(bytes);							
+											} catch (Exception e) {								
+											}
+										}
+									}
+									Script script = sb.build();
+									dataArrayList = blocks.scriptToDataArrayList(script, dataArrayList);
+								}
+							}
+							if (dataArrayList!=null && dataArrayList.size()>0) {
+								byte[] data = blocks.dataArrayListToDataArray(dataArrayList);
+								String dataStringRoll = blocks.dataArrayToString(data);
+								List<Byte> messageTypeRoll = blocks.getMessageTypeFromTransaction(dataStringRoll);
+								List<Byte> messageRoll = blocks.getMessageFromTransaction(dataStringRoll);
+
+								if (messageTypeRoll.get(3)==Roll.id.byteValue() && messageRoll.size() == Roll.length) {
+									ByteBuffer byteBuffer = ByteBuffer.allocate(Roll.length);
+									for (byte b : messageRoll) {
+										byteBuffer.put(b);
+									}	
+									String rollTxHash = new BigInteger(1, Util.toByteArray(messageRoll.subList(0, 32))).toString(16);
+									if (rollTxHash.equals(txHash)) {
+										roll = byteBuffer.getDouble(32) * 100.0;									
+									}
+								}
+							}
 						}
 					}
-					
+
 					if (messageType.get(3)==Bet.idDice.byteValue() && message.size() == lengthDice) {
 						ByteBuffer byteBuffer = ByteBuffer.allocate(lengthDice);
 						for (byte b : message) {
@@ -227,7 +273,28 @@ public class Bet {
 									betInfo.payout = payout;
 									betInfo.source = source;
 									betInfo.txHash = txHash;
+									betInfo.roll = null;
+									betInfo.resolved = false;
+									betInfo.profit = null;
 									betInfo.betType = "dice";
+
+									if (roll != null) {
+										logger.info("Roll = "+roll.toString()+", chance = "+chance.toString());
+
+										BigInteger profit = BigInteger.ZERO;
+										if (roll<chance) {
+											logger.info("The bet is a winner");
+											//win
+											profit = new BigDecimal(bet.doubleValue()*(payout.doubleValue()-1.0)*chaSupply.doubleValue()/(chaSupply.doubleValue()-bet.doubleValue()*payout.doubleValue())).toBigInteger();
+										} else {
+											logger.info("The bet is a loser");
+											//lose
+											profit = bet.multiply(BigInteger.valueOf(-1));
+										}
+										betInfo.profit = profit.doubleValue()/Config.unit.doubleValue();
+										betInfo.roll = roll;
+										betInfo.resolved = true;
+									}
 									bets.add(betInfo);
 								}
 							}
@@ -244,6 +311,7 @@ public class Bet {
 						for (int i = 0; i < 9; i++) {
 							deal.cards.add(new Card(byteBuffer.getShort(8+2*i)));
 						}
+						String cards = deal.toString();
 						Double chance = Deck.chanceOfWinning(deal.cards) * 100.0;
 						Double payout = 100.0/chance*(1-Config.houseEdge);
 						Boolean payoutChanceCongruent = Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-Config.houseEdge)),6);
@@ -259,7 +327,45 @@ public class Bet {
 									betInfo.source = source;
 									betInfo.txHash = txHash;
 									betInfo.betType = "poker";
-									betInfo.cards = deal.toString();
+									betInfo.cards = cards;	
+									betInfo.roll = null;
+									betInfo.resolved = false;
+									betInfo.profit = null;
+									if (roll != null) {
+										Deck dealtSoFar = new Deck();
+										dealtSoFar.cards.clear();
+										Deck removedCards = new Deck();
+										removedCards.cards.clear();
+										for (String c : cards.split(" ")) {
+											Card card = new Card(c);
+											if (!card.toString().equals("??")) {
+												removedCards.cards.add(card);
+											}
+											dealtSoFar.cards.add(card);
+										}
+										Deck dealRandom = Deck.ShuffleAndDeal(roll / 100.0, removedCards.cards, dealtSoFar.cards.size()-removedCards.cards.size());
+										for (int j = 0; j<dealtSoFar.cards.size(); j++) {
+											if (dealtSoFar.cards.get(j).cardString().equals("??")) {
+												dealtSoFar.cards.set(j, dealRandom.cards.remove(0));
+											}
+										}
+										logger.info("Dealt cards = "+dealtSoFar.toString());
+
+										BigInteger profit = BigInteger.ZERO;
+										if (Deck.didWin(dealtSoFar.cards)) {
+											logger.info("The bet is a winner");
+											//win
+											profit = new BigDecimal(bet.doubleValue()*(payout.doubleValue()-1.0)*chaSupply.doubleValue()/(chaSupply.doubleValue()-bet.doubleValue()*payout.doubleValue())).toBigInteger();
+										} else {
+											logger.info("The bet is a loser");
+											//lose
+											profit = bet.multiply(BigInteger.valueOf(-1));
+										}
+										betInfo.profit = profit.doubleValue()/Config.unit.doubleValue();
+										betInfo.roll = roll;
+										betInfo.cards = dealtSoFar.toString();
+										betInfo.resolved = true;
+									}
 									bets.add(betInfo);
 								}
 							}
@@ -291,7 +397,7 @@ public class Bet {
 		} else { // bet with CHA
 			destination = "";
 		}
-		
+
 		if (destination.equals("") && resolution.equals("instant")) {
 			destination = Config.feeAddress;
 			btcAmount = BigInteger.valueOf(Config.feeAddressFee);
@@ -374,7 +480,7 @@ public class Bet {
 		} else { // bet with CHA
 			destination = "";
 		}
-		
+
 		if (destination.equals("") && resolution.equals("instant")) {
 			destination = Config.feeAddress;
 			btcAmount = BigInteger.valueOf(Config.feeAddressFee);
@@ -457,7 +563,7 @@ public class Bet {
 		}
 		return null;
 	}
-	
+
 	public static void resolve() {
 		//resolve bets
 		logger.info("Resolving bets");
@@ -486,7 +592,9 @@ public class Bet {
 				Double couldWin = rsCouldWin.getDouble("total");
 				couldWin = couldWin / Config.unit;
 
+				Double roll = null;
 				Double rollA = null;
+				Double rollB = null;
 				Double rollC = 0.0;
 
 				Integer block1 = 308500;
@@ -510,15 +618,23 @@ public class Bet {
 					rollC = (new BigInteger(blockHash,16)).mod(BigInteger.valueOf(1000000000)).doubleValue()/1000000000.0;					
 				}
 
-				BigInteger chaCredit = BigInteger.ZERO;				
 				if (rollA != null) {
 					//PROTOCOL CHANGE:
 					// if block is less than 308500, then rollA uses lotto numbers, rollB uses txHash, rollC is 0
 					// if block is greater than 308500, then rollA uses lotto number if block could win more than 20,000 CHA, rollB uses txHash, rollC uses block hash
-					Double rollB = (new BigInteger(txHash.substring(10, txHash.length()),16)).mod(BigInteger.valueOf(1000000000)).doubleValue()/1000000000.0;
-					Double roll = (rollA + rollB + rollC) % 1.0;
+					rollB = (new BigInteger(txHash.substring(10, txHash.length()),16)).mod(BigInteger.valueOf(1000000000)).doubleValue()/1000000000.0;
+					roll = (rollA + rollB + rollC) % 1.0;
 					roll = roll * 100.0;
+				}
 
+				// Instant bets are resolved using Roll transactions
+				ResultSet rsRoll = db.executeQuery("select * from rolls where roll_tx_hash='"+txHash+"' and block_index='"+blockIndex.toString()+"'");
+				if (rsRoll.next()) {
+					roll = rsRoll.getDouble("roll");
+				}
+
+				BigInteger chaCredit = BigInteger.ZERO;				
+				if (roll != null) {
 					if (cards!=null && cards.length()>0) { //poker bet
 						Deck dealtSoFar = new Deck();
 						dealtSoFar.cards.clear();
@@ -652,5 +768,6 @@ class BetInfo {
 	public Boolean valid;
 	public Boolean resolved;
 	public Double profit;
+	public Double roll;
 	public String cards;
 }

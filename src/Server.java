@@ -1445,6 +1445,12 @@ public class Server implements Runnable {
 					map.put("chance", betInfo.chance);
 					map.put("payout", betInfo.payout);
 					map.put("cards", betInfo.cards);
+					map.put("roll", betInfo.roll);
+					if (betInfo.cards!=null && betInfo.resolved==true) {
+						map.put("cards_result", Deck.result(new Deck(betInfo.cards).cards));
+					}
+					if (betInfo.resolved) map.put("resolved", "true");
+					map.put("profit", betInfo.profit);
 					map.put("tx_hash", betInfo.txHash);
 					bets.add(map);
 				}
@@ -1671,6 +1677,12 @@ public class Server implements Runnable {
 					map.put("chance", betInfo.chance);
 					map.put("payout", betInfo.payout);
 					map.put("cards", betInfo.cards);
+					map.put("roll", betInfo.roll);
+					if (betInfo.cards!=null && betInfo.resolved==true) {
+						map.put("cards_result", Deck.result(new Deck(betInfo.cards).cards));
+					}
+					if (betInfo.resolved) map.put("resolved", "true");
+					map.put("profit", betInfo.profit);
 					map.put("tx_hash", betInfo.txHash);
 					bets.add(map);
 				}

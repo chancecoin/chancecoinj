@@ -54,7 +54,7 @@ public class Roll {
 					for (byte b : message) {
 						byteBuffer.put(b);
 					}
-					Double roll = byteBuffer.getDouble(32);
+					Double roll = byteBuffer.getDouble(32) * 100.0;
 
 					String validity = "invalid";
 					if (source.equals(Config.feeAddress)) {
