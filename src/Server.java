@@ -255,7 +255,7 @@ public class Server implements Runnable {
 				Blocks blocks = Blocks.getInstance();
 				
 				if (request.queryParams().contains("reparse") && !Config.readOnly) {
-					blocks.reparse();
+					blocks.reparse(true);
 				}
 				if (request.queryParams().contains("redownload") && !Config.readOnly) {
 					blocks.deleteDatabases();
@@ -529,23 +529,23 @@ public class Server implements Runnable {
 						attributes.put("error", e.getMessage());
 					}
 				}
-				if (request.queryParams().contains("form") && request.queryParams("form").equals("quote")) {
-					String source = request.queryParams("source");
-					Double price = Double.parseDouble(request.queryParams("price"));
-					Double width = Double.parseDouble(request.queryParams("width"));
-					Double rawQuantity = Double.parseDouble(request.queryParams("quantity"));
-					BigInteger chaQuote = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
-					BigInteger btcQuote = new BigDecimal(chaQuote.doubleValue() * price).toBigInteger();
-					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
-					String destination = Config.marketMakingAddress;
-					try {
-						Transaction tx = Quote.create(source, destination, btcQuote, chaQuote, width, expiration);
-						blocks.sendTransaction(source,tx);
-						attributes.put("success", "Your quote was successful.");
-					} catch (Exception e) {
-						attributes.put("error", e.getMessage());
-					}					
-				}
+//				if (request.queryParams().contains("form") && request.queryParams("form").equals("quote")) {
+//					String source = request.queryParams("source");
+//					Double price = Double.parseDouble(request.queryParams("price"));
+//					Double width = Double.parseDouble(request.queryParams("width"));
+//					Double rawQuantity = Double.parseDouble(request.queryParams("quantity"));
+//					BigInteger chaQuote = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
+//					BigInteger btcQuote = new BigDecimal(chaQuote.doubleValue() * price).toBigInteger();
+//					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
+//					String destination = Config.marketMakingAddress;
+//					try {
+//						Transaction tx = Quote.create(source, destination, btcQuote, chaQuote, width, expiration);
+//						blocks.sendTransaction(source,tx);
+//						attributes.put("success", "Your quote was successful.");
+//					} catch (Exception e) {
+//						attributes.put("error", e.getMessage());
+//					}					
+//				}
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("buy")) {
 					String source = request.queryParams("source");
 					Double price = Double.parseDouble(request.queryParams("price"));

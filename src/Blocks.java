@@ -175,7 +175,7 @@ public class Blocks implements Runnable {
 				}
 				String fileBTCdb = Config.dbPath+Config.appName.toLowerCase()+".h2.db";
 				Database db = Database.getInstance();
-				
+
 				//reasons to redownload:
 				ResultSet rsPokerBets = db.executeQuery("select * from bets where cards is not null;");
 				Boolean shouldReDownload = !new File(fileBTCdb).exists() || !rsPokerBets.next();
@@ -256,9 +256,7 @@ public class Blocks implements Runnable {
 		if ((!working && initialized) || force) {
 			statusMessage = "Checking block height";
 			logger.info(statusMessage);
-			if (!force) {
-				working = true;
-			}
+			working = true;
 			try {
 				//catch Chancecoin up to Bitcoin
 				Integer blockHeight = getHeight();
@@ -318,18 +316,14 @@ public class Blocks implements Runnable {
 						parsing = false;
 					}
 					Order.expire();
-					Quote.expire();
-					QuotePay.pay();
-					Bet.resolve();
-					Roll.serviceRollRequests();
+					//Quote.expire();
+					//QuotePay.pay();
 				}
 			} catch (Exception e) {
 				logger.error("Error during follow: "+e.toString());
 				e.printStackTrace();
 			}	
-			if (!force) {
-				working = false;
-			}
+			working = false;
 		}
 	}
 
@@ -362,10 +356,9 @@ public class Blocks implements Runnable {
 				importTransaction(tx, block, blockHeight);
 			}
 			Order.expire();
-			Quote.expire();
-			QuotePay.pay();
+			//Quote.expire();
+			//QuotePay.pay();
 			Bet.resolve();
-			Roll.serviceRollRequests();
 		} catch (SQLException e) {
 		}
 	}
@@ -385,7 +378,7 @@ public class Blocks implements Runnable {
 		}
 		return dataArrayList;
 	}
-	
+
 	public byte[] dataArrayListToDataArray(List<Byte> dataArrayList) {
 		byte[] data = null;
 		byte[] prefixBytes = Config.prefix.getBytes();
@@ -397,7 +390,7 @@ public class Blocks implements Runnable {
 		}
 		return data;
 	}
-	
+
 	public String dataArrayToString(byte[] data) {
 		String dataString = "";
 		try {
@@ -406,7 +399,7 @@ public class Blocks implements Runnable {
 		}
 		return dataString;
 	}
-	
+
 	public void importTransaction(Transaction tx, Block block, Integer blockHeight) {
 		BigInteger fee = BigInteger.ZERO;
 		String destination = "";
@@ -513,6 +506,7 @@ public class Blocks implements Runnable {
 		db.executeUpdate("delete from order_matches;");
 		db.executeUpdate("delete from btcpays;");
 		db.executeUpdate("delete from bets;");
+		db.executeUpdate("delete from rolls;");
 		db.executeUpdate("delete from burns;");
 		db.executeUpdate("delete from cancels;");
 		db.executeUpdate("delete from order_expirations;");
@@ -527,9 +521,7 @@ public class Blocks implements Runnable {
 	public void parseFrom(Integer blockNumber, Boolean force) {
 		if (!working || force) {
 			parsing = true;
-			if (!force) {
-				working = true;
-			}
+			working = true;
 			Database db = Database.getInstance();
 			ResultSet rs = db.executeQuery("select * from blocks where block_index>="+blockNumber.toString()+" order by block_index asc;");
 			try {
@@ -537,18 +529,15 @@ public class Blocks implements Runnable {
 					Integer blockIndex = rs.getInt("block_index");
 					parseBlock(blockIndex);
 					Order.expire(blockIndex);
-					Quote.expire(blockIndex);
-					QuotePay.pay();
+					//Quote.expire(blockIndex);
+					//QuotePay.pay();
 					Bet.resolve();
-					Roll.serviceRollRequests();
 				}
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			if (!force) {
-				working = false;
-			}
+			working = false;
 			parsing = false;
 		}
 	}
@@ -614,12 +603,12 @@ public class Blocks implements Runnable {
 							Cancel.parse(txIndex, message);
 						} else if (messageType.get(3)==BTCPay.id.byteValue()) {
 							BTCPay.parse(txIndex, message);
-						} else if (messageType.get(3)==Quote.id.byteValue()) {
-							Quote.parse(txIndex, message);
-						} else if (messageType.get(3)==QuotePay.id.byteValue()) {
-							QuotePay.parse(txIndex, message);
 						} else if (messageType.get(3)==Roll.id.byteValue()) {
 							Roll.parse(txIndex, message);
+							//} else if (messageType.get(3)==Quote.id.byteValue()) {
+							//	Quote.parse(txIndex, message);
+							//} else if (messageType.get(3)==QuotePay.id.byteValue()) {
+							//	QuotePay.parse(txIndex, message);
 						}						
 					}
 				}
@@ -817,27 +806,27 @@ public class Blocks implements Runnable {
 				try {
 					if ((script.isSentToAddress() && (totalOutput.compareTo(totalInput)>0 || !atLeastOneRegularInput)) || (script.isSentToMultiSig())) {
 						//if we have this transaction in our wallet already, we shall confirm that it is not already spent
-						if (wallet.getTransaction(new Sha256Hash(txHash))==null || wallet.getTransaction(new Sha256Hash(txHash)).getOutput(unspent.vout).isAvailableForSpending()) {
-							if (script.isSentToAddress()) {
-								atLeastOneRegularInput = true;
-							}
-							Sha256Hash sha256Hash = new Sha256Hash(txHash);	
-							TransactionOutPoint txOutPt = new TransactionOutPoint(params, unspent.vout, sha256Hash);
-							for (ECKey key : wallet.getKeys()) {
-								try {
-									if (key.toAddress(params).equals(new Address(params, source))) {
-										//System.out.println("Spending "+sha256Hash+" "+unspent.vout);
-										totalInput = totalInput.add(BigDecimal.valueOf(unspent.amount*Config.unit).toBigInteger());
-										TransactionInput input = new TransactionInput(params, tx, new byte[]{}, txOutPt);
-										tx.addInput(input);
-										inputScripts.add(script);
-										inputKeys.add(key);
-										break;
-									}
-								} catch (AddressFormatException e) {
+						//if (wallet.getTransaction(new Sha256Hash(txHash))==null || wallet.getTransaction(new Sha256Hash(txHash)).getOutput(unspent.vout).isAvailableForSpending()) {
+						if (script.isSentToAddress()) {
+							atLeastOneRegularInput = true;
+						}
+						Sha256Hash sha256Hash = new Sha256Hash(txHash);	
+						TransactionOutPoint txOutPt = new TransactionOutPoint(params, unspent.vout, sha256Hash);
+						for (ECKey key : wallet.getKeys()) {
+							try {
+								if (key.toAddress(params).equals(new Address(params, source))) {
+									//System.out.println("Spending "+sha256Hash+" "+unspent.vout);
+									totalInput = totalInput.add(BigDecimal.valueOf(unspent.amount*Config.unit).toBigInteger());
+									TransactionInput input = new TransactionInput(params, tx, new byte[]{}, txOutPt);
+									tx.addInput(input);
+									inputScripts.add(script);
+									inputKeys.add(key);
+									break;
 								}
+							} catch (AddressFormatException e) {
 							}
 						}
+						//}
 					}
 				} catch (Exception e) {
 					logger.error("Error during transaction creation: "+e.toString());
@@ -897,7 +886,7 @@ public class Blocks implements Runnable {
 				Blocks blocks = Blocks.getInstance();
 				//blocks.wallet.commitTx(txBet);
 				if (Util.pushTx(rawTx)) {
-					
+
 				} else {
 					throw new Exception("The transaction did not go through successfully. Please try again.");	
 				}
