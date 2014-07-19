@@ -223,6 +223,25 @@ public class Server implements Runnable {
 				return results.toString();
 			}
 		});
+		post(new Route("/update_unresolved_bets") {
+			@Override
+			public Object handle(Request request, Response response) {
+				request.session(true);
+				String address = Util.getAddresses().get(0);
+				if (request.queryParams().contains("address")) {
+					address = request.queryParams("address");
+					request.session().attribute("address", address);
+				}
+				List<BetInfo> betsPending = Bet.getPending(address);
+				Integer numUnresolvedBets = 0;
+				for (BetInfo betInfo : betsPending) {
+					if (!betInfo.resolved) {
+						numUnresolvedBets++;
+					}	
+				}
+				return numUnresolvedBets;
+			}
+		});
 		get(new FreeMarkerRoute("/") {
 			@Override
 			public ModelAndView handle(Request request, Response response) {
@@ -1438,6 +1457,7 @@ public class Server implements Runnable {
 								
 				List<BetInfo> betsPending = Bet.getPending(address);
 				bets = new ArrayList<HashMap<String, Object>>();
+				Integer numUnresolvedBets = 0;
 				for (BetInfo betInfo : betsPending) {
 					HashMap<String,Object> map = new HashMap<String,Object>();
 					map.put("source", betInfo.source);
@@ -1449,13 +1469,18 @@ public class Server implements Runnable {
 					if (betInfo.cards!=null && betInfo.resolved==true) {
 						map.put("cards_result", Deck.result(new Deck(betInfo.cards).cards));
 					}
-					if (betInfo.resolved) map.put("resolved", "true");
+					if (betInfo.resolved) {
+						map.put("resolved", "true");
+					} else {
+						numUnresolvedBets++;
+					}
 					map.put("profit", betInfo.profit);
 					map.put("tx_hash", betInfo.txHash);
 					bets.add(map);
 				}
 				attributes.put("my_bets_pending", bets);
-				
+				attributes.put("num_unresolved_bets", numUnresolvedBets);
+								
 				return modelAndView(attributes, "casino.html");
 			}
 		});
@@ -1670,6 +1695,7 @@ public class Server implements Runnable {
 								
 				List<BetInfo> betsPending = Bet.getPending(address);
 				bets = new ArrayList<HashMap<String, Object>>();
+				Integer numUnresolvedBets = 0;
 				for (BetInfo betInfo : betsPending) {
 					HashMap<String,Object> map = new HashMap<String,Object>();
 					map.put("source", betInfo.source);
@@ -1681,13 +1707,19 @@ public class Server implements Runnable {
 					if (betInfo.cards!=null && betInfo.resolved==true) {
 						map.put("cards_result", Deck.result(new Deck(betInfo.cards).cards));
 					}
-					if (betInfo.resolved) map.put("resolved", "true");
+					if (betInfo.resolved) {
+						map.put("resolved", "true");
+					} else {
+						numUnresolvedBets++;
+					}
 					map.put("profit", betInfo.profit);
 					map.put("tx_hash", betInfo.txHash);
 					bets.add(map);
 				}
+				
 				attributes.put("my_bets_pending", bets);
-
+				attributes.put("num_unresolved_bets", numUnresolvedBets);
+				
 				return modelAndView(attributes, "casino.html");
 			}
 		});

@@ -44,7 +44,21 @@ function processAjaxRequest(urlString, formName, waitMessage) {
 			$(formName+" input").prop("disabled", false);
 			$(formName+" button").prop("disabled", false);
 			$(formName+" input").val("");
-			window.location.reload(true); 
+			window.location.reload(true);
+		}
+	});
+}
+
+function updateUnresolvedBets() {
+	$.ajax({
+		type: "POST",
+		url: "/update_unresolved_bets",
+		success: function(response) {
+			if (response < $("#num_unresolved_bets").html()) {
+				window.location.reload(true);
+			} else {
+				$("#num_unresolved_bets").html(response);
+			}
 		}
 	});
 }

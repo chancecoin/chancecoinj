@@ -10,6 +10,9 @@
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
 	<link rel="stylesheet" href="/css/style.css">
 	<link rel="stylesheet" href="/css/bootstrap-select.min.css">
+	<link rel="stylesheet" href="/images/css_cards/cards.css">
+	<link rel="stylesheet" href="/images/css_cards/cards-ie.css">
+	<link rel="stylesheet" href="/images/css_cards/cards-ie9.css">
 	<link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon">
   <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
 	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
@@ -33,14 +36,36 @@
 			$(document.body).on("click", "a[data-toggle]", function(event) {
 				location.hash = this.getAttribute("href");
 			});
+			if($("#num_unresolved_bets").html() > 0) {
+				setInterval(function(){updateUnresolvedBets();}, 10000);
+			}
 		});
 		$(window).on('popstate', function() {
 			var anchor = location.hash || $("a[data-toggle=tab]").first().attr("href");
 			$('a[href=' + anchor + ']').tab('show');
 		});
+		function getCardRank(card) {
+			if (card.charAt(0) == "T") {
+				return 10;
+			} else {
+				return card.charAt(0);
+			}
+		}
+		function getCardSuit(card) {
+			if (card.charAt(1) == "D") {
+				return "diams";
+			} else if (card.charAt(1) == "H") {
+				return "hearts";
+			} else if (card.charAt(1) == "S") {
+				return "spades";
+			} else if (card.charAt(1) == "C") {
+				return "clubs";
+			}
+		}
 	</script>
 </head>
 <body>
+	<div class="playingCards fourColours rotateHand">
 	<nav class="navbar navbar-default" role="navigation">
 	  <div class="container-fluid">
 	    <!-- Brand and toggle get grouped for better mobile display -->
@@ -224,6 +249,7 @@
 
 	</script>
 
+</div>
 </body>
 </html>
 </#macro>
