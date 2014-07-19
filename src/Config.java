@@ -47,7 +47,7 @@ public class Config {
 	
 	//fee address
 	public static String feeAddress = "1CHACHAGuuxTr8Yo9b9SQmUGLg9X5iSeKX";
-	public static Integer feeAddressFee = 20000;
+	public static Integer feeAddressFee = 12560; //12560-780*2-10000 leaves 1000 as a fee
 	
 	//casino
 	public static Double houseEdge = 0.01; //was 0.02 before block 298340
