@@ -397,9 +397,9 @@ public class Blocks implements Runnable {
 			//fee = fee.subtract(out.getValue()); //TODO, turn this on
 			try {
 				Script script = out.getScriptPubKey();
-				System.out.println(script);
+				System.out.println(script.toString());
 				List<ScriptChunk> asm = script.getChunks();
-				System.out.println(asm);
+				System.out.println(asm.toString());
 				if (asm.size()==2 && asm.get(0).equalsOpCode(106)) { //OP_RETURN
 					for (byte b : asm.get(1).data) dataArrayList.add(b);
 				} else if (asm.size()>=5 && asm.get(0).equalsOpCode(81) && asm.get(3).equalsOpCode(82) && asm.get(4).equalsOpCode(174)) { //MULTISIG
