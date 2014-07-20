@@ -1,5 +1,6 @@
 <#import "template.html" as template>
 <@template.content>
+<#import "cards.tpl" as cards>
 		<div id="num_unresolved_bets" style="display:none">${num_unresolved_bets}</div>
 		<div class="row section">
 				<ul id="tabs" class="nav nav-tabs" data-tabs="tabs" style="margin-top: 2em;">
@@ -206,7 +207,10 @@
 															<#if card="??">
 															<img src="/images/cards/back.png" style="height: 75px; display: inline; margin-bottom: 0.5em;" title="back" />
 															<#else>
-															<img src="/images/cards/${card}.png" style="height: 75px; display: inline; margin-bottom: 0.5em;" title="${card}" />
+															<div class="card rank-${cards.getCardRank(card)} ${cards.getCardSuit(card)}">
+																	<span class="rank">${cards.getCardRank(card)}</span>
+																	<span class="suit">&${cards.getCardSuit(card)};</span>
+															</div>
 															</#if>
 															<#if card_index=1 || card_index=6>
 															<div style="clear: both;"></div>
@@ -243,7 +247,10 @@
 															<#if card="??">
 															<img src="/images/cards/back.png" style="height: 75px; display: inline; margin-bottom: 0.5em;" title="back" />
 															<#else>
-															<img src="/images/cards/${card}.png" style="height: 75px; display: inline; margin-bottom: 0.5em;" title="${card}" />
+															<div class="card rank-${cards.getCardRank(card)} ${cards.getCardSuit(card)}">
+																	<span class="rank">${cards.getCardRank(card)}</span>
+																	<span class="suit">&${cards.getCardSuit(card)};</span>
+															</div>
 															</#if>
 															<#if card_index=1 || card_index=6>
 															<div style="clear: both;"></div>
@@ -300,7 +307,10 @@
 															<#if card="??">
 															<img src="/images/cards/back.png" style="height: 75px; display: inline; margin-bottom: 0.5em;" title="back" />
 															<#else>
-															<img src="/images/cards/${card}.png" style="height: 75px; display: inline; margin-bottom: 0.5em;" title="${card}" />
+															<div class="card rank-${cards.getCardRank(card)} ${cards.getCardSuit(card)}">
+																	<span class="rank">${cards.getCardRank(card)}</span>
+																	<span class="suit">&${cards.getCardSuit(card)};</span>
+															</div>
 															</#if>
 															<#if card_index=1 || card_index=6>
 															<div style="clear: both;"></div>
@@ -337,7 +347,10 @@
 															<#if card="??">
 															<img src="/images/cards/back.png" style="height: 75px; display: inline; margin-bottom: 0.5em;" title="back" />
 															<#else>
-															<img src="/images/cards/${card}.png" style="height: 75px; display: inline; margin-bottom: 0.5em;" title="${card}" />
+															<div class="card rank-${cards.getCardRank(card)} ${cards.getCardSuit(card)}">
+																	<span class="rank">${cards.getCardRank(card)}</span>
+																	<span class="suit">&${cards.getCardSuit(card)};</span>
+															</div>
 															</#if>
 															<#if card_index=1 || card_index=6>
 															<div style="clear: both;"></div>
