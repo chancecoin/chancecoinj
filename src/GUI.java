@@ -163,7 +163,7 @@ class Browser extends Region {
 	final WebView browser = new WebView();
 	final Button buttonHome = createHomeButton();
 	final WebEngine webEngine = browser.getEngine();
-	final String address = "http://0.0.0.0:8080/";
+	final String address = "http://0.0.0.0:"+Config.serverPort.toString()+"/casino";
 
 	public Browser() {
 		webEngine.load(address);

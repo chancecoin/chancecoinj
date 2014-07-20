@@ -178,7 +178,8 @@ public class Blocks implements Runnable {
 
 				//reasons to redownload:
 				ResultSet rsPokerBets = db.executeQuery("select * from bets where cards is not null;");
-				Boolean shouldReDownload = !new File(fileBTCdb).exists() || !rsPokerBets.next();
+				ResultSet rsRolls = db.executeQuery("select * from rolls;");
+				Boolean shouldReDownload = !new File(fileBTCdb).exists() || !rsPokerBets.next() || !rsRolls.next();
 
 				if (shouldReDownload) {
 					deleteDatabases();
