@@ -75,10 +75,10 @@ public class Test {
 
 	public static void main(String[] args) {
 		Blocks blocks = Blocks.getInstanceAndWait();
-//		for (int block = 311542; block<311553; block++) {
-//			blocks.reDownloadBlockTransactions(block);
-//			blocks.parseBlock(block);
-//		}
+		for (int block = 311738; block<311738; block++) {
+			blocks.reDownloadBlockTransactions(block);
+			blocks.parseBlock(block);
+		}
 
 		//		Database db = Database.getInstance();
 		//		ResultSet rs = db.executeQuery("select block_hash from blocks;");
