@@ -75,7 +75,7 @@ public class Test {
 
 	public static void main(String[] args) {
 		Blocks blocks = Blocks.getInstanceAndWait();
-		for (int block = 311738; block<311738; block++) {
+		for (int block = 311738; block<=311738; block++) {
 			blocks.reDownloadBlockTransactions(block);
 			blocks.parseBlock(block);
 		}
