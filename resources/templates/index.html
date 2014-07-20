@@ -188,7 +188,7 @@
 				<tbody>
 					<#list bets as bet>
 							<tr>
-									<td><a href="/wallet?address=${bet["source"]}">${bet["source"]?substring(0,6)}</a></td>
+									<td><a href="/wallet?address=${bet["source"]}">${bet["source"]?substring(0,6)}...</a></td>
 									<td>${bet["block_time"]}</td>
 									<td>${bet["bet"]} CHA</td>
 									<td>${bet["chance"]}% / ${bet["payout"]}X</td>

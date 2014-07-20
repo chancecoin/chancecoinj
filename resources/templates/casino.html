@@ -189,7 +189,7 @@
 											<#if my_bets_pending??>
 											<#list my_bets_pending as bet>
 													<tr>
-															<td><a href="?address=${bet["source"]}">${bet["source"]?substring(0,6)}</a></td>
+															<td><a href="?address=${bet["source"]}">${bet["source"]?substring(0,6)}...</a></td>
 															<td>Pending</td>
 															<td>${bet["bet"]} CHA</td>
 															<td>${bet["chance"]}% / ${bet["payout"]}X</td>
@@ -226,7 +226,7 @@
 											</#if>
 											<#list bets as bet>
 													<tr>
-															<td><a href="?address=${bet["source"]}">${bet["source"]?substring(0,6)}</a></td>
+															<td><a href="?address=${bet["source"]}">${bet["source"]?substring(0,6)}...</a></td>
 															<td>${bet["block_time"]}</td>
 															<td>${bet["bet"]} CHA</td>
 															<td>${bet["chance"]}% / ${bet["payout"]}X</td>
@@ -283,7 +283,7 @@
 											<#if my_bets_pending??>
 											<#list my_bets_pending as bet>
 													<tr>
-															<td><a href="/wallet?address=${bet["source"]}">${bet["source"]?substring(0,6)}</a></td>
+															<td><a href="/wallet?address=${bet["source"]}">${bet["source"]?substring(0,6)}...</a></td>
 															<td>Pending</td>
 															<td>${bet["bet"]} CHA</td>
 															<td>${bet["chance"]}% / ${bet["payout"]}X</td>
@@ -320,7 +320,7 @@
 											</#if>
 											<#list my_bets as bet>
 													<tr>
-															<td><a href="?address=${bet["source"]}">${bet["source"]?substring(0,6)}</a></td>
+															<td><a href="?address=${bet["source"]}">${bet["source"]?substring(0,6)}...</a></td>
 															<td>${bet["block_time"]}</td>
 															<td>${bet["bet"]} CHA</td>
 															<td>${bet["chance"]}% / ${bet["payout"]}X</td>
