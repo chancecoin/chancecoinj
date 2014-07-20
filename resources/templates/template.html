@@ -95,7 +95,9 @@
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Exchange <b class="caret"></b></a>
 						<ul class="dropdown-menu">
 							<li><a href="/exchange">Decentralized exchange</a></li>
+							<#if read_only??>
 							<li><a href="https://poloniex.com/exchange/btc_cha">Centralized exchange &mdash; Poloniex</a></li>
+							</#if>
 						</ul>
 					</li>
 					<li <#if title?? && title=="Wallet">class="active"</#if>><a href="/wallet">Wallet</a></li>
