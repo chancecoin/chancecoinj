@@ -99,6 +99,7 @@
 						</ul>
 					</li>
 					<li <#if title?? && title=="Wallet">class="active"</#if>><a href="/wallet">Wallet</a></li>
+					<#if read_only??>
 					<li <#if title?? && title=="Participate">class="active"</#if>><a href="/participate">Participate</a></li>
 					<li <#if title?? && title=="Technical">class="active"</#if>><a href="/technical">Technical</a></li>
 					<li class="dropdown">
@@ -110,6 +111,7 @@
 							<li><a href="https://github.com/chancecoin/chancecoinj">GitHub</a></li>
 						</ul>
 					</li>
+					</#if>
 	      </ul>
 	      <ul class="nav navbar-nav navbar-right">
 					<#if price_BTC?? && price_CHA?? && supply??>
