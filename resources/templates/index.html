@@ -1,6 +1,7 @@
 <#import "template.html" as template>
 <@template.content>
 <#import "cards.tpl" as cards>
+<#if read_only??>
 <div class="row section">
 		<div class="page-header">
 		  <h1>Chancecoin <small>a coin for betting in a decentralized casino</small></h1>
@@ -10,6 +11,7 @@
 		<p>Built on top of the Bitcoin blockchain, Chancecoin is the first and only casino that is truly decentralized. There is no central point of failure. The owner can't run away with the bankroll. Nobody can shut it down. It's owned by the people.</p>
 		<p><a class="btn btn-primary btn-lg" role="button" href="/participate">Download</a> <a class="btn btn-primary btn-lg" role="button" href="/technical">Learn more</a></p>
 </div>
+</#if>
 
 <div class="row section">
 		<ul id="tabs" class="nav nav-tabs" data-tabs="tabs" style="margin-top: 2em;">
