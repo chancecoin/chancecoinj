@@ -118,7 +118,8 @@ public class Roll {
 		byteBuffer.putInt(0, id);
 		for (int i = 0; i<rollTxHashBytes.length; i++) byteBuffer.put(0+4+i, rollTxHashBytes[i]);
 		Random random = new Random();
-		byteBuffer.putDouble(32+4, random.nextDouble()); //random double on (0,1)
+		Double roll = random.nextDouble();
+		byteBuffer.putDouble(32+4, roll); //random double on (0,1)
 		List<Byte> dataArrayList = Util.toByteArrayList(byteBuffer.array());
 		dataArrayList.addAll(0, Util.toByteArrayList(Config.prefix.getBytes()));
 		byte[] data = Util.toByteArray(dataArrayList);
@@ -128,6 +129,7 @@ public class Roll {
 			dataString = new String(data,"ISO-8859-1");
 		} catch (UnsupportedEncodingException e) {
 		}
+		logger.info("Rolling the dice for "+rollTxHash+": "+roll);
 		Transaction tx = blocks.transaction(source, destination, btcAmount, BigInteger.valueOf(Config.minFee), dataString, useUnspentTxHash, useUnspentVout);
 		return tx;
 	}
