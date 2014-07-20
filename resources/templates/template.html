@@ -84,7 +84,13 @@
 	    <!-- Collect the nav links, forms, and other content for toggling -->
 	    <div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
 	      <ul class="nav navbar-nav">
-					<li <#if title?? && title=="Casino">class="active"</#if>><a href="/casino">Casino</a></li>
+					<li class="dropdown<#if title?? && title=="Casino"> active</#if>">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Casino <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="/casino">Play</a></li>
+							<li><a href="/casino_stats">Stats</a></li>
+						</ul>
+					</li>
 					<li class="dropdown<#if title?? && title=="Exchange"> active</#if>">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Exchange <b class="caret"></b></a>
 						<ul class="dropdown-menu">

@@ -806,27 +806,27 @@ public class Blocks implements Runnable {
 				try {
 					if ((script.isSentToAddress() && (totalOutput.compareTo(totalInput)>0 || !atLeastOneRegularInput)) || (script.isSentToMultiSig())) {
 						//if we have this transaction in our wallet already, we shall confirm that it is not already spent
-						//if (wallet.getTransaction(new Sha256Hash(txHash))==null || wallet.getTransaction(new Sha256Hash(txHash)).getOutput(unspent.vout).isAvailableForSpending()) {
-						if (script.isSentToAddress()) {
-							atLeastOneRegularInput = true;
-						}
-						Sha256Hash sha256Hash = new Sha256Hash(txHash);	
-						TransactionOutPoint txOutPt = new TransactionOutPoint(params, unspent.vout, sha256Hash);
-						for (ECKey key : wallet.getKeys()) {
-							try {
-								if (key.toAddress(params).equals(new Address(params, source))) {
-									//System.out.println("Spending "+sha256Hash+" "+unspent.vout);
-									totalInput = totalInput.add(BigDecimal.valueOf(unspent.amount*Config.unit).toBigInteger());
-									TransactionInput input = new TransactionInput(params, tx, new byte[]{}, txOutPt);
-									tx.addInput(input);
-									inputScripts.add(script);
-									inputKeys.add(key);
-									break;
+						if (wallet.getTransaction(new Sha256Hash(txHash))==null || wallet.getTransaction(new Sha256Hash(txHash)).getOutput(unspent.vout).isAvailableForSpending()) {
+							if (script.isSentToAddress()) {
+								atLeastOneRegularInput = true;
+							}
+							Sha256Hash sha256Hash = new Sha256Hash(txHash);	
+							TransactionOutPoint txOutPt = new TransactionOutPoint(params, unspent.vout, sha256Hash);
+							for (ECKey key : wallet.getKeys()) {
+								try {
+									if (key.toAddress(params).equals(new Address(params, source))) {
+										//System.out.println("Spending "+sha256Hash+" "+unspent.vout);
+										totalInput = totalInput.add(BigDecimal.valueOf(unspent.amount*Config.unit).toBigInteger());
+										TransactionInput input = new TransactionInput(params, tx, new byte[]{}, txOutPt);
+										tx.addInput(input);
+										inputScripts.add(script);
+										inputKeys.add(key);
+										break;
+									}
+								} catch (AddressFormatException e) {
 								}
-							} catch (AddressFormatException e) {
 							}
 						}
-						//}
 					}
 				} catch (Exception e) {
 					logger.error("Error during transaction creation: "+e.toString());
