@@ -44,7 +44,11 @@ function processAjaxRequest(urlString, formName, waitMessage) {
 			$(formName+" input").prop("disabled", false);
 			$(formName+" button").prop("disabled", false);
 			$(formName+" input").val("");
-			window.location.reload(true);
+			if (urlString=="/process_bet") {
+				window.location = "/casino";
+			} else {
+				window.location.reload(true);
+			}
 		}
 	});
 }
