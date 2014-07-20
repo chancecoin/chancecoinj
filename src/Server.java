@@ -301,24 +301,24 @@ public class Server implements Runnable {
 					}
 				}
 				
-				//get top balances
-				Database db = Database.getInstance();
-				ResultSet rs = db.executeQuery("select address,amount as balance,amount*100.0/(select sum(amount) from balances) as share from balances where asset='CHA' group by address order by amount desc limit 10;");
-				ArrayList<HashMap<String, Object>> balances = new ArrayList<HashMap<String, Object>>();
-				try {
-					while (rs.next()) {
-						HashMap<String,Object> map = new HashMap<String,Object>();
-						map.put("address", rs.getString("address"));
-						map.put("balance", BigInteger.valueOf(rs.getLong("balance")).doubleValue()/Config.unit.doubleValue());
-						map.put("share", rs.getDouble("share"));
-						balances.add(map);
-					}
-				} catch (SQLException e) {
+				//poker hand
+				List<String> pokerHand = new ArrayList<String>();
+				Deck deal = Deck.ShuffleAndDeal(new Random().nextDouble(), null, 9);
+				deal.cards.set(5, new Card("??"));
+				deal.cards.set(6, new Card("??"));
+				for (Card c : deal.cards) {
+					pokerHand.add(c.toString());
 				}
-				attributes.put("balances", balances);
+				attributes.put("poker_chance", Deck.chanceOfWinning(deal.cards)*100.0);
+				attributes.put("poker_hand", pokerHand);
+				
+				Database db = Database.getInstance();
+								
+				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
+				attributes.put("house_edge", Config.houseEdge);
 				
 				//get recent bets
-				rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,cards,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index and bets.profit!=0 order by bets.block_index desc, bets.tx_index desc limit 10;");
+				ResultSet rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,cards,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index and bets.profit!=0 order by bets.block_index desc, bets.tx_index desc limit 10;");
 				ArrayList<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -342,36 +342,35 @@ public class Server implements Runnable {
 				}
 				attributes.put("bets", bets);
 				
-				//get top winners
-				rs = db.executeQuery("select source, count(bet) as bet_count, avg(bet) as avg_bet, avg(chance) as avg_chance, sum(profit) as sum_profit from bets where validity='valid' group by source order by sum(profit) desc limit 10;");
-				ArrayList<HashMap<String, Object>> winners = new ArrayList<HashMap<String, Object>>();
-				try {
-					while (rs.next()) {
-						HashMap<String,Object> map = new HashMap<String,Object>();
-						map.put("source", rs.getString("source"));
-						map.put("bet_count", rs.getDouble("bet_count"));
-						map.put("avg_bet", BigInteger.valueOf(rs.getLong("avg_bet")).doubleValue()/Config.unit.doubleValue());
-						map.put("avg_chance", rs.getDouble("avg_chance"));
-						map.put("sum_profit", BigInteger.valueOf(rs.getLong("sum_profit")).doubleValue()/Config.unit.doubleValue());
-						winners.add(map);
+				//get my pending bets
+				List<BetInfo> betsPending = Bet.getPending(address);
+				bets = new ArrayList<HashMap<String, Object>>();
+				Integer numUnresolvedBets = 0;
+				for (BetInfo betInfo : betsPending) {
+					HashMap<String,Object> map = new HashMap<String,Object>();
+					map.put("source", betInfo.source);
+					map.put("bet", betInfo.bet.doubleValue()/Config.unit.doubleValue());
+					map.put("chance", betInfo.chance);
+					map.put("payout", betInfo.payout);
+					map.put("cards", betInfo.cards);
+					map.put("roll", betInfo.roll);
+					if (betInfo.cards!=null && betInfo.resolved==true) {
+						map.put("cards_result", Deck.result(new Deck(betInfo.cards).cards));
 					}
-				} catch (SQLException e) {
+					if (betInfo.resolved) {
+						map.put("resolved", "true");
+					} else {
+						numUnresolvedBets++;
+					}
+					map.put("profit", betInfo.profit);
+					map.put("tx_hash", betInfo.txHash);
+					bets.add(map);
 				}
-				attributes.put("winners", winners);	
+				attributes.put("my_bets_pending", bets);
 				
-				//poker hand
-				List<String> pokerHand = new ArrayList<String>();
-				Deck deal = Deck.ShuffleAndDeal(new Random().nextDouble(), null, 9);
-				deal.cards.set(5, new Card("??"));
-				deal.cards.set(6, new Card("??"));
-				for (Card c : deal.cards) {
-					pokerHand.add(c.toString());
-				}
-				attributes.put("poker_chance", Deck.chanceOfWinning(deal.cards)*100.0);
-				attributes.put("poker_hand", pokerHand);
-								
-				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
-				attributes.put("house_edge", Config.houseEdge);
+				//get my number of unresolved bets
+				attributes.put("num_unresolved_bets", numUnresolvedBets);
+				
 				return modelAndView(attributes, "index.html");
 			}
 		});
