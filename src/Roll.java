@@ -109,7 +109,7 @@ public class Roll {
 		return rolls;
 	}
 	
-	public static Transaction create(String source, String destination, BigInteger btcAmount, String rollTxHash) throws Exception {
+	public static Transaction create(String source, String destination, BigInteger btcAmount, String rollTxHash, String useUnspentTxHash, Integer useUnspentVout) throws Exception {
 		Database db = Database.getInstance();
 		rollTxHash = rollTxHash.substring(0, 64);
 		byte[] rollTxHashBytes = DatatypeConverter.parseHexBinary(rollTxHash);
@@ -128,7 +128,7 @@ public class Roll {
 			dataString = new String(data,"ISO-8859-1");
 		} catch (UnsupportedEncodingException e) {
 		}
-		Transaction tx = blocks.transaction(source, destination, btcAmount, BigInteger.valueOf(Config.minFee), dataString);
+		Transaction tx = blocks.transaction(source, destination, btcAmount, BigInteger.valueOf(Config.minFee), dataString, useUnspentTxHash, useUnspentVout);
 		return tx;
 	}
 	
@@ -153,7 +153,7 @@ public class Roll {
 						if (!pending && !rs.next()) {
 							try {
 								String destination = Config.donationAddress;
-								Transaction tx = Roll.create(Config.feeAddress, destination, amount.subtract(BigInteger.valueOf(Config.minFee)).subtract(BigInteger.valueOf(Config.dustSize*2)), rollTxHash);
+								Transaction tx = Roll.create(Config.feeAddress, destination, amount.subtract(BigInteger.valueOf(Config.minFee)).subtract(BigInteger.valueOf(Config.dustSize*2)), rollTxHash, unspent.txid, unspent.vout);
 								blocks.sendTransaction(destination, tx);
 							} catch (Exception e) {
 							}

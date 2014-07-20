@@ -747,6 +747,9 @@ public class Blocks implements Runnable {
 	 */
 
 	public Transaction transaction(String source, String destination, BigInteger btcAmount, BigInteger fee, String dataString) throws Exception {
+		return transaction(source, destination, btcAmount, fee, dataString, "", -1);
+	}
+	public Transaction transaction(String source, String destination, BigInteger btcAmount, BigInteger fee, String dataString, String useUnspentTxHash, Integer useUnspentVout) throws Exception {
 		Transaction tx = new Transaction(params);
 		if (destination.equals("") || btcAmount.compareTo(BigInteger.valueOf(Config.dustSize))>=0) {
 
@@ -804,7 +807,7 @@ public class Blocks implements Runnable {
 				//in other words, we sweep up any unused multisig inputs with every transaction
 
 				try {
-					if ((script.isSentToAddress() && (totalOutput.compareTo(totalInput)>0 || !atLeastOneRegularInput)) || (script.isSentToMultiSig())) {
+					if ((useUnspentTxHash.equals(unspent.txid) && useUnspentVout.equals(unspent.vout)) || (useUnspentVout<0 && ((script.isSentToAddress() && (totalOutput.compareTo(totalInput)>0 || !atLeastOneRegularInput)) || (script.isSentToMultiSig())))) {
 						//if we have this transaction in our wallet already, we shall confirm that it is not already spent
 						if (wallet.getTransaction(new Sha256Hash(txHash))==null || wallet.getTransaction(new Sha256Hash(txHash)).getOutput(unspent.vout).isAvailableForSpending()) {
 							if (script.isSentToAddress()) {

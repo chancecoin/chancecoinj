@@ -243,6 +243,8 @@ public class Bet {
 									}	
 									String rollTxHash = new BigInteger(1, Util.toByteArray(messageRoll.subList(0, 32))).toString(16);
 									while (rollTxHash.length()<64) rollTxHash = "0"+rollTxHash;
+									System.out.println(rollTxHash);
+									System.out.println(txHash);
 									if (rollTxHash.equals(txHash)) {
 										roll = byteBuffer.getDouble(32) * 100.0;									
 									}
