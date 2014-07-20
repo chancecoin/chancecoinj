@@ -154,10 +154,13 @@
 										</#if>
 										<#if card="??">
 											<input type="hidden" name="card${card_index+1}" value="??">
-											<img src="/images/cards/back.png" class="card" title="Back" />
+											<div class="card back">*</div>
 										<#else>
 											<input type="hidden" name="card${card_index+1}" value="${card}">
-											<img src="/images/cards/${card}.png" class="card" title="${card}" />
+											<div class="card rank-${cards.getCardRank(card)} ${cards.getCardSuit(card)}">
+													<span class="rank">${cards.getCardRank(card)}</span>
+													<span class="suit">&${cards.getCardSuit(card)};</span>
+											</div>
 										</#if>
 									</div>
 								</div>
@@ -205,7 +208,7 @@
 									<div style="float: left; padding-top: 1.25em; padding-right: 1em;">Opponent</div>
 									</#if>
 									<#if card="??">
-									<img src="/images/cards/back.png" style="height: 75px; display: inline; margin-bottom: 0.5em;" title="back" />
+									<div class="card back">*</div>
 									<#else>
 									<div class="card rank-${cards.getCardRank(card)} ${cards.getCardSuit(card)}">
 									    <span class="rank">${cards.getCardRank(card)}</span>
