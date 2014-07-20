@@ -1,6 +1,6 @@
 <#import "template.html" as template>
 <@template.content>
-
+<#import "cards.tpl" as cards>
 <div class="row section">
 		<div class="page-header">
 		  <h1>Chancecoin <small>a coin for betting in a decentralized casino</small></h1>
@@ -205,7 +205,10 @@
 									<#if card="??">
 									<img src="/images/cards/back.png" style="height: 75px; display: inline; margin-bottom: 0.5em;" title="back" />
 									<#else>
-									<img src="/images/cards/${card}.png" style="height: 75px; display: inline; margin-bottom: 0.5em;" title="${card}" />
+									<div class="card rank-${cards.getCardRank(card)} ${cards.getCardSuit(card)}">
+									    <span class="rank">${cards.getCardRank(card)}</span>
+									    <span class="suit">&${cards.getCardSuit(card)};</span>
+									</div>
 									</#if>
 									<#if card_index=1 || card_index=6>
 									<div style="clear: both;"></div>
