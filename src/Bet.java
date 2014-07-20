@@ -242,6 +242,7 @@ public class Bet {
 										byteBuffer.put(b);
 									}	
 									String rollTxHash = new BigInteger(1, Util.toByteArray(messageRoll.subList(0, 32))).toString(16);
+									while (rollTxHash.length()<64) rollTxHash = "0"+rollTxHash;
 									if (rollTxHash.equals(txHash)) {
 										roll = byteBuffer.getDouble(32) * 100.0;									
 									}

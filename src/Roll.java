@@ -50,6 +50,7 @@ public class Roll {
 
 				if (message.size() == length) {
 					String rollTxHash = new BigInteger(1, Util.toByteArray(message.subList(0, 32))).toString(16);
+					while (rollTxHash.length()<64) rollTxHash = "0"+rollTxHash;
 					ByteBuffer byteBuffer = ByteBuffer.allocate(length);
 					for (byte b : message) {
 						byteBuffer.put(b);
@@ -93,6 +94,7 @@ public class Roll {
 							byteBuffer.put(b);
 						}		
 						String rollTxHash = new BigInteger(1, Util.toByteArray(message.subList(0, 32))).toString(16);
+						while (rollTxHash.length()<64) rollTxHash = "0"+rollTxHash;
 						Double roll = byteBuffer.getDouble(32);
 						RollRequestInfo rollInfo = new RollRequestInfo();
 						rollInfo.roll = roll;
