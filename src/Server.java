@@ -374,6 +374,26 @@ public class Server implements Runnable {
 				return modelAndView(attributes, "index.html");
 			}
 		});
+		get(new FreeMarkerRoute("/chat") {
+			@Override
+			public ModelAndView handle(Request request, Response response) {
+				setConfiguration(configuration);
+				Map<String, Object> attributes = new HashMap<String, Object>();
+				request.session(true);
+				attributes = updateChatStatus(request, attributes);
+				attributes.put("title", "Chat");
+				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
+				attributes.put("version", Config.version);
+				attributes.put("min_version", Util.getMinVersion());
+				attributes.put("min_version_major", Util.getMinMajorVersion());
+				attributes.put("min_version_minor", Util.getMinMinorVersion());
+				attributes.put("version_major", Config.majorVersion);
+				attributes.put("version_minor", Config.minorVersion);
+				Blocks.getInstance().versionCheck();
+				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
+				return modelAndView(attributes, "chat.html");
+			}
+		});
 		get(new FreeMarkerRoute("/participate") {
 			@Override
 			public ModelAndView handle(Request request, Response response) {
@@ -480,7 +500,6 @@ public class Server implements Runnable {
 				attributes.put("min_version_minor", Util.getMinMinorVersion());
 				attributes.put("version_major", Config.majorVersion);
 				attributes.put("version_minor", Config.minorVersion);
-				attributes.put("max_width", Config.maxWidth);
 				attributes.put("market_making_address", Config.marketMakingAddress);				
 				Blocks.getInstance().versionCheck();
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
@@ -710,7 +729,6 @@ public class Server implements Runnable {
 				attributes.put("min_version_minor", Util.getMinMinorVersion());
 				attributes.put("version_major", Config.majorVersion);
 				attributes.put("version_minor", Config.minorVersion);
-				attributes.put("max_width", Config.maxWidth);
 				attributes.put("market_making_address", Config.marketMakingAddress);								
 				Blocks.getInstance().versionCheck();
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);

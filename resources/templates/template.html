@@ -101,6 +101,7 @@
 						</ul>
 					</li>
 					<li <#if title?? && title=="Wallet">class="active"</#if>><a href="/wallet">Wallet</a></li>
+					<li <#if title?? && title=="Chat">class="active"</#if>><a href="/chat">Chat</a></li>
 					<#if read_only??>
 					<li <#if title?? && title=="Participate">class="active"</#if>><a href="/participate">Participate</a></li>
 					<li <#if title?? && title=="Technical">class="active"</#if>><a href="/technical">Technical</a></li>
@@ -198,57 +199,11 @@
 		</#if>
 
 		<#nested/>
-
-		<div style="position: fixed; bottom: 0em; right: 1em;">
-		<div id="hide_chat" onclick="document.getElementById('chat_open').innerHTML='0'; document.getElementById('CHATBUTTON_CHATBOX').style.display='none'; document.getElementById('hide_chat').style.display='none'; document.getElementById('show_chat').style.display='block'; updateChatStatus();"></div>
-		<p id="show_chat" style="display: none;"><a href="#" onclick="document.getElementById('chat_open').innerHTML='1'; document.getElementById('CHATBUTTON_CHATBOX').style.display='block'; document.getElementById('show_chat').style.display='none'; document.getElementById('hide_chat').style.display='block'; updateChatStatus();">Show chat</a></p>
-		<iframe name="CHATBUTTON_CHATBOX" id="CHATBUTTON_CHATBOX" src="https://www.chatbutton.com/chatroom/18347632/" width="300" height="300" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" style="display:none"><a href="https://www.chatbutton.com/chatroom/18347632/">Enter Chat Room</a></iframe>
-		<script type="text/javascript">
-		CHBT_channel="18347632";
-		CHBT_profanityfilter="0";
-		//CHBT_position="bottom-left";
-		</script>
-		<script type="text/javascript" src="https://www.chatbutton.com/c.js">
-		</script>
-		</div>
-		<div id="chat_open" style="display:none">${chat_open}</div>
-		<script type="text/javascript">
-			window.onload = function() {
-				if (document.getElementById('chat_open').innerHTML == 0) {
-					document.getElementById('CHATBUTTON_CHATBOX').style.display='none';
-					document.getElementById('hide_chat').style.display='none';
-					document.getElementById('show_chat').style.display='block';
-				} else {
-					document.getElementById('CHATBUTTON_CHATBOX').style.display='block';
-					document.getElementById('hide_chat').style.display='block';
-					document.getElementById('show_chat').style.display='none';
-				}
-			}
-
-			function updateChatStatus() {
-				$.ajax({
-					url: "/chat_status_update?chat_open="+$('#chat_open').html(),
-					type: 'GET',
-					success: function(data) {
-					}
-		          	});
-			}
-
-		</script>
 	</div>
 
 	<div class="container-fluid footer">
 	Chancecoin &copy; 2014. Released under the <a href="http://opensource.org/licenses/mit-license.php">MIT License</a>.
 	</div>
-
-	<script src="http://yui.yahooapis.com/3.12.0/build/yui/yui.js"></script>
-	<script>
-	YUI().use('node-base', 'node-event-delegate', function (Y) {
-	Y.one('body').delegate('click', function (e) {
-	e.preventDefault();
-	}, 'a[href="#"]');
-	});
-	</script>
 
 	<script>
 	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

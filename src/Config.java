@@ -43,7 +43,7 @@ public class Config {
 	
 	//market making address
 	public static String marketMakingAddress = "1CHABTCsWGp25zjfDWjYrhejgP5V97Zv9r";
-	public static Double maxWidth = 0.05; //5%
+	//public static Double maxWidth = 0.05; //5%
 	
 	//fee address
 	public static String feeAddress = "1CHACHAGuuxTr8Yo9b9SQmUGLg9X5iSeKX";

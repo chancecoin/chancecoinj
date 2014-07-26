@@ -71,67 +71,6 @@ public class Bet {
 				}
 
 				String asset = "CHA";
-				String getBTCBack = "";
-				//				if (!destination.equals("") && !destination.equals(Config.feeAddress)) {
-				//					asset = "BTC";
-				//					ResultSet rsAvailableCHAInBTC = db.executeQuery("select sum(btc_amount/cha_amount*(1+width/2)*cha_remaining) as available_cha_in_btc from quotes where validity='valid' and destination='"+destination+"' and cha_remaining>0 order by btc_amount/cha_amount*(1+width/2) asc, tx_index asc");
-				//					if (rsAvailableCHAInBTC.next() && BigInteger.valueOf(rsAvailableCHAInBTC.getLong("available_cha_in_btc")).compareTo(btcAmount)>=0) {
-				//						ResultSet rsQuotes = db.executeQuery("select * from quotes where validity='valid' and destination='"+destination+"' and cha_remaining>0 order by btc_amount/cha_amount*(1+width/2) asc, tx_index asc");
-				//						BigInteger btcFilled = BigInteger.ZERO;
-				//						BigInteger chaFilled = BigInteger.ZERO;
-				//						try {
-				//							while (rsQuotes.next()) {
-				//								String quoteTxIndex = rsQuotes.getString("tx_index");
-				//								String quoteTxHash = rsQuotes.getString("tx_hash");
-				//								String quoteSource = rsQuotes.getString("source");
-				//								String quoteDestination = rsQuotes.getString("destination");
-				//								BigInteger chaRemaining = BigInteger.valueOf(rs.getLong("cha_remaining"));
-				//								BigInteger btcQuote = BigInteger.valueOf(rs.getLong("btc_amount"));
-				//								BigInteger chaQuote = BigInteger.valueOf(rs.getLong("cha_amount"));
-				//								Double width = rs.getDouble("width");
-				//								Double price = btcQuote.doubleValue() / chaQuote.doubleValue() * (1+width/2);
-				//								BigInteger availableCHAInBTC = new BigDecimal(price * chaRemaining.doubleValue()).toBigInteger();
-				//								if (availableCHAInBTC.compareTo(btcAmount.subtract(btcFilled))<0) {
-				//									//we take down all of the quote
-				//									BigInteger btcToFill = availableCHAInBTC;
-				//									BigInteger chaToFill = chaRemaining;
-				//									btcFilled = btcFilled.add(btcToFill);
-				//									chaFilled = chaFilled.add(chaToFill);
-				//									chaRemaining = BigInteger.ZERO;
-				//									db.executeUpdate("update quotes set cha_available='"+chaRemaining+"' where tx_index = '"+quoteTxIndex+"'");
-				//									Util.credit(source, "CHA", chaToFill, "Quote fill", txHash, blockIndex);
-				//									Util.debit(quoteDestination, "CHA", chaToFill, "Quote fill", txHash, blockIndex);
-				//									String quotePayId = txHash + quoteTxHash;
-				//									db.executeUpdate("insert into quotepays (id,tx_hash_buy,tx_hash_sell,source,destination,btc_amount,validity) values('"+quotePayId+"','"+txHash+"','"+quoteTxHash+"','"+destination+"','"+quoteSource+"','"+btcToFill+"','pending')");
-				//								} else {
-				//									//we take down a fraction of the quote, and we are done
-				//									BigInteger btcToFill = btcAmount.subtract(btcFilled);
-				//									BigInteger chaToFill = new BigDecimal(btcFilled.doubleValue() / price).toBigInteger();
-				//									btcFilled = btcFilled.add(btcToFill);
-				//									chaFilled = chaFilled.add(chaToFill);
-				//									chaRemaining = chaRemaining.subtract(chaToFill);
-				//									db.executeUpdate("update quotes set cha_available='"+chaRemaining+"' where tx_index = '"+quoteTxIndex+"'");
-				//									Util.credit(source, "CHA", chaToFill, "Quote fill", txHash, blockIndex);
-				//									Util.debit(quoteDestination, "CHA", chaToFill, "Quote fill", txHash, blockIndex);
-				//									String quotePayId = txHash + quoteTxHash;
-				//									db.executeUpdate("insert into quotepays (id,tx_hash_buy,tx_hash_sell,source,destination,btc_amount,validity) values('"+quotePayId+"','"+txHash+"','"+quoteTxHash+"','"+destination+"','"+quoteSource+"','"+btcToFill+"','pending')");
-				//									break;
-				//								}
-				//							}
-				//						} catch (SQLException e) {	
-				//						}
-				//						if (bet.compareTo(BigInteger.ZERO)<=0) {
-				//							getBTCBack = "true";
-				//						}
-				//						//convert the BTC bet to CHA
-				//						bet = chaFilled;
-				//					} else {
-				//						//not enough available CHA on quotes, must return BTC
-				//						db.executeUpdate("insert into quotepays (id,tx_hash_buy,tx_hash_sell,source,destination,btc_amount,validity) values('"+txHash+txHash+"','"+txHash+"','"+txHash+"','"+destination+"','"+source+"','"+btcAmount+"','pending')");
-				//						return;
-				//					}
-				//				}
-
 				if (messageType.get(3) == idDice.byteValue() && message.size() == lengthDice) {
 					chance = byteBuffer.getDouble(8);
 					payout = byteBuffer.getDouble(16);
@@ -149,7 +88,7 @@ public class Bet {
 							}
 						}
 					}
-					db.executeUpdate("insert into bets(tx_index, tx_hash, block_index, source, bet, chance, payout, profit, cha_supply, validity, get_btc_back) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+bet.toString()+"','"+chance.toString()+"','"+payout.toString()+"','0','"+chaSupply.toString()+"','"+validity+"','"+getBTCBack+"')");					
+					db.executeUpdate("insert into bets(tx_index, tx_hash, block_index, source, bet, chance, payout, profit, cha_supply, validity) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+bet.toString()+"','"+chance.toString()+"','"+payout.toString()+"','0','"+chaSupply.toString()+"','"+validity+"')");					
 				} else if (messageType.get(3) == idPoker.byteValue() && message.size() == lengthPoker) {
 					Deck deal = new Deck();
 					deal.cards.clear();
@@ -174,7 +113,7 @@ public class Bet {
 							}
 						}
 					}
-					db.executeUpdate("insert into bets(tx_index, tx_hash, block_index, source, destination, bet, chance, payout, profit, cha_supply, validity, cards, get_btc_back) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+destination+"','"+bet.toString()+"','"+chance.toString()+"','"+payout.toString()+"','0','"+chaSupply.toString()+"','"+validity+"','"+deal.toString()+"','"+getBTCBack+"')");
+					db.executeUpdate("insert into bets(tx_index, tx_hash, block_index, source, destination, bet, chance, payout, profit, cha_supply, validity, cards) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+destination+"','"+bet.toString()+"','"+chance.toString()+"','"+payout.toString()+"','0','"+chaSupply.toString()+"','"+validity+"','"+deal.toString()+"')");
 				}
 			}
 		} catch (SQLException e) {	
@@ -243,8 +182,6 @@ public class Bet {
 									}	
 									String rollTxHash = new BigInteger(1, Util.toByteArray(messageRoll.subList(0, 32))).toString(16);
 									while (rollTxHash.length()<64) rollTxHash = "0"+rollTxHash;
-									System.out.println(rollTxHash);
-									System.out.println(txHash);
 									if (rollTxHash.equals(txHash)) {
 										roll = byteBuffer.getDouble(32) * 100.0;									
 									}
@@ -392,14 +329,6 @@ public class Bet {
 		if (!((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit)) throw new Exception("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
 
 		BigInteger btcAmount = BigInteger.ZERO;
-		//		if (asset.equals("BTC") && !destination.equals("")) { // bet with BTC, expect return in CHA
-		//			btcAmount = bet;
-		//		} else if (asset.equals("BTC2") && !destination.equals("")) { // bet with BTC, expect return in BTC
-		//			btcAmount = bet;
-		//			bet = bet.negate();
-		//		} else { // bet with CHA
-		//			destination = "";
-		//		}
 		destination = "";
 
 		if (destination.equals("") && resolution.equals("instant")) {
@@ -476,14 +405,6 @@ public class Bet {
 		if (!((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit)) throw new Exception("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
 
 		BigInteger btcAmount = BigInteger.ZERO;
-		//		if (asset.equals("BTC") && !destination.equals("")) { // bet with BTC, expect return in CHA
-		//			btcAmount = bet;
-		//		} else if (asset.equals("BTC2") && !destination.equals("")) { // bet with BTC, expect return in BTC
-		//			btcAmount = bet;
-		//			bet = bet.negate();
-		//		} else { // bet with CHA
-		//			destination = "";
-		//		}
 		destination = "";
 
 		if (destination.equals("") && resolution.equals("instant")) {
@@ -692,60 +613,7 @@ public class Bet {
 						db.executeUpdate("update bets set profit='"+profit.toString()+"', rolla='"+(rollA*100.0)+"', rollb='"+(rollB*100.0)+"', roll='"+roll+"', resolved='true' where tx_index='"+txIndex+"';");
 					}
 					if (chaCredit.compareTo(BigInteger.ZERO)>0) {
-						//						if (getBTCBack.equals("true")) {
-						//							ResultSet rsAvailableBTCInCHA = db.executeQuery("select sum(btc_remaining/(btc_amount/cha_amount*(1-width/2))) as available_btc_in_cha from quotes where validity='valid' and destination='"+destination+"' and btc_remaining>0 order by btc_amount/cha_amount*(1-width/2) desc, tx_index asc");
-						//							if (rsAvailableBTCInCHA.next() && BigInteger.valueOf(rsAvailableBTCInCHA.getLong("available_btc_in_cha")).compareTo(chaCredit)>=0) {
-						//								ResultSet rsQuotes = db.executeQuery("select * from quotes where validity='valid' and destination='"+destination+"' and btc_remaining>0 order by btc_amount/cha_amount*(1-width/2) desc, tx_index asc");
-						//								BigInteger btcFilled = BigInteger.ZERO;
-						//								BigInteger chaFilled = BigInteger.ZERO;
-						//								try {
-						//									while (rsQuotes.next()) {
-						//										String quoteTxIndex = rsQuotes.getString("tx_index");
-						//										String quoteTxHash = rsQuotes.getString("tx_hash");
-						//										String quoteSource = rsQuotes.getString("source");
-						//										String quoteDestination = rsQuotes.getString("destination");
-						//										BigInteger btcRemaining = BigInteger.valueOf(rs.getLong("btc_remaining"));
-						//										BigInteger btcQuote = BigInteger.valueOf(rs.getLong("btc_amount"));
-						//										BigInteger chaQuote = BigInteger.valueOf(rs.getLong("cha_amount"));
-						//										Double width = rs.getDouble("width");
-						//										Double price = btcQuote.doubleValue() / chaQuote.doubleValue() * (1-width/2);
-						//										BigInteger availableBTCInCHA = new BigDecimal(btcRemaining.doubleValue() / price).toBigInteger();
-						//										if (availableBTCInCHA.compareTo(chaCredit.subtract(chaFilled))<0) {
-						//											//we take down all of the quote
-						//											BigInteger btcToFill = btcRemaining;
-						//											BigInteger chaToFill = availableBTCInCHA;
-						//											btcFilled = btcFilled.add(btcToFill);
-						//											chaFilled = chaFilled.add(chaToFill);
-						//											btcRemaining = BigInteger.ZERO;
-						//											db.executeUpdate("update quotes set btc_available='"+btcRemaining+"' where tx_index = '"+quoteTxIndex+"'");
-						//											Util.credit(quoteSource, "CHA", chaToFill, "Quote fill", txHash, blockIndex);
-						//											Util.debit(quoteDestination, "CHA", chaToFill, "Quote fill", txHash, blockIndex);
-						//											String quotePayId = quoteTxHash + txHash;
-						//											db.executeUpdate("insert into quotepays (id,tx_hash_buy,tx_hash_sell,buysell,source,destination,btc_amount,validity) values('"+quotePayId+"','"+quoteTxHash+"','"+txHash+"','"+destination+"','"+source+"','"+btcToFill+"','pending')");
-						//										} else {
-						//											//we take down a fraction of the quote, and we are done
-						//											BigInteger chaToFill = chaCredit.subtract(chaFilled);
-						//											BigInteger btcToFill = new BigDecimal(price * chaToFill.doubleValue()).toBigInteger();
-						//											btcFilled = btcFilled.add(btcToFill);
-						//											chaFilled = chaFilled.add(chaToFill);
-						//											btcRemaining = btcRemaining.subtract(btcToFill);
-						//											db.executeUpdate("update quotes set btc_available='"+btcRemaining+"' where tx_index = '"+quoteTxIndex+"'");
-						//											Util.credit(quoteSource, "CHA", chaToFill, "Quote fill", txHash, blockIndex);
-						//											Util.debit(quoteDestination, "CHA", chaToFill, "Quote fill", txHash, blockIndex);
-						//											String quotePayId = quoteTxHash + txHash;
-						//											db.executeUpdate("insert into quotepays (id,tx_hash_buy,tx_hash_sell,buysell,source,destination,btc_amount,validity) values('"+quotePayId+"','"+quoteTxHash+"','"+txHash+"','"+destination+"','"+quoteSource+"','"+btcToFill+"','pending')");
-						//											break;
-						//										}
-						//									}
-						//								} catch (SQLException e) {	
-						//								}
-						//							} else {
-						//								//not enough available BTC on quotes, must credit CHA instead
-						//								Util.credit(source, "CHA", chaCredit, "Bet won", txHash, blockIndex);
-						//							}
-						//						} else {
 						Util.credit(source, "CHA", chaCredit, "Bet won", txHash, blockIndex);
-						//						}
 					}
 				}
 			}
