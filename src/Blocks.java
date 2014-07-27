@@ -317,7 +317,6 @@ public class Blocks implements Runnable {
 						parsing = false;
 					}
 					Order.expire();
-					Quote.expire();
 				}
 			} catch (Exception e) {
 				logger.error("Error during follow: "+e.toString());
@@ -356,7 +355,6 @@ public class Blocks implements Runnable {
 				importTransaction(tx, block, blockHeight);
 			}
 			Order.expire();
-			Quote.expire();
 			Bet.resolve();
 		} catch (SQLException e) {
 		}
@@ -528,7 +526,6 @@ public class Blocks implements Runnable {
 					Integer blockIndex = rs.getInt("block_index");
 					parseBlock(blockIndex);
 					Order.expire(blockIndex);
-					Quote.expire(blockIndex);
 					Bet.resolve();
 				}
 			} catch (SQLException e) {
@@ -748,7 +745,18 @@ public class Blocks implements Runnable {
 		return transaction(source, destination, btcAmount, fee, dataString, "", -1);
 	}
 	public Transaction transaction(String source, String destination, BigInteger btcAmount, BigInteger fee, String dataString, String useUnspentTxHash, Integer useUnspentVout) throws Exception {
+		List<String> destinations = new ArrayList<String>();
+		destinations.add(destination);
+		List<BigInteger> btcAmounts = new ArrayList<BigInteger>();
+		btcAmounts.add(btcAmount);
+		return transaction(source, destinations, btcAmounts, fee, dataString, useUnspentTxHash, useUnspentVout);		
+	}
+	public Transaction transaction(String source, List<String> destinations, List<BigInteger> btcAmounts, BigInteger fee, String dataString, String useUnspentTxHash, Integer useUnspentVout) throws Exception {
 		Transaction tx = new Transaction(params);
+		if (destinations.size()==0 || btcAmounts.size()==0) throw new Exception("Please give at least one destination and amount.");
+		if (destinations.size()!=btcAmounts.size()) throw new Exception("Please give the same number of destinations as amounts.");
+		String destination = destinations.get(0);
+		BigInteger btcAmount = btcAmounts.get(0);
 		if (destination.equals("") || btcAmount.compareTo(BigInteger.valueOf(Config.dustSize))>=0) {
 
 			byte[] data = null;
@@ -763,9 +771,13 @@ public class Blocks implements Runnable {
 			BigInteger totalInput = BigInteger.ZERO;
 
 			try {
-				if (!destination.equals("") && btcAmount.compareTo(BigInteger.ZERO)>0) {
-					totalOutput = totalOutput.add(btcAmount);
-					tx.addOutput(btcAmount, new Address(params, destination));
+				for (int i = 0; i < destinations.size(); i++) {
+					destination = destinations.get(i);
+					btcAmount = btcAmounts.get(i);
+					if (!destination.equals("") && btcAmount.compareTo(BigInteger.ZERO)>0) {
+						totalOutput = totalOutput.add(btcAmount);
+						tx.addOutput(btcAmount, new Address(params, destination));
+					}
 				}
 			} catch (AddressFormatException e) {
 			}

@@ -110,6 +110,13 @@ public class Roll {
 	}
 	
 	public static Transaction create(String source, String destination, BigInteger btcAmount, String rollTxHash, String useUnspentTxHash, Integer useUnspentVout) throws Exception {
+		List<String> destinations = new ArrayList<String>();
+		destinations.add(destination);
+		List<BigInteger> btcAmounts = new ArrayList<BigInteger>();
+		btcAmounts.add(btcAmount);
+		return create(source, destinations, btcAmounts, rollTxHash, useUnspentTxHash, useUnspentVout);
+	}
+	public static Transaction create(String source, List<String> destinations, List<BigInteger> btcAmounts, String rollTxHash, String useUnspentTxHash, Integer useUnspentVout) throws Exception {
 		Database db = Database.getInstance();
 		rollTxHash = rollTxHash.substring(0, 64);
 		byte[] rollTxHashBytes = DatatypeConverter.parseHexBinary(rollTxHash);
@@ -130,7 +137,7 @@ public class Roll {
 		} catch (UnsupportedEncodingException e) {
 		}
 		logger.info("Rolling the dice for "+rollTxHash+": "+roll);
-		Transaction tx = blocks.transaction(source, destination, btcAmount, BigInteger.valueOf(Config.minFee), dataString, useUnspentTxHash, useUnspentVout);
+		Transaction tx = blocks.transaction(source, destinations, btcAmounts, BigInteger.valueOf(Config.minFee), dataString, useUnspentTxHash, useUnspentVout);
 		return tx;
 	}
 	
@@ -142,6 +149,7 @@ public class Roll {
 			List<UnspentOutput> unspents = Util.getUnspents(Config.feeAddress);
 			for (UnspentOutput unspent : unspents) {
 				if (unspent.confirmations.equals(0) && unspent.type.equals("pubkeyhash")) {
+					TransactionInfoInsight txInfo = Util.getTransactionInsight(unspent.txid);
 					BigInteger amount = new BigDecimal(unspent.amount*Config.unit).toBigInteger();
 					String rollTxHash = unspent.txid;
 					try {
@@ -154,9 +162,39 @@ public class Roll {
 						}
 						if (!pending && !rs.next()) {
 							try {
-								String destination = Config.donationAddress;
-								Transaction tx = Roll.create(Config.feeAddress, destination, amount.subtract(BigInteger.valueOf(Config.minFee)).subtract(BigInteger.valueOf(Config.dustSize*2)), rollTxHash, unspent.txid, unspent.vout);
-								blocks.sendTransaction(destination, tx);
+								List<String> destinations = new ArrayList<String>();
+								List<BigInteger> btcAmounts = new ArrayList<BigInteger>();
+								destinations.add(Config.donationAddress);
+								BigInteger feeAmount = BigInteger.valueOf(Config.feeAddressFee).subtract(BigInteger.valueOf(Config.minFee)).subtract(BigInteger.valueOf(Config.dustSize*2));
+								btcAmounts.add(feeAmount);
+								BigInteger convertToCha = amount.subtract(BigInteger.valueOf(Config.feeAddressFee));
+								ResultSet rsQuotes = db.executeQuery("select * from quotes where validity='valid' and cha_remaining>0 order by price asc,tx_index asc;");
+								while (rsQuotes.next()) {
+									if (convertToCha.compareTo(BigInteger.ZERO)>0) {
+										Double price = rsQuotes.getDouble("price");
+										BigInteger chaRemaining = BigInteger.valueOf(rsQuotes.getLong("cha_remaining"));
+										BigInteger btcRemaining = new BigDecimal(chaRemaining.doubleValue()*price).toBigInteger();
+										if (convertToCha.compareTo(btcRemaining)>=0) {
+											destinations.add(rsQuotes.getString("source"));
+											btcAmounts.add(new BigDecimal(chaRemaining.doubleValue()*price).toBigInteger());
+											convertToCha = convertToCha.subtract(btcRemaining);
+										} else {
+											destinations.add(rsQuotes.getString("source"));
+											btcAmounts.add(new BigDecimal(convertToCha.doubleValue()*price).toBigInteger());											
+											convertToCha = BigInteger.ZERO;
+										}
+									}
+								}
+								if (convertToCha.compareTo(BigInteger.ZERO)>0) {
+									for (Vin vin : txInfo.vin) {
+										if (convertToCha.compareTo(BigInteger.ZERO)>0 && vin.addr!=null && !vin.addr.equals("")) {
+											destinations.add(txInfo.vin.get(0).addr);
+											btcAmounts.add(convertToCha);
+										}
+									}
+								}
+								Transaction tx = Roll.create(Config.feeAddress, destinations, btcAmounts, rollTxHash, unspent.txid, unspent.vout);
+								blocks.sendTransaction(Config.feeAddress, tx);
 							} catch (Exception e) {
 							}
 						}

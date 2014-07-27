@@ -118,9 +118,6 @@ public class Server implements Runnable {
 					String asset = request.queryParams("asset");
 					String resolution = request.queryParams("resolution");
 					String destination = "";
-					if (asset.equals("BTC") || asset.equals("BTC2")) {
-						destination = Config.marketMakingAddress;
-					}
 					try {
 						Transaction tx = Bet.createDiceBet(source, destination, asset, resolution, bet, chance, payout);
 						blocks.sendTransaction(source, tx);
@@ -152,9 +149,6 @@ public class Server implements Runnable {
 					String asset = request.queryParams("asset");
 					String resolution = request.queryParams("resolution");
 					String destination = "";
-					if (asset.equals("BTC") || asset.equals("BTC2")) {
-						destination = Config.marketMakingAddress;
-					}
 					try {
 						Transaction tx = Bet.createPokerBet(source, destination, asset, resolution, bet, playerCards, boardCards, opponentCards);
 						blocks.sendTransaction(source, tx);
@@ -547,21 +541,21 @@ public class Server implements Runnable {
 						attributes.put("error", e.getMessage());
 					}
 				}
-				if (request.queryParams().contains("form") && request.queryParams("form").equals("quote")) {
-					String source = request.queryParams("source");
-					Double price = Double.parseDouble(request.queryParams("price"));
-					Double rawQuantity = Double.parseDouble(request.queryParams("quantity"));
-					BigInteger chaQuote = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
-					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
-					String destination = Config.marketMakingAddress;
-					try {
-						Transaction tx = Quote.create(source, destination, chaQuote, price, expiration);
-						blocks.sendTransaction(source,tx);
-						attributes.put("success", "Your quote was successful.");
-					} catch (Exception e) {
-						attributes.put("error", e.getMessage());
-					}					
-				}
+//				if (request.queryParams().contains("form") && request.queryParams("form").equals("quote")) {
+//					String source = request.queryParams("source");
+//					Double price = Double.parseDouble(request.queryParams("price"));
+//					Double rawQuantity = Double.parseDouble(request.queryParams("quantity"));
+//					BigInteger chaQuote = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
+//					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
+//					String destination = Config.marketMakingAddress;
+//					try {
+//						Transaction tx = Quote.create(source, destination, chaQuote, price, expiration);
+//						blocks.sendTransaction(source,tx);
+//						attributes.put("success", "Your quote was successful.");
+//					} catch (Exception e) {
+//						attributes.put("error", e.getMessage());
+//					}					
+//				}
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("buy")) {
 					String source = request.queryParams("source");
 					Double price = Double.parseDouble(request.queryParams("price"));

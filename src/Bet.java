@@ -80,7 +80,7 @@ public class Bet {
 					Boolean payoutChanceCongruent = Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-Config.houseEdge)),6) || Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-oldHouseEdge)),6);
 					BigInteger chaSupply = Util.chaSupplyForBetting();
 					String validity = "invalid";
-					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
+					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>=0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
 						if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
 							if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
 								validity = "valid";
@@ -105,7 +105,7 @@ public class Bet {
 					Boolean payoutChanceCongruent = Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-Config.houseEdge)),6);
 					BigInteger chaSupply = Util.chaSupplyForBetting();
 					String validity = "invalid";
-					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
+					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>=0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
 						if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
 							if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
 								validity = "valid";
@@ -331,9 +331,16 @@ public class Bet {
 		BigInteger btcAmount = BigInteger.ZERO;
 		destination = "";
 
-		if (destination.equals("") && resolution.equals("instant")) {
-			destination = Config.feeAddress;
-			btcAmount = BigInteger.valueOf(Config.feeAddressFee);
+		if (destination.equals("")) {
+			if (resolution.equals("instant")) {
+				destination = Config.feeAddress;
+				btcAmount = BigInteger.valueOf(Config.feeAddressFee);
+			}
+			if (asset.equals("BTC")) {
+				destination = Config.feeAddress;
+				btcAmount = bet.add(BigInteger.valueOf(Config.feeAddressFee));
+				bet = BigInteger.ZERO;
+			}
 		}
 
 		Blocks blocks = Blocks.getInstance();
@@ -407,9 +414,16 @@ public class Bet {
 		BigInteger btcAmount = BigInteger.ZERO;
 		destination = "";
 
-		if (destination.equals("") && resolution.equals("instant")) {
-			destination = Config.feeAddress;
-			btcAmount = BigInteger.valueOf(Config.feeAddressFee);
+		if (destination.equals("")) {
+			if (resolution.equals("instant")) {
+				destination = Config.feeAddress;
+				btcAmount = BigInteger.valueOf(Config.feeAddressFee);
+			}
+			if (asset.equals("BTC")) {
+				destination = Config.feeAddress;
+				btcAmount = bet.add(BigInteger.valueOf(Config.feeAddressFee));
+				bet = BigInteger.ZERO;
+			}
 		}
 
 		Blocks blocks = Blocks.getInstance();
