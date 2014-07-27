@@ -209,6 +209,7 @@ public class Bet {
 								if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
 									BetInfo betInfo = new BetInfo();
 									betInfo.bet = bet;
+									betInfo.btcAmount = btcAmount;
 									betInfo.chance = chance;
 									betInfo.payout = payout;
 									betInfo.source = source;
@@ -262,6 +263,7 @@ public class Bet {
 								if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
 									BetInfo betInfo = new BetInfo();
 									betInfo.bet = bet;
+									betInfo.btcAmount = btcAmount;
 									betInfo.chance = chance;
 									betInfo.payout = payout;
 									betInfo.source = source;
@@ -650,6 +652,7 @@ class BetInfo {
 	public String betType;
 	public String source;
 	public BigInteger bet;
+	public BigInteger btcAmount;
 	public Double chance;
 	public Double payout;
 	public String txHash;

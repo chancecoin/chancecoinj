@@ -187,7 +187,7 @@
 													<tr>
 															<td><a href="?address=${bet["source"]}">${bet["source"]?substring(0,6)}...</a></td>
 															<td>Pending</td>
-															<td>${bet["bet"]} CHA</td>
+															<td><#if (bet["bet"]>0)>${bet["bet"]} CHA<#else>${bet["betBTC"]} BTC</#if></td>
 															<td>${bet["chance"]}% / ${bet["payout"]}X</td>
 
 															<#if bet["cards"]??>
