@@ -547,23 +547,21 @@ public class Server implements Runnable {
 						attributes.put("error", e.getMessage());
 					}
 				}
-//				if (request.queryParams().contains("form") && request.queryParams("form").equals("quote")) {
-//					String source = request.queryParams("source");
-//					Double price = Double.parseDouble(request.queryParams("price"));
-//					Double width = Double.parseDouble(request.queryParams("width"));
-//					Double rawQuantity = Double.parseDouble(request.queryParams("quantity"));
-//					BigInteger chaQuote = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
-//					BigInteger btcQuote = new BigDecimal(chaQuote.doubleValue() * price).toBigInteger();
-//					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
-//					String destination = Config.marketMakingAddress;
-//					try {
-//						Transaction tx = Quote.create(source, destination, btcQuote, chaQuote, width, expiration);
-//						blocks.sendTransaction(source,tx);
-//						attributes.put("success", "Your quote was successful.");
-//					} catch (Exception e) {
-//						attributes.put("error", e.getMessage());
-//					}					
-//				}
+				if (request.queryParams().contains("form") && request.queryParams("form").equals("quote")) {
+					String source = request.queryParams("source");
+					Double price = Double.parseDouble(request.queryParams("price"));
+					Double rawQuantity = Double.parseDouble(request.queryParams("quantity"));
+					BigInteger chaQuote = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
+					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
+					String destination = Config.marketMakingAddress;
+					try {
+						Transaction tx = Quote.create(source, destination, chaQuote, price, expiration);
+						blocks.sendTransaction(source,tx);
+						attributes.put("success", "Your quote was successful.");
+					} catch (Exception e) {
+						attributes.put("error", e.getMessage());
+					}					
+				}
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("buy")) {
 					String source = request.queryParams("source");
 					Double price = Double.parseDouble(request.queryParams("price"));
@@ -601,21 +599,15 @@ public class Server implements Runnable {
 				Database db = Database.getInstance();
 				
 				//get quotes
-				ResultSet rs = db.executeQuery("select * from quotes where validity='valid';");
+				ResultSet rs = db.executeQuery("select * from quotes where validity='valid' order by price desc;");
 				ArrayList<HashMap<String, Object>> quotes = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
 						HashMap<String,Object> map = new HashMap<String,Object>();
 						map.put("cha_amount", BigInteger.valueOf(rs.getLong("cha_amount")).doubleValue()/Config.unit.doubleValue());
-						map.put("btc_amount", BigInteger.valueOf(rs.getLong("btc_amount")).doubleValue()/Config.unit.doubleValue());
 						map.put("cha_remaining", BigInteger.valueOf(rs.getLong("cha_remaining")).doubleValue()/Config.unit.doubleValue());
-						map.put("btc_remaining", BigInteger.valueOf(rs.getLong("btc_remaining")).doubleValue()/Config.unit.doubleValue());
-						Double price = BigInteger.valueOf(rs.getLong("btc_amount")).doubleValue()/BigInteger.valueOf(rs.getLong("cha_amount")).doubleValue();						
-						Double width = rs.getDouble("width");
+						Double price = rs.getDouble("price");
 						map.put("price", price);						
-						map.put("bid", price*(1-width/2.0));
-						map.put("offer", price*(1+width/2.0));						
-						map.put("width", width);
 						map.put("source", rs.getString("source"));
 						map.put("destination", rs.getString("destination"));
 						map.put("tx_hash", rs.getString("tx_hash"));
@@ -762,21 +754,15 @@ public class Server implements Runnable {
 				Database db = Database.getInstance();
 				
 				//get quotes
-				ResultSet rs = db.executeQuery("select * from quotes where validity='valid';");
+				ResultSet rs = db.executeQuery("select * from quotes where validity='valid' order by price desc;");
 				ArrayList<HashMap<String, Object>> quotes = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
 						HashMap<String,Object> map = new HashMap<String,Object>();
 						map.put("cha_amount", BigInteger.valueOf(rs.getLong("cha_amount")).doubleValue()/Config.unit.doubleValue());
-						map.put("btc_amount", BigInteger.valueOf(rs.getLong("btc_amount")).doubleValue()/Config.unit.doubleValue());
 						map.put("cha_remaining", BigInteger.valueOf(rs.getLong("cha_remaining")).doubleValue()/Config.unit.doubleValue());
-						map.put("btc_remaining", BigInteger.valueOf(rs.getLong("btc_remaining")).doubleValue()/Config.unit.doubleValue());
-						Double price = BigInteger.valueOf(rs.getLong("btc_amount")).doubleValue()/BigInteger.valueOf(rs.getLong("cha_amount")).doubleValue();						
-						Double width = rs.getDouble("width");
+						Double price = rs.getDouble("price");
 						map.put("price", price);						
-						map.put("bid", price*(1-width/2.0));
-						map.put("offer", price*(1+width/2.0));						
-						map.put("width", width);
 						map.put("source", rs.getString("source"));
 						map.put("destination", rs.getString("destination"));
 						map.put("tx_hash", rs.getString("tx_hash"));

@@ -177,14 +177,10 @@
 						</table>
 				</div>
 		</div>
-		<!--
 		<div class="row section">
 				<div class="col-xs-4 segment one-third">
-						<h2>Casino liquidity</h2>
-						<p>Provide liquidity to the casino for people who want to bet with BTC and have it be automatically converted to and from CHA.</p>
-				</div>
-				<div class="col-xs-4 segment one-third">
-						<h2>Quote</h2>
+						<h2>Casino liquidity book</h2>
+						<p>Provide liquidity to the casino for people who want to bet with BTC and have it be automatically converted to CHA.</p>
 						<form action="/exchange" method="post">
 								<input type="hidden" name="form" value="quote">
 								<input type="hidden" name="source" value="${address}">
@@ -197,11 +193,6 @@
 								<div class="input-group">
 									<span class="input-group-addon">$</span>
 									<input type="text" placeholder="price (CHA/BTC)" name="price">
-								</div>
-
-								<div class="input-group">
-									<span class="input-group-addon">%</span>
-									<input type="text" placeholder="width (%)" name="width">
 								</div>
 
 								<div class="input-group">
@@ -223,23 +214,42 @@
 						<table class="table">
 								<thead>
 										<tr>
-												<th>Market (CHA/BTC)</th>
+												<th>Price (CHA/BTC)</th>
 												<th>Quantity (CHA)</th>
-												<th>Quantity (BTC)</th>
 										</tr>
 								</thead>
 
 								<tbody>
 									<#list quotes as quote>
 									<tr>
-										<td>${quote["bid"]} at ${quote["offer"]}</td>
+										<td>${quote["price"]}</td>
 										<td>${quote["cha_remaining"]} / ${quote["cha_amount"]}</td>
-										<td>${quote["btc_remaining"]} / ${quote["btc_amount"]}</td>
 									</tr>
 									</#list>
 								</tbody>
 						</table>
 				</div>
+				<div class="col-xs-4 segment one-third">
+						<h2>My quotes</h2>
+						<table class="table">
+								<thead>
+										<tr>
+												<th>Price (CHA/BTC)</th>
+												<th>Quantity (CHA)</th>
+										</tr>
+								</thead>
+
+								<tbody>
+									<#list quotes as quote>
+									<#if address=quote["source"]>
+									<tr>
+										<td>${quote["price"]}</td>
+										<td>${quote["cha_remaining"]} / ${quote["cha_amount"]}</td>
+									</tr>
+									</#if>
+									</#list>
+								</tbody>
+						</table>
+				</div>
 		</div>
-		-->
 </@template.content>

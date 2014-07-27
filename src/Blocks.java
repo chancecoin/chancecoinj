@@ -317,8 +317,7 @@ public class Blocks implements Runnable {
 						parsing = false;
 					}
 					Order.expire();
-					//Quote.expire();
-					//QuotePay.pay();
+					Quote.expire();
 				}
 			} catch (Exception e) {
 				logger.error("Error during follow: "+e.toString());
@@ -357,8 +356,7 @@ public class Blocks implements Runnable {
 				importTransaction(tx, block, blockHeight);
 			}
 			Order.expire();
-			//Quote.expire();
-			//QuotePay.pay();
+			Quote.expire();
 			Bet.resolve();
 		} catch (SQLException e) {
 		}
@@ -530,8 +528,7 @@ public class Blocks implements Runnable {
 					Integer blockIndex = rs.getInt("block_index");
 					parseBlock(blockIndex);
 					Order.expire(blockIndex);
-					//Quote.expire(blockIndex);
-					//QuotePay.pay();
+					Quote.expire(blockIndex);
 					Bet.resolve();
 				}
 			} catch (SQLException e) {

@@ -104,16 +104,17 @@ public class Database {
 
 			// Quotes for market making book
 			executeUpdate("CREATE TABLE IF NOT EXISTS quotes(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, destination TEXT, expiration INTEGER, expire_index INTEGER, btc_amount INTEGER, cha_amount INTEGER, btc_remaining INTEGER, cha_remaining INTEGER, width REAL, validity TEXT)");			
+			executeUpdate("ALTER TABLE quotes add price REAL;");
 			executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON quotes (block_index)");
 			executeUpdate("CREATE INDEX IF NOT EXISTS expire_index_idx ON quotes (expire_index)");
 
-			// Quotepays
-			// if tx_hash_buy is a bet, this is someone betting in BTC, and tx_hash_sell is the quote
-			// if reversed, this is someone winning CHA and selling it
-			// if tx_hash_buy and tx_hash_sell are both a bet, this is someone betting BTC and getting it back because there wasn't a quote to fill the order
-			// if tx_hash_buy and tx_hash_sell are both a quote, this is a quote that has a expired, and BTC is credited back
-			executeUpdate("CREATE TABLE IF NOT EXISTS quotepays(id TEXT PRIMARY KEY, tx_hash_buy TEXT, tx_hash_sell TEXT, tx_index TEXT, tx_hash TEXT, block_index INTEGER, source TEXT, destination TEXT, btc_amount INTEGER, validity TEXT)");
-			executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON quotepays (block_index)");
+//			// Quotepays
+//			// if tx_hash_buy is a bet, this is someone betting in BTC, and tx_hash_sell is the quote
+//			// if reversed, this is someone winning CHA and selling it
+//			// if tx_hash_buy and tx_hash_sell are both a bet, this is someone betting BTC and getting it back because there wasn't a quote to fill the order
+//			// if tx_hash_buy and tx_hash_sell are both a quote, this is a quote that has a expired, and BTC is credited back
+//			executeUpdate("CREATE TABLE IF NOT EXISTS quotepays(id TEXT PRIMARY KEY, tx_hash_buy TEXT, tx_hash_sell TEXT, tx_index TEXT, tx_hash TEXT, block_index INTEGER, source TEXT, destination TEXT, btc_amount INTEGER, validity TEXT)");
+//			executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON quotepays (block_index)");
 
 			// Burns
 			executeUpdate("CREATE TABLE IF NOT EXISTS burns(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, burned INTEGER, earned INTEGER, validity TEXT)");
