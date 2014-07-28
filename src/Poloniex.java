@@ -22,19 +22,25 @@ import javax.crypto.spec.SecretKeySpec;
 public class Poloniex {
 	private static final String API_URL = "https://poloniex.com/tradingApi";
 	private static final String USER_AGENT = "Mozilla/5.0 (compatible; BTCE-API/1.0; MSIE 6.0 compatible; +https://github.com/abwaters/btce-api)" ;
-
-//	private static String key = Config.PoloniexKey;
-//	private static String secret = Config.PoloniexSecret;
 	
 	private static long auth_last_request = 0 ;
 	private static long auth_request_limit = 1000 ;	// request limit in milliseconds
 	private static long last_request = 0 ;
 	private static long request_limit = 15000 ;	// request limit in milliseconds for non-auth calls...defaults to 15 seconds
-
-	private boolean initialized = false;
-	
+	private boolean initialized = false;	
 	private Mac mac ;
 	
+	private static Poloniex instance = null;
+
+	private Poloniex() {}
+	
+	public static Poloniex getInstance() {
+		if(instance == null) {
+			instance = new Poloniex();
+		}
+		return instance;
+	}
+
 	public void setAuthKeys() throws Exception {
 		SecretKeySpec keyspec = null ;
 		try {
@@ -220,22 +226,14 @@ public class Poloniex {
 		}
 		return;
 	}	
-	
-	
-	
+
 	public static void main(String args[]) {
 		Config.loadUserDefined();
-		Poloniex polo = new Poloniex();
+		Poloniex polo = Poloniex.getInstance();
 		//polo.buy(0.00052, 0.2);
 		polo.getBalance();
 		System.out.println(Config.poloniexKey);
 		System.out.println(Config.poloniexSecret);
 		//polo.cancelOrder("13589199");
 	}
-	
-    
-    
-	
-	
-	
 }
