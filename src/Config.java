@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
@@ -21,6 +22,7 @@ public class Config {
 	public static String RPCPassword = "";
 	public static Integer serverPort = 8080;
 	public static String ConfigFile = "./resources/chancecoin.conf";
+	public static String customConfigFile = "./resources/custom.conf";
 	public static Boolean readOnly = false;
 	public static String donationAddress = "1CHANCeWHSRAfvfi4rwo8v6NEY64RfZYqB";
 	
@@ -67,6 +69,10 @@ public class Config {
 	public static Integer maxExpiration = 4*2016;
 	public static Integer maxInt = ((int) Math.pow(2.0,63.0))-1;
 	
+	//exchanges
+	public static String poloniexKey = "";
+	public static String poloniexSecret = "";
+	
 	public static void loadUserDefined() {
 		FileInputStream input;
 		try {
@@ -83,6 +89,16 @@ public class Config {
 			if (prop.getProperty("readOnly")!=null) {
 				if (prop.getProperty("readOnly").equals("true")) {
 					readOnly = true;
+				}
+			}
+			
+			if ((new File(customConfigFile)).exists()) {
+				input = new FileInputStream(customConfigFile);
+				prop = new Properties();
+				prop.load(input);
+				if (prop.getProperty("poloniexKey")!=null && prop.getProperty("poloniexSecret")!=null) {
+					poloniexKey = prop.getProperty("poloniexKey");
+					poloniexSecret = prop.getProperty("poloniexSecret");				
 				}
 			}
 		} catch (IOException e) {
