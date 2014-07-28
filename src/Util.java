@@ -11,6 +11,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.sql.ResultSet;
@@ -580,6 +581,56 @@ public class Util {
 		}		
 		return null;		
 	}
+	
+	public static Double getBestOfferOnExchanges(Double btcToPurchase) {
+		String orderBookPoloniex = getPage("https://poloniex.com/public?command=returnOrderBook&currencyPair=BTC_CHA");
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			OrderBook orderBook = objectMapper.readValue(orderBookPoloniex, new TypeReference<OrderBook>() {});
+			System.out.println(orderBook.asks);
+			Double offersInBTCFound = 0.0;
+			Double offersInCHAFound = 0.0;
+			Double bestOffer = 0.0;
+			for (List<Double> offer : orderBook.asks) {
+				if (offersInBTCFound >= btcToPurchase) {
+					bestOffer = offersInBTCFound/offersInCHAFound;
+					break;
+				} else if (offersInBTCFound + offer.get(0)*offer.get(1) <= btcToPurchase) {
+					//need to add this entire level
+					offersInCHAFound += offer.get(1);
+					offersInBTCFound += offer.get(0)*offer.get(1);
+				} else {
+					//need to add only the amount needed to fulfill
+					offersInCHAFound += (btcToPurchase - offersInBTCFound) / offer.get(0);
+					offersInBTCFound += btcToPurchase - offersInBTCFound;
+				}
+				System.out.println("-----------------");
+				System.out.println("rate " + offer.get(0));
+				System.out.println("BTC " + offersInBTCFound);
+				System.out.println("CHA " + offersInCHAFound);
+			}
+			System.out.println(bestOffer);
+			return bestOffer;
+		} catch (Exception e) {
+			logger.error(e.toString());
+		}		
+		return null;		
+	}
+
+	public static Double buyBestOfferOnExchanges(Double btcToPurchase) {
+		String result = getPage("https://poloniex.com/public?command=returnOrderBook&currencyPair=BTC_CHA");
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			OrderBook orderBook = objectMapper.readValue(result, new TypeReference<OrderBook>() {});
+			System.out.println(orderBook);
+		} catch (Exception e) {
+			logger.error(e.toString());
+		}		
+		return null;		
+	}
+
 	
 	public static BigInteger factorial(BigInteger n) {
 		BigInteger result = BigInteger.ONE;
