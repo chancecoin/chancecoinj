@@ -70,6 +70,11 @@ public class Roll {
 						Util.debit(source, "CHA", chaAmount, "Debit CHA amount from casino liquidity provider", txHash, blockIndex);
 						db.executeUpdate("update bets set bet = '"+chaAmount.toString()+"' where tx_hash='"+rollTxHash.toString()+"';");
 					}
+					ResultSet rsBet = db.executeQuery("select * from bets where tx_hash='"+rollTxHash.toString()+"' and resolved='true';");
+					if (rsBet.next()) {
+						db.executeUpdate("update bets set resolved='', profit='0', roll='', rolla='', rollb='' where tx_hash='"+rollTxHash.toString()+"';");						
+						db.executeUpdate("delete from credits where event='"+rollTxHash.toString()+"';");
+					}
 					db.executeUpdate("insert into rolls(tx_index, tx_hash, block_index, source, destination, roll_tx_hash, roll, cha_amount, validity) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+destination+"','"+rollTxHash.toString()+"','"+roll.toString()+"','"+chaAmount.toString()+"','"+validity+"')");
 				}				
 			}

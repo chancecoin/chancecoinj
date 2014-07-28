@@ -571,9 +571,66 @@ public class Bet {
 				}
 
 				// Instant bets are resolved using Roll transactions
-				ResultSet rsRoll = db.executeQuery("select * from rolls where roll_tx_hash='"+txHash+"' and block_index='"+blockIndex.toString()+"'");
+				ResultSet rsRoll = null;
+				//PROTOCOL CHANGE: before block 313000, we required the roll transaction to be in the same block
+				if (blockIndex<313000) {
+					rsRoll = db.executeQuery("select * from rolls where roll_tx_hash='"+txHash+"' and block_index='"+blockIndex.toString()+"'");
+				} else {
+					rsRoll = db.executeQuery("select * from rolls where roll_tx_hash='"+txHash+"'");					
+				}
 				if (rsRoll.next()) {
 					roll = rsRoll.getDouble("roll");
+				}
+				
+				Blocks blocks = Blocks.getInstance();
+				
+				//check for pending roll
+				for (UnspentOutput unspent : Util.getUnspents(Config.donationAddress)) {
+					if (unspent.confirmations.equals(0)) {
+						TransactionInfoInsight txInfo = Util.getTransactionInsight(unspent.txid);
+						List<Byte> dataArrayList = null;
+						if (txInfo != null && txInfo.vout != null && txInfo.vout.size()>0) {
+							for (Vout vout : txInfo.vout) {
+								ScriptBuilder sb = new ScriptBuilder();
+								String asm = vout.scriptPubKey.asm;
+								for (String opcode : asm.split(" ")) {
+									if (opcode.equals("1")) {
+										sb.op(ScriptOpCodes.OP_1);							
+									} else if (opcode.equals("2")) {
+										sb.op(ScriptOpCodes.OP_2);							
+									} else if (opcode.equals("OP_CHECKMULTISIG")) {
+										sb.op(ScriptOpCodes.OP_CHECKMULTISIG);							
+									} else {
+										try {
+											byte[] bytes = DatatypeConverter.parseHexBinary(opcode);
+											sb.data(bytes);							
+										} catch (Exception e) {								
+										}
+									}
+								}
+								Script script = sb.build();
+								dataArrayList = blocks.scriptToDataArrayList(script, dataArrayList);
+							}
+						}
+						if (dataArrayList!=null && dataArrayList.size()>0) {
+							byte[] data = blocks.dataArrayListToDataArray(dataArrayList);
+							String dataStringRoll = blocks.dataArrayToString(data);
+							List<Byte> messageTypeRoll = blocks.getMessageTypeFromTransaction(dataStringRoll);
+							List<Byte> messageRoll = blocks.getMessageFromTransaction(dataStringRoll);
+
+							if (messageTypeRoll.get(3)==Roll.id.byteValue() && messageRoll.size() == Roll.length) {
+								ByteBuffer byteBuffer = ByteBuffer.allocate(Roll.length);
+								for (byte b : messageRoll) {
+									byteBuffer.put(b);
+								}	
+								String rollTxHash = new BigInteger(1, Util.toByteArray(messageRoll.subList(0, 32))).toString(16);
+								while (rollTxHash.length()<64) rollTxHash = "0"+rollTxHash;
+								if (rollTxHash.equals(txHash)) {
+									roll = byteBuffer.getDouble(32) * 100.0;									
+								}
+							}
+						}
+					}
 				}
 
 				BigInteger chaCredit = BigInteger.ZERO;				
