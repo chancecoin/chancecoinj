@@ -90,23 +90,20 @@ public class Database {
 			// Bets (dice)
 			executeUpdate("CREATE TABLE IF NOT EXISTS bets(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, bet INTEGER, chance REAL, payout REAL, profit INTEGER, cha_supply INTEGER, rolla REAL, rollb REAL, roll REAL, resolved TEXT, cards TEXT, validity TEXT)");
 			executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON bets (block_index)");
-
-			// Bets (poker)
 			executeUpdate("ALTER TABLE bets add cards TEXT;");
-			
-			// Bets (new columns)
 			executeUpdate("ALTER TABLE bets add get_btc_back TEXT;");
 			executeUpdate("ALTER TABLE bets add destination TEXT;");
 
 			// Rolls
 			executeUpdate("CREATE TABLE IF NOT EXISTS rolls(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, destination TEXT, roll_tx_hash TEXT, roll REAL, validity TEXT)");
+			executeUpdate("ALTER TABLE rolls add cha_amount INTEGER;");
 			executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON rolls (block_index)");
 
-			// Quotes for market making book
-			executeUpdate("CREATE TABLE IF NOT EXISTS quotes(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, destination TEXT, expiration INTEGER, expire_index INTEGER, btc_amount INTEGER, cha_amount INTEGER, btc_remaining INTEGER, cha_remaining INTEGER, width REAL, validity TEXT)");			
-			executeUpdate("ALTER TABLE quotes add price REAL;");
-			executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON quotes (block_index)");
-			executeUpdate("CREATE INDEX IF NOT EXISTS expire_index_idx ON quotes (expire_index)");
+//			// Quotes for market making book
+//			executeUpdate("CREATE TABLE IF NOT EXISTS quotes(tx_index INTEGER PRIMARY KEY, tx_hash TEXT UNIQUE, block_index INTEGER, source TEXT, destination TEXT, expiration INTEGER, expire_index INTEGER, btc_amount INTEGER, cha_amount INTEGER, btc_remaining INTEGER, cha_remaining INTEGER, width REAL, validity TEXT)");			
+//			executeUpdate("ALTER TABLE quotes add price REAL;");
+//			executeUpdate("CREATE INDEX IF NOT EXISTS block_index_idx ON quotes (block_index)");
+//			executeUpdate("CREATE INDEX IF NOT EXISTS expire_index_idx ON quotes (expire_index)");
 
 //			// Quotepays
 //			// if tx_hash_buy is a bet, this is someone betting in BTC, and tx_hash_sell is the quote

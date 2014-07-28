@@ -31,6 +31,7 @@ import com.google.common.primitives.Ints;
 public class Roll {
 	static Logger logger = LoggerFactory.getLogger(Roll.class);
 	public static Integer length = 32+8;
+	public static Integer length2 = 32+8+8; //last parameter is amount of CHA given for bet made with BTC
 	public static Integer id = 14;
 
 	public static void parse(Integer txIndex, List<Byte> message) {
@@ -48,20 +49,28 @@ public class Roll {
 				ResultSet rsCheck = db.executeQuery("select * from rolls where tx_index='"+txIndex.toString()+"'");
 				if (rsCheck.next()) return;
 
-				if (message.size() == length) {
+				if (message.size() == length || message.size() == length2) {
 					String rollTxHash = new BigInteger(1, Util.toByteArray(message.subList(0, 32))).toString(16);
 					while (rollTxHash.length()<64) rollTxHash = "0"+rollTxHash;
-					ByteBuffer byteBuffer = ByteBuffer.allocate(length);
+					ByteBuffer byteBuffer = ByteBuffer.allocate(message.size());
 					for (byte b : message) {
 						byteBuffer.put(b);
 					}
 					Double roll = byteBuffer.getDouble(32) * 100.0;
+					BigInteger chaAmount = BigInteger.ZERO;
+					if (message.size() == length2) {
+						chaAmount = BigInteger.valueOf(byteBuffer.getLong(32+8));
+					}
 
 					String validity = "invalid";
 					if (source.equals(Config.feeAddress)) {
 						validity = "valid";
 					}
-					db.executeUpdate("insert into rolls(tx_index, tx_hash, block_index, source, destination, roll_tx_hash, roll, validity) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+destination+"','"+rollTxHash.toString()+"','"+roll.toString()+"','"+validity+"')");
+					if (chaAmount.compareTo(BigInteger.ZERO)>0) {
+						Util.debit(source, "CHA", chaAmount, "Debit CHA amount from casino liquidity provider", txHash, blockIndex);
+						db.executeUpdate("update bets set bet = '"+chaAmount.toString()+"' where tx_hash='"+rollTxHash.toString()+"';");
+					}
+					db.executeUpdate("insert into rolls(tx_index, tx_hash, block_index, source, destination, roll_tx_hash, roll, cha_amount, validity) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+destination+"','"+rollTxHash.toString()+"','"+roll.toString()+"','"+chaAmount.toString()+"','"+validity+"')");
 				}				
 			}
 		} catch (SQLException e) {	
@@ -88,7 +97,7 @@ public class Roll {
 					List<Byte> messageType = blocks.getMessageTypeFromTransaction(dataString);
 					List<Byte> message = blocks.getMessageFromTransaction(dataString);
 
-					if (messageType.get(3)==Roll.id.byteValue() && message.size() == length) {
+					if (messageType.get(3)==Roll.id.byteValue() && (message.size() == length || message.size() == length2)) {
 						ByteBuffer byteBuffer = ByteBuffer.allocate(length);
 						for (byte b : message) {
 							byteBuffer.put(b);
@@ -96,8 +105,13 @@ public class Roll {
 						String rollTxHash = new BigInteger(1, Util.toByteArray(message.subList(0, 32))).toString(16);
 						while (rollTxHash.length()<64) rollTxHash = "0"+rollTxHash;
 						Double roll = byteBuffer.getDouble(32);
+						BigInteger chaAmount = BigInteger.ZERO;
+						if (message.size() == length2) {
+							chaAmount = BigInteger.valueOf(byteBuffer.getLong(32+8));
+						}
 						RollRequestInfo rollInfo = new RollRequestInfo();
 						rollInfo.roll = roll;
+						rollInfo.chaAmount = chaAmount;
 						rollInfo.rollTxHash = rollTxHash;
 						rollInfo.source = source;
 						rolls.add(rollInfo);
@@ -109,24 +123,32 @@ public class Roll {
 		return rolls;
 	}
 	
-	public static Transaction create(String source, String destination, BigInteger btcAmount, String rollTxHash, String useUnspentTxHash, Integer useUnspentVout) throws Exception {
+	public static Transaction create(String source, String destination, BigInteger btcAmount, String rollTxHash, BigInteger chaAmount, String useUnspentTxHash, Integer useUnspentVout) throws Exception {
 		List<String> destinations = new ArrayList<String>();
 		destinations.add(destination);
 		List<BigInteger> btcAmounts = new ArrayList<BigInteger>();
 		btcAmounts.add(btcAmount);
-		return create(source, destinations, btcAmounts, rollTxHash, useUnspentTxHash, useUnspentVout);
+		return create(source, destinations, btcAmounts, rollTxHash, chaAmount, useUnspentTxHash, useUnspentVout);
 	}
-	public static Transaction create(String source, List<String> destinations, List<BigInteger> btcAmounts, String rollTxHash, String useUnspentTxHash, Integer useUnspentVout) throws Exception {
+	public static Transaction create(String source, List<String> destinations, List<BigInteger> btcAmounts, String rollTxHash, BigInteger chaAmount, String useUnspentTxHash, Integer useUnspentVout) throws Exception {
 		Database db = Database.getInstance();
 		rollTxHash = rollTxHash.substring(0, 64);
 		byte[] rollTxHashBytes = DatatypeConverter.parseHexBinary(rollTxHash);
 		Blocks blocks = Blocks.getInstance();
-		ByteBuffer byteBuffer = ByteBuffer.allocate(length+4);
+		ByteBuffer byteBuffer = null;			
+		if (chaAmount.compareTo(BigInteger.ZERO)>0) {
+			byteBuffer = ByteBuffer.allocate(length2+4);
+		} else {
+			byteBuffer = ByteBuffer.allocate(length+4);			
+		}
 		byteBuffer.putInt(0, id);
 		for (int i = 0; i<rollTxHashBytes.length; i++) byteBuffer.put(0+4+i, rollTxHashBytes[i]);
 		Random random = new Random();
 		Double roll = random.nextDouble();
 		byteBuffer.putDouble(32+4, roll); //random double on (0,1)
+		if (chaAmount.compareTo(BigInteger.ZERO)>0) {
+			byteBuffer.putLong(32+4+8, chaAmount.longValue());
+		}
 		List<Byte> dataArrayList = Util.toByteArrayList(byteBuffer.array());
 		dataArrayList.addAll(0, Util.toByteArrayList(Config.prefix.getBytes()));
 		byte[] data = Util.toByteArray(dataArrayList);
@@ -167,33 +189,14 @@ public class Roll {
 								destinations.add(Config.donationAddress);
 								BigInteger feeAmount = BigInteger.valueOf(Config.feeAddressFee).subtract(BigInteger.valueOf(Config.minFee)).subtract(BigInteger.valueOf(Config.dustSize*2));
 								btcAmounts.add(feeAmount);
+								
 								BigInteger convertToCha = amount.subtract(BigInteger.valueOf(Config.feeAddressFee));
-								ResultSet rsQuotes = db.executeQuery("select * from quotes where validity='valid' and cha_remaining>0 order by price asc,tx_index asc;");
-								while (rsQuotes.next()) {
-									if (convertToCha.compareTo(BigInteger.ZERO)>0) {
-										Double price = rsQuotes.getDouble("price");
-										BigInteger chaRemaining = BigInteger.valueOf(rsQuotes.getLong("cha_remaining"));
-										BigInteger btcRemaining = new BigDecimal(chaRemaining.doubleValue()*price).toBigInteger();
-										if (convertToCha.compareTo(btcRemaining)>=0) {
-											destinations.add(rsQuotes.getString("source"));
-											btcAmounts.add(new BigDecimal(chaRemaining.doubleValue()*price).toBigInteger());
-											convertToCha = convertToCha.subtract(btcRemaining);
-										} else {
-											destinations.add(rsQuotes.getString("source"));
-											btcAmounts.add(new BigDecimal(convertToCha.doubleValue()*price).toBigInteger());											
-											convertToCha = BigInteger.ZERO;
-										}
-									}
-								}
-								if (convertToCha.compareTo(BigInteger.ZERO)>0) {
-									for (Vin vin : txInfo.vin) {
-										if (convertToCha.compareTo(BigInteger.ZERO)>0 && vin.addr!=null && !vin.addr.equals("")) {
-											destinations.add(txInfo.vin.get(0).addr);
-											btcAmounts.add(convertToCha);
-										}
-									}
-								}
-								Transaction tx = Roll.create(Config.feeAddress, destinations, btcAmounts, rollTxHash, unspent.txid, unspent.vout);
+								
+								Double price = 0.001;//Util.getBestOfferOnExchanges(convertToCha.doubleValue()/Config.unit.doubleValue());
+								//Util.buyBestOfferOnExchanges(convertToCha.doubleValue()/Config.unit);
+								BigInteger chaAmount = new BigDecimal(convertToCha.doubleValue() * price).toBigInteger();
+								convertToCha = BigInteger.ZERO;
+								Transaction tx = Roll.create(Config.feeAddress, destinations, btcAmounts, rollTxHash, chaAmount, unspent.txid, unspent.vout);
 								blocks.sendTransaction(Config.feeAddress, tx);
 							} catch (Exception e) {
 							}
@@ -204,11 +207,11 @@ public class Roll {
 			}
 		}
 	}
-
 }
 
 class RollRequestInfo {
 	public String source;
 	public String rollTxHash;
 	public Double roll;
+	public BigInteger chaAmount;
 }

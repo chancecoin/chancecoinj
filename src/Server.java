@@ -1298,8 +1298,8 @@ public class Server implements Runnable {
 				attributes.put("poker_chance", Deck.chanceOfWinning(deal.cards)*100.0);
 				attributes.put("poker_hand", pokerHand);
 												
-				//get last 200 bets
-				ResultSet rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,cards,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 200;");
+				//get last 100 bets
+				ResultSet rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,cards,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 100;");
 				List<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -1356,6 +1356,7 @@ public class Server implements Runnable {
 					HashMap<String,Object> map = new HashMap<String,Object>();
 					map.put("source", betInfo.source);
 					map.put("bet", betInfo.bet.doubleValue()/Config.unit.doubleValue());
+					map.put("betBTC", betInfo.btcAmount.doubleValue()/Config.unit.doubleValue());
 					map.put("chance", betInfo.chance);
 					map.put("payout", betInfo.payout);
 					map.put("cards", betInfo.cards);
@@ -1446,8 +1447,8 @@ public class Server implements Runnable {
 				attributes.put("poker_chance", Deck.chanceOfWinning(deal.cards)*100.0);
 				attributes.put("poker_hand", pokerHand);
 				
-				//get last 200 bets
-				ResultSet rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,cards,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 200;");
+				//get last 100 bets
+				ResultSet rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,cards,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 100;");
 				List<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
 				try {
 					while (rs.next()) {
@@ -1504,6 +1505,7 @@ public class Server implements Runnable {
 					HashMap<String,Object> map = new HashMap<String,Object>();
 					map.put("source", betInfo.source);
 					map.put("bet", betInfo.bet.doubleValue()/Config.unit.doubleValue());
+					map.put("betBTC", betInfo.btcAmount.doubleValue()/Config.unit.doubleValue());
 					map.put("chance", betInfo.chance);
 					map.put("payout", betInfo.payout);
 					map.put("cards", betInfo.cards);
