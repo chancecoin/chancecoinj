@@ -331,18 +331,15 @@ public class Bet {
 		if (!((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit)) throw new Exception("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
 
 		BigInteger btcAmount = BigInteger.ZERO;
-		destination = "";
 
-		if (destination.equals("")) {
-			if (resolution.equals("instant")) {
-				destination = Config.feeAddress;
-				btcAmount = BigInteger.valueOf(Config.feeAddressFee);
-			}
-			if (asset.equals("BTC")) {
-				destination = Config.feeAddress;
-				btcAmount = bet.add(BigInteger.valueOf(Config.feeAddressFee));
-				bet = BigInteger.ZERO;
-			}
+		if (resolution.equals("instant")) {
+			destination = Config.feeAddress;
+			btcAmount = BigInteger.valueOf(Config.feeAddressFee);
+		}
+		if (asset.equals("BTC")) {
+			destination = Config.feeAddress;
+			btcAmount = BigInteger.valueOf(Config.feeAddressFee).add(bet);
+			bet = BigInteger.ZERO;
 		}
 
 		Blocks blocks = Blocks.getInstance();
@@ -414,18 +411,15 @@ public class Bet {
 		if (!((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit)) throw new Exception("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
 
 		BigInteger btcAmount = BigInteger.ZERO;
-		destination = "";
 
-		if (destination.equals("")) {
-			if (resolution.equals("instant")) {
-				destination = Config.feeAddress;
-				btcAmount = BigInteger.valueOf(Config.feeAddressFee);
-			}
-			if (asset.equals("BTC")) {
-				destination = Config.feeAddress;
-				btcAmount = bet.add(BigInteger.valueOf(Config.feeAddressFee));
-				bet = BigInteger.ZERO;
-			}
+		if (resolution.equals("instant")) {
+			destination = Config.feeAddress;
+			btcAmount = BigInteger.valueOf(Config.feeAddressFee);
+		}
+		if (asset.equals("BTC")) {
+			destination = Config.feeAddress;
+			btcAmount = BigInteger.valueOf(Config.feeAddressFee).add(bet);
+			bet = BigInteger.ZERO;
 		}
 
 		Blocks blocks = Blocks.getInstance();
@@ -581,9 +575,9 @@ public class Bet {
 				if (rsRoll.next()) {
 					roll = rsRoll.getDouble("roll");
 				}
-				
+
 				Blocks blocks = Blocks.getInstance();
-				
+
 				//check for pending roll
 				for (UnspentOutput unspent : Util.getUnspents(Config.donationAddress)) {
 					if (unspent.confirmations.equals(0)) {

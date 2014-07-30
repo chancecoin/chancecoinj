@@ -196,11 +196,11 @@ public class Roll {
 								btcAmounts.add(feeAmount);
 								
 								BigInteger convertToCha = amount.subtract(BigInteger.valueOf(Config.feeAddressFee));
-								
-								Double price = 0.001;//Util.getBestOfferOnExchanges(convertToCha.doubleValue()/Config.unit.doubleValue());
-								//Util.buyBestOfferOnExchanges(convertToCha.doubleValue()/Config.unit);
-								BigInteger chaAmount = new BigDecimal(convertToCha.doubleValue() * price).toBigInteger();
-								convertToCha = BigInteger.ZERO;
+								BigInteger chaAmount = BigInteger.ZERO;
+								if (convertToCha.compareTo(BigInteger.ZERO)>0) {
+									Double price = Util.buyBestOfferOnExchanges(convertToCha.doubleValue()/Config.unit.doubleValue());
+									chaAmount = new BigDecimal(convertToCha.doubleValue() * price).toBigInteger();
+								}
 								Transaction tx = Roll.create(Config.feeAddress, destinations, btcAmounts, rollTxHash, chaAmount, unspent.txid, unspent.vout);
 								blocks.sendTransaction(Config.feeAddress, tx);
 							} catch (Exception e) {
