@@ -141,8 +141,9 @@ public class Bet {
 					List<Byte> message = blocks.getMessageFromTransaction(dataString);
 
 					Double roll = null;
+					BigInteger chaAmount = BigInteger.ZERO;
 					//check for pending roll
-					for (UnspentOutput unspent : Util.getUnspents(Config.donationAddress)) {
+					for (UnspentOutput unspent : Util.getUnspents(Config.marketMakingAddress)) {
 						if (unspent.confirmations.equals(0)) {
 							TransactionInfoInsight txInfo = Util.getTransactionInsight(unspent.txid);
 							List<Byte> dataArrayList = null;
@@ -175,8 +176,8 @@ public class Bet {
 								List<Byte> messageTypeRoll = blocks.getMessageTypeFromTransaction(dataStringRoll);
 								List<Byte> messageRoll = blocks.getMessageFromTransaction(dataStringRoll);
 
-								if (messageTypeRoll.get(3)==Roll.id.byteValue() && messageRoll.size() == Roll.length) {
-									ByteBuffer byteBuffer = ByteBuffer.allocate(Roll.length);
+								if (messageTypeRoll.get(3)==Roll.id.byteValue() && (messageRoll.size() == Roll.length || messageRoll.size() == Roll.length2)) {
+									ByteBuffer byteBuffer = ByteBuffer.allocate(messageRoll.size());
 									for (byte b : messageRoll) {
 										byteBuffer.put(b);
 									}	
@@ -184,6 +185,9 @@ public class Bet {
 									while (rollTxHash.length()<64) rollTxHash = "0"+rollTxHash;
 									if (rollTxHash.equals(txHash)) {
 										roll = byteBuffer.getDouble(32) * 100.0;									
+										if (messageRoll.size() == Roll.length2) {
+											chaAmount = BigInteger.valueOf(byteBuffer.getLong(32+8));
+										}
 									}
 								}
 							}
@@ -196,6 +200,7 @@ public class Bet {
 							byteBuffer.put(b);
 						}			
 						BigInteger bet = BigInteger.valueOf(byteBuffer.getLong(0));
+						if (chaAmount.compareTo(BigInteger.ZERO)>0) bet = chaAmount; 
 						Double chance = byteBuffer.getDouble(8);
 						Double payout = byteBuffer.getDouble(16);
 						Double houseEdge = Config.houseEdge;
@@ -204,12 +209,12 @@ public class Bet {
 						Boolean payoutChanceCongruent = Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-houseEdge)),6) || Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-oldHouseEdge)),6);
 						BigInteger chaSupply = Util.chaSupplyForBetting();
 						String validity = "invalid";
-						if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
+						if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>=0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
 							if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
 								if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
 									BetInfo betInfo = new BetInfo();
 									betInfo.bet = bet;
-									betInfo.btcAmount = btcAmount;
+									betInfo.btcAmount = btcAmount.subtract(BigInteger.valueOf(Config.feeAddressFee));
 									betInfo.chance = chance;
 									betInfo.payout = payout;
 									betInfo.source = source;
@@ -246,6 +251,7 @@ public class Bet {
 							byteBuffer.put(b);
 						}			
 						BigInteger bet = BigInteger.valueOf(byteBuffer.getLong(0));
+						if (chaAmount.compareTo(BigInteger.ZERO)>0) bet = chaAmount; 
 						Deck deal = new Deck();
 						deal.cards.clear();
 
@@ -258,12 +264,12 @@ public class Bet {
 						Boolean payoutChanceCongruent = Util.roundOff(chance,6)==Util.roundOff(100.0/(payout/(1.0-Config.houseEdge)),6);
 						BigInteger chaSupply = Util.chaSupplyForBetting();
 						String validity = "invalid";
-						if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
+						if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>=0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
 							if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
 								if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
 									BetInfo betInfo = new BetInfo();
 									betInfo.bet = bet;
-									betInfo.btcAmount = btcAmount;
+									betInfo.btcAmount = btcAmount.subtract(BigInteger.valueOf(Config.feeAddressFee));
 									betInfo.chance = chance;
 									betInfo.payout = payout;
 									betInfo.source = source;
@@ -579,7 +585,7 @@ public class Bet {
 				Blocks blocks = Blocks.getInstance();
 
 				//check for pending roll
-				for (UnspentOutput unspent : Util.getUnspents(Config.donationAddress)) {
+				for (UnspentOutput unspent : Util.getUnspents(Config.marketMakingAddress)) {
 					if (unspent.confirmations.equals(0)) {
 						TransactionInfoInsight txInfo = Util.getTransactionInsight(unspent.txid);
 						List<Byte> dataArrayList = null;

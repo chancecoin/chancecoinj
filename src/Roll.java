@@ -68,7 +68,7 @@ public class Roll {
 					}
 					if (chaAmount.compareTo(BigInteger.ZERO)>0) {
 						Util.debit(source, "CHA", chaAmount, "Debit CHA amount from casino liquidity provider", txHash, blockIndex);
-						db.executeUpdate("update bets set bet = '"+chaAmount.toString()+"' where tx_hash='"+rollTxHash.toString()+"';");
+						db.executeUpdate("update bets set bet = bet+"+chaAmount.toString()+" where tx_hash='"+rollTxHash.toString()+"';");
 					}
 					ResultSet rsBet = db.executeQuery("select * from bets where tx_hash='"+rollTxHash.toString()+"' and resolved='true';");
 					if (rsBet.next()) {
@@ -81,7 +81,7 @@ public class Roll {
 		} catch (SQLException e) {	
 		}
 	}
-	
+
 	public static List<RollRequestInfo> getPendingRollRequests(String source) {
 		Database db = Database.getInstance();
 		ResultSet rs = db.executeQuery("select * from transactions where block_index<0 and source='"+source+"' order by tx_index desc;");
@@ -103,7 +103,7 @@ public class Roll {
 					List<Byte> message = blocks.getMessageFromTransaction(dataString);
 
 					if (messageType.get(3)==Roll.id.byteValue() && (message.size() == length || message.size() == length2)) {
-						ByteBuffer byteBuffer = ByteBuffer.allocate(length);
+						ByteBuffer byteBuffer = ByteBuffer.allocate(message.size());
 						for (byte b : message) {
 							byteBuffer.put(b);
 						}		
@@ -127,7 +127,7 @@ public class Roll {
 		}	
 		return rolls;
 	}
-	
+
 	public static Transaction create(String source, String destination, BigInteger btcAmount, String rollTxHash, BigInteger chaAmount, String useUnspentTxHash, Integer useUnspentVout) throws Exception {
 		List<String> destinations = new ArrayList<String>();
 		destinations.add(destination);
@@ -167,7 +167,7 @@ public class Roll {
 		Transaction tx = blocks.transaction(source, destinations, btcAmounts, BigInteger.valueOf(Config.minFee), dataString, useUnspentTxHash, useUnspentVout);
 		return tx;
 	}
-	
+
 	public static void serviceRollRequests() {
 		if (Util.isOwnAddress(Config.feeAddress)) {
 			List<RollRequestInfo> rollsPending = getPendingRollRequests(Config.feeAddress);
@@ -176,37 +176,42 @@ public class Roll {
 			List<UnspentOutput> unspents = Util.getUnspents(Config.feeAddress);
 			for (UnspentOutput unspent : unspents) {
 				if (unspent.confirmations.equals(0) && unspent.type.equals("pubkeyhash")) {
-					TransactionInfoInsight txInfo = Util.getTransactionInsight(unspent.txid);
 					BigInteger amount = new BigDecimal(unspent.amount*Config.unit).toBigInteger();
-					String rollTxHash = unspent.txid;
-					try {
-						ResultSet rs = db.executeQuery("select * from rolls where roll_tx_hash='"+rollTxHash+"';");
-						Boolean pending = false;
-						for (RollRequestInfo rollInfo : rollsPending) {
-							if (rollInfo.rollTxHash.equals(rollTxHash)) {
-								pending = true;
-							}
-						}
-						if (!pending && !rs.next()) {
-							try {
-								List<String> destinations = new ArrayList<String>();
-								List<BigInteger> btcAmounts = new ArrayList<BigInteger>();
-								destinations.add(Config.donationAddress);
-								BigInteger feeAmount = BigInteger.valueOf(Config.feeAddressFee).subtract(BigInteger.valueOf(Config.minFee)).subtract(BigInteger.valueOf(Config.dustSize*2));
-								btcAmounts.add(feeAmount);
-								
-								BigInteger convertToCha = amount.subtract(BigInteger.valueOf(Config.feeAddressFee));
-								BigInteger chaAmount = BigInteger.ZERO;
-								if (convertToCha.compareTo(BigInteger.ZERO)>0) {
-									Double price = Util.buyBestOfferOnExchanges(convertToCha.doubleValue()/Config.unit.doubleValue());
-									chaAmount = new BigDecimal(convertToCha.doubleValue() * price).toBigInteger();
+					if (amount.compareTo(BigInteger.valueOf(Config.feeAddressFee))>=0) {
+						TransactionInfoInsight txInfo = Util.getTransactionInsight(unspent.txid);
+						String rollTxHash = unspent.txid;
+						try {
+							ResultSet rs = db.executeQuery("select * from rolls where roll_tx_hash='"+rollTxHash+"';");
+							Boolean pending = false;
+							for (RollRequestInfo rollInfo : rollsPending) {
+								if (rollInfo.rollTxHash.equals(rollTxHash)) {
+									pending = true;
 								}
-								Transaction tx = Roll.create(Config.feeAddress, destinations, btcAmounts, rollTxHash, chaAmount, unspent.txid, unspent.vout);
-								blocks.sendTransaction(Config.feeAddress, tx);
-							} catch (Exception e) {
 							}
+							if (!pending && !rs.next()) {
+								try {
+									List<String> destinations = new ArrayList<String>();
+									List<BigInteger> btcAmounts = new ArrayList<BigInteger>();
+									destinations.add(Config.marketMakingAddress);
+									BigInteger convertToCha = amount.subtract(BigInteger.valueOf(Config.feeAddressFee));
+									btcAmounts.add(convertToCha.add(BigInteger.valueOf(Config.minFee)));
+
+									BigInteger chaAmount = BigInteger.ZERO;
+									if (convertToCha.compareTo(BigInteger.valueOf(Config.minFee))>0) {
+										Double price = Util.getBestOfferOnExchanges(convertToCha.doubleValue()/Config.unit.doubleValue());
+										//Util.buyBestOfferOnExchanges(convertToCha.doubleValue()/Config.unit.doubleValue());
+										if (price == null) price = 0.001;
+										chaAmount = new BigDecimal(convertToCha.doubleValue() / price).toBigInteger();
+										logger.info("Converting "+convertToCha+" BTC into "+chaAmount+" CHA at a price of "+price);
+									}
+									Transaction tx = Roll.create(Config.feeAddress, destinations, btcAmounts, rollTxHash, chaAmount, unspent.txid, unspent.vout);
+									blocks.sendTransaction(Config.feeAddress, tx);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+						} catch (SQLException e) {
 						}
-					} catch (SQLException e) {
 					}
 				}
 			}
