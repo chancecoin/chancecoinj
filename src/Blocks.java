@@ -265,7 +265,7 @@ public class Blocks implements Runnable {
 				bitcoinBlock = blockHeight;
 				chancecoinBlock = lastBlock;
 
-				if (chancecoinBlock>0 && bitcoinBlock>0 && chancecoinBlock < bitcoinBlock-144) { 
+				if (chancecoinBlock>0 && bitcoinBlock>0 && chancecoinBlock < bitcoinBlock-Config.redownloadDatabase) { 
 					//if more than 144 blocks out of date (about a day), we re-download the databases
 					deleteDatabases();
 					initialized = false;

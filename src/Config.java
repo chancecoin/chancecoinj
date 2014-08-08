@@ -25,6 +25,7 @@ public class Config {
 	public static String customConfigFile = "./resources/custom.conf";
 	public static Boolean readOnly = false;
 	public static String donationAddress = "1CHANCeWHSRAfvfi4rwo8v6NEY64RfZYqB";
+	public static Integer redownloadDatabase = 144;
 	
 	//version
 	public static Integer majorVersion = 2;
@@ -90,6 +91,9 @@ public class Config {
 				if (prop.getProperty("readOnly").equals("true")) {
 					readOnly = true;
 				}
+			}
+			if (prop.getProperty("redownloadDatabase")!=null) {
+				redownloadDatabase = Integer.parseInt(prop.getProperty("redownloadDatabase"));
 			}
 			
 			if ((new File(customConfigFile)).exists()) {
