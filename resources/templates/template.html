@@ -39,7 +39,7 @@
 				location.hash = this.getAttribute("href");
 			});
 			if($("#num_unresolved_bets").html() > 0) {
-				setInterval(function(){updateUnresolvedBets();}, 10000);
+				setInterval(function(){updateUnresolvedBets();}, 5000);
 			}
 		});
 		$(window).on('popstate', function() {
