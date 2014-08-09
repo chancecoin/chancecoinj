@@ -11,6 +11,7 @@ public class DiceRoller {
 	public static Logger logger = LoggerFactory.getLogger(Blocks.class);
 
 	public static void main(String[] args) {
+		Config.loadUserDefined();
 		Blocks blocks = Blocks.getInstanceAndWait();
 		while (true) {
 			logger.info("Rolling dice");

@@ -200,7 +200,6 @@ public class Bet {
 							byteBuffer.put(b);
 						}			
 						BigInteger bet = BigInteger.valueOf(byteBuffer.getLong(0));
-						if (chaAmount.compareTo(BigInteger.ZERO)>0) bet = chaAmount; 
 						Double chance = byteBuffer.getDouble(8);
 						Double payout = byteBuffer.getDouble(16);
 						Double houseEdge = Config.houseEdge;
@@ -211,6 +210,7 @@ public class Bet {
 						String validity = "invalid";
 						if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>=0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
 							if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
+								if (chaAmount.compareTo(BigInteger.ZERO)>0) bet = chaAmount; 
 								if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
 									BetInfo betInfo = new BetInfo();
 									betInfo.bet = bet;
@@ -251,7 +251,6 @@ public class Bet {
 							byteBuffer.put(b);
 						}			
 						BigInteger bet = BigInteger.valueOf(byteBuffer.getLong(0));
-						if (chaAmount.compareTo(BigInteger.ZERO)>0) bet = chaAmount; 
 						Deck deal = new Deck();
 						deal.cards.clear();
 
@@ -266,6 +265,7 @@ public class Bet {
 						String validity = "invalid";
 						if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>=0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
 							if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
+								if (chaAmount.compareTo(BigInteger.ZERO)>0) bet = chaAmount; 
 								if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
 									BetInfo betInfo = new BetInfo();
 									betInfo.bet = bet;
@@ -572,8 +572,8 @@ public class Bet {
 
 				// Instant bets are resolved using Roll transactions
 				ResultSet rsRoll = null;
-				//PROTOCOL CHANGE: before block 313000, we required the roll transaction to be in the same block
-				if (blockIndex<313000) {
+				//PROTOCOL CHANGE: before block 314650, we required the roll transaction to be in the same block
+				if (blockIndex<314650) {
 					rsRoll = db.executeQuery("select * from rolls where roll_tx_hash='"+txHash+"' and block_index='"+blockIndex.toString()+"'");
 				} else {
 					rsRoll = db.executeQuery("select * from rolls where roll_tx_hash='"+txHash+"'");					
