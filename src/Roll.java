@@ -199,7 +199,7 @@ public class Roll {
 									BigInteger chaAmount = BigInteger.ZERO;
 									if (convertToCha.compareTo(BigInteger.valueOf(Config.minFee))>0) {
 										Double price = Util.getBestOfferOnExchanges(convertToCha.doubleValue()/Config.unit.doubleValue());
-										//Util.buyBestOfferOnExchanges(convertToCha.doubleValue()/Config.unit.doubleValue());
+										Util.buyBestOfferOnExchanges(convertToCha.doubleValue()/Config.unit.doubleValue());
 										if (price == null) { //if we can't get a price from Poloniex, we shall look for the previous traded price
 											ResultSet previousPrices = db.executeQuery("select btc_amount/cha_amount as price from rolls,bets,transactions where rolls.roll_tx_hash=bets.tx_hash and transactions.tx_hash=bets.tx_hash and cha_amount>0 order by bets.tx_index desc limit 1;");
 											if (previousPrices.next()) {
