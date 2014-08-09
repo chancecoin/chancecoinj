@@ -292,11 +292,13 @@ public class Util {
 		if (hasBalance(address, asset)) {
 			BigInteger existingAmount = getBalance(address,asset);
 			BigInteger newAmount = existingAmount.subtract(amount);
-			if (newAmount.compareTo(BigInteger.ZERO)>=0) {
+			//if (newAmount.compareTo(BigInteger.ZERO)>=0) {
 				db.executeUpdate("update balances set amount='"+newAmount.toString()+"' where address='"+address+"' and asset='"+asset+"';");
-				db.executeUpdate("insert into debits(address, asset, amount, calling_function, event, block_index) values('"+address+"','"+asset+"','"+amount.toString()+"', '"+callingFunction+"', '"+event+"', '"+blockIndex.toString()+"');");
-			}
+			//}
+		} else {
+			db.executeUpdate("insert into balances(address, asset, amount) values('"+address+"','"+asset+"','-"+amount.toString()+"');");				
 		}
+		db.executeUpdate("insert into debits(address, asset, amount, calling_function, event, block_index) values('"+address+"','"+asset+"','"+amount.toString()+"', '"+callingFunction+"', '"+event+"', '"+blockIndex.toString()+"');");
 	}
 
 	public static void credit(String address, String asset, BigInteger amount, String callingFunction, String event, Integer blockIndex) {

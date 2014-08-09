@@ -26,10 +26,11 @@ public class Config {
 	public static Boolean readOnly = false;
 	public static String donationAddress = "1CHANCeWHSRAfvfi4rwo8v6NEY64RfZYqB";
 	public static Integer redownloadDatabase = 144;
+	public static Double burnPrice = 0.001;
 	
 	//version
 	public static Integer majorVersion = 2;
-	public static Integer minorVersion = 4;
+	public static Integer minorVersion = 5;
 	public static String version = Integer.toString(majorVersion)+"."+Integer.toString(minorVersion);
 	public static Integer majorVersionDB = 1;
 	public static Integer minorVersionDB = 2;

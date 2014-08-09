@@ -187,7 +187,7 @@
 													<tr>
 															<td><a href="?address=${bet["source"]}">${bet["source"]?substring(0,6)}...</a></td>
 															<td>Pending</td>
-															<td><#if (bet["bet"]>0)>${bet["bet"]} CHA<#else>${bet["betBTC"]} BTC</#if></td>
+															<td><#if (bet["bet"]>0)>${bet["bet"]} CHA<#if (bet["betBTC"]>0)> (${bet["betBTC"]?string(",##0.00000")} BTC)</#if><#else>${bet["betBTC"]?string(",##0.00000")} BTC</#if></td>
 															<td>${bet["chance"]}% / ${bet["payout"]}X</td>
 
 															<#if bet["cards"]??>
@@ -287,7 +287,7 @@
 													<tr>
 															<td><a href="/wallet?address=${bet["source"]}">${bet["source"]?substring(0,6)}...</a></td>
 															<td>Pending</td>
-															<td><#if (bet["bet"]>0)>${bet["bet"]} CHA<#else>${bet["betBTC"]} BTC</#if></td>
+															<td><#if (bet["bet"]>0)>${bet["bet"]} CHA<#if (bet["betBTC"]>0)> (${bet["betBTC"]?string(",##0.00000")} BTC)</#if><#else>${bet["betBTC"]?string(",##0.00000")} BTC</#if></td>
 															<td>${bet["chance"]}% / ${bet["payout"]}X</td>
 
 															<#if bet["cards"]??>

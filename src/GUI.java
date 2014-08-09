@@ -111,7 +111,7 @@ public class GUI extends Application {
 		// create the scene
 		mainStage = new Stage(StageStyle.DECORATED);
 		mainStage.setTitle("Chancecoin");
-		mainStage.getIcons().add(new Image("file:./resources/static/images/logo.png"));
+		mainStage.getIcons().add(new Image("file:./resources/static/images/favicon.png"));
 		mainStage.setIconified(true);
 		Scene scene = new Scene(new Browser(),1000,690, Color.web("#EEEEEE"));
 		mainStage.setResizable(false);

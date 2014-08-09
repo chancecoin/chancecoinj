@@ -200,7 +200,13 @@ public class Roll {
 									if (convertToCha.compareTo(BigInteger.valueOf(Config.minFee))>0) {
 										Double price = Util.getBestOfferOnExchanges(convertToCha.doubleValue()/Config.unit.doubleValue());
 										//Util.buyBestOfferOnExchanges(convertToCha.doubleValue()/Config.unit.doubleValue());
-										if (price == null) price = 0.001;
+										if (price == null) { //if we can't get a price from Poloniex, we shall look for the previous traded price
+											ResultSet previousPrices = db.executeQuery("select btc_amount/cha_amount as price from rolls,bets,transactions where rolls.roll_tx_hash=bets.tx_hash and transactions.tx_hash=bets.tx_hash and cha_amount>0 order by bets.tx_index desc limit 1;");
+											if (previousPrices.next()) {
+												price = previousPrices.getDouble("price");
+											}
+										}
+										if (price == null) price = Config.burnPrice; //if all else fails, we default to the burn valuation
 										chaAmount = new BigDecimal(convertToCha.doubleValue() / price).toBigInteger();
 										logger.info("Converting "+convertToCha+" BTC into "+chaAmount+" CHA at a price of "+price);
 									}
