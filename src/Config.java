@@ -26,6 +26,7 @@ public class Config {
 	public static Boolean readOnly = false;
 	public static String donationAddress = "1CHANCeWHSRAfvfi4rwo8v6NEY64RfZYqB";
 	public static Integer redownloadDatabase = 144;
+	public static Double burnPrice = 0.001;
 	
 	//version
 	public static Integer majorVersion = 2;
