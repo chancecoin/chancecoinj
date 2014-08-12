@@ -19,25 +19,20 @@ import com.lambdaworks.crypto.SCrypt;
 import com.lambdaworks.crypto.SCryptUtil;
 
 //TODO: allow people to verify NY Lottery number calculation easily
-//TODO: force locale to avoid decimals, commas issue
 //TODO: encrypt wallet
-//TODO: make it so when you make a transaction, it automatically shows the pending transaction
-//TODO: make it so pending transactions affect the balance so people can't double bet, double btcpay, etc.
-//TODO: make transactions keep retrying
-//TODO: more information on fees
 //TODO: chancecoin wallet should list all types of transactions maybe?
 //TODO: option to allow btcpays to be completed automatically?
-//TODO: automatically buy CHA at best price and bet (basically bet with BTC, it buys the CHA on the Dex, and we are always offering)
 //TODO: test betting with 0 bet size
 //TODO: other games
 //TODO: redundancy for downloads.txt on github
 //TODO: use NAS's blockchain download stuff if it's better than bitcoinj
-//TODO: other ways to transactions/bet resolving faster?
-//TODO: scratch ticket solution: lock in randomness and bet offline
 //TODO: use n-of-3 multisig as per dexx7's suggestions
-//TODO: bet with BTC
-//TODO: make a wallet that just connects to chancecoin.com api instead of downloading blockchain
-//TODO: transaction chaining
+
+//TODO next:
+//TODO: document fees, new user documentation
+//TODO: BTC bet is default for user with no CHA
+//TODO: make a JS wallet that just connects to chancecoin.com api instead of downloading blockchain
+//TODO: make it so pending transactions affect the balance so people can't double bet
 public class Test {
 
 	public static String solveScryptPuzzle(String betDescription) {

@@ -288,7 +288,9 @@ public class Server implements Runnable {
 					addresses.add(map);
 				}
 				attributes.put("address", address);				
-				attributes.put("addresses", addresses);				
+				attributes.put("addresses", addresses);	
+				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
 				for (ECKey key : blocks.wallet.getKeys()) {
 					if (key.toAddress(blocks.params).toString().equals(address)) {
 						attributes.put("own", true);
@@ -516,7 +518,9 @@ public class Server implements Runnable {
 					addresses.add(map);
 				}
 				attributes.put("address", address);				
-				attributes.put("addresses", addresses);				
+				attributes.put("addresses", addresses);			
+				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
 				for (ECKey key : blocks.wallet.getKeys()) {
 					if (key.toAddress(blocks.params).toString().equals(address)) {
 						attributes.put("own", true);
@@ -543,21 +547,6 @@ public class Server implements Runnable {
 						attributes.put("error", e.getMessage());
 					}
 				}
-//				if (request.queryParams().contains("form") && request.queryParams("form").equals("quote")) {
-//					String source = request.queryParams("source");
-//					Double price = Double.parseDouble(request.queryParams("price"));
-//					Double rawQuantity = Double.parseDouble(request.queryParams("quantity"));
-//					BigInteger chaQuote = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
-//					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
-//					String destination = Config.marketMakingAddress;
-//					try {
-//						Transaction tx = Quote.create(source, destination, chaQuote, price, expiration);
-//						blocks.sendTransaction(source,tx);
-//						attributes.put("success", "Your quote was successful.");
-//					} catch (Exception e) {
-//						attributes.put("error", e.getMessage());
-//					}					
-//				}
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("buy")) {
 					String source = request.queryParams("source");
 					Double price = Double.parseDouble(request.queryParams("price"));
@@ -588,31 +577,9 @@ public class Server implements Runnable {
 						attributes.put("error", e.getMessage());
 					}
 				}
-
-				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
-				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
 				
 				Database db = Database.getInstance();
-				
-//				//get quotes
-//				ResultSet rs = db.executeQuery("select * from quotes where validity='valid' order by price desc;");
-//				ArrayList<HashMap<String, Object>> quotes = new ArrayList<HashMap<String, Object>>();
-//				try {
-//					while (rs.next()) {
-//						HashMap<String,Object> map = new HashMap<String,Object>();
-//						map.put("cha_amount", BigInteger.valueOf(rs.getLong("cha_amount")).doubleValue()/Config.unit.doubleValue());
-//						map.put("cha_remaining", BigInteger.valueOf(rs.getLong("cha_remaining")).doubleValue()/Config.unit.doubleValue());
-//						Double price = rs.getDouble("price");
-//						map.put("price", price);						
-//						map.put("source", rs.getString("source"));
-//						map.put("destination", rs.getString("destination"));
-//						map.put("tx_hash", rs.getString("tx_hash"));
-//						quotes.add(map);
-//					}
-//				} catch (SQLException e) {
-//				}
-//				attributes.put("quotes", quotes);				
-				
+								
 				//get buy orders
 				ResultSet rs = db.executeQuery("select 1.0*give_amount/get_amount as price, get_remaining as quantity,tx_hash from orders where get_asset='CHA' and give_asset='BTC' and validity='valid' and give_remaining>0 and get_remaining>0 order by price desc, quantity desc;");
 				ArrayList<HashMap<String, Object>> ordersBuy = new ArrayList<HashMap<String, Object>>();
@@ -738,14 +705,13 @@ public class Server implements Runnable {
 				}
 				attributes.put("address", address);				
 				attributes.put("addresses", addresses);
+				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
 				for (ECKey key : blocks.wallet.getKeys()) {
 					if (key.toAddress(blocks.params).toString().equals(address)) {
 						attributes.put("own", true);
 					}
 				}
-				
-				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
-				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
 				
 				Database db = Database.getInstance();
 				
@@ -894,6 +860,8 @@ public class Server implements Runnable {
 				}
 				attributes.put("address", address);
 				attributes.put("addresses", addresses);
+				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
 				for (ECKey key : blocks.wallet.getKeys()) {
 					if (key.toAddress(blocks.params).toString().equals(address)) {
 						attributes.put("own", true);
@@ -1141,15 +1109,14 @@ public class Server implements Runnable {
 				}
 				attributes.put("address", address);
 				attributes.put("addresses", addresses);
+				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
 				for (ECKey key : blocks.wallet.getKeys()) {
 					if (key.toAddress(blocks.params).toString().equals(address)) {
 						attributes.put("own", true);
 					}
 				}
-				
-				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
-				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
-				
+								
 				Database db = Database.getInstance();
 
 				//get my sends
@@ -1276,6 +1243,8 @@ public class Server implements Runnable {
 				}
 				attributes.put("address", address);				
 				attributes.put("addresses", addresses);
+				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
 				for (ECKey key : blocks.wallet.getKeys()) {
 					if (key.toAddress(blocks.params).toString().equals(address)) {
 						attributes.put("own", true);
@@ -1427,6 +1396,8 @@ public class Server implements Runnable {
 				}
 				attributes.put("address", address);				
 				attributes.put("addresses", addresses);
+				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
 				for (ECKey key : blocks.wallet.getKeys()) {
 					if (key.toAddress(blocks.params).toString().equals(address)) {
 						attributes.put("own", true);
@@ -1578,6 +1549,8 @@ public class Server implements Runnable {
 				}
 				attributes.put("address", address);				
 				attributes.put("addresses", addresses);
+				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
 				for (ECKey key : blocks.wallet.getKeys()) {
 					if (key.toAddress(blocks.params).toString().equals(address)) {
 						attributes.put("own", true);
