@@ -30,7 +30,6 @@ import com.lambdaworks.crypto.SCryptUtil;
 
 //TODO next:
 //TODO: document fees, new user documentation
-//TODO: BTC bet is default for user with no CHA
 //TODO: make a JS wallet that just connects to chancecoin.com api instead of downloading blockchain
 //TODO: make it so pending transactions affect the balance so people can't double bet
 public class Test {
