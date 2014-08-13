@@ -81,11 +81,8 @@ public class Bet {
 					BigInteger chaSupply = Util.chaSupplyForBetting();
 					String validity = "invalid";
 					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>=0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
-						if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
-							if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
-								validity = "valid";
-								Util.debit(source, "CHA", bet, "Debit bet amount", txHash, blockIndex);								
-							}
+						if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
+							validity = "valid";
 						}
 					}
 					db.executeUpdate("insert into bets(tx_index, tx_hash, block_index, source, bet, chance, payout, profit, cha_supply, validity) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+bet.toString()+"','"+chance.toString()+"','"+payout.toString()+"','0','"+chaSupply.toString()+"','"+validity+"')");					
@@ -106,11 +103,8 @@ public class Bet {
 					BigInteger chaSupply = Util.chaSupplyForBetting();
 					String validity = "invalid";
 					if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>=0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
-						if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
-							if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
-								validity = "valid";
-								Util.debit(source, "CHA", bet, "Debit bet amount", txHash, blockIndex);								
-							}
+						if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
+							validity = "valid";
 						}
 					}
 					db.executeUpdate("insert into bets(tx_index, tx_hash, block_index, source, destination, bet, chance, payout, profit, cha_supply, validity, cards) values('"+txIndex.toString()+"','"+txHash+"','"+blockIndex.toString()+"','"+source+"','"+destination+"','"+bet.toString()+"','"+chance.toString()+"','"+payout.toString()+"','0','"+chaSupply.toString()+"','"+validity+"','"+deal.toString()+"')");
@@ -209,40 +203,38 @@ public class Bet {
 						BigInteger chaSupply = Util.chaSupplyForBetting();
 						String validity = "invalid";
 						if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>=0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
-							if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
-								if (chaAmount.compareTo(BigInteger.ZERO)>0) bet = chaAmount; 
-								if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
-									BetInfo betInfo = new BetInfo();
-									betInfo.bet = bet;
-									betInfo.btcAmount = btcAmount.subtract(BigInteger.valueOf(Config.feeAddressFee));
-									betInfo.chance = chance;
-									betInfo.payout = payout;
-									betInfo.source = source;
-									betInfo.txHash = txHash;
-									betInfo.roll = null;
-									betInfo.resolved = false;
-									betInfo.profit = null;
-									betInfo.betType = "dice";
+							if (chaAmount.compareTo(BigInteger.ZERO)>0) bet = chaAmount; 
+							if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
+								BetInfo betInfo = new BetInfo();
+								betInfo.bet = bet;
+								betInfo.btcAmount = btcAmount.subtract(BigInteger.valueOf(Config.feeAddressFee));
+								betInfo.chance = chance;
+								betInfo.payout = payout;
+								betInfo.source = source;
+								betInfo.txHash = txHash;
+								betInfo.roll = null;
+								betInfo.resolved = false;
+								betInfo.profit = null;
+								betInfo.betType = "dice";
 
-									if (roll != null) {
-										logger.info("Roll = "+roll.toString()+", chance = "+chance.toString());
+								if (roll != null) {
+									logger.info("Roll = "+roll.toString()+", chance = "+chance.toString());
 
-										BigInteger profit = BigInteger.ZERO;
-										if (roll<chance) {
-											logger.info("The bet is a winner");
-											//win
-											profit = new BigDecimal(bet.doubleValue()*(payout.doubleValue()-1.0)*chaSupply.doubleValue()/(chaSupply.doubleValue()-bet.doubleValue()*payout.doubleValue())).toBigInteger();
-										} else {
-											logger.info("The bet is a loser");
-											//lose
-											profit = bet.multiply(BigInteger.valueOf(-1));
-										}
-										betInfo.profit = profit.doubleValue()/Config.unit.doubleValue();
-										betInfo.roll = roll;
-										betInfo.resolved = true;
+									BigInteger profit = BigInteger.ZERO;
+									if (roll<chance) {
+										logger.info("The bet is a winner");
+										//win
+										profit = new BigDecimal(bet.doubleValue()*(payout.doubleValue()-1.0)*chaSupply.doubleValue()/(chaSupply.doubleValue()-bet.doubleValue()*payout.doubleValue())).toBigInteger();
+									} else {
+										logger.info("The bet is a loser");
+										//lose
+										profit = bet.multiply(BigInteger.valueOf(-1));
 									}
-									bets.add(betInfo);
+									betInfo.profit = profit.doubleValue()/Config.unit.doubleValue();
+									betInfo.roll = roll;
+									betInfo.resolved = true;
 								}
+								bets.add(betInfo);
 							}
 						}
 					} else if (messageType.get(3)==Bet.idPoker.byteValue() && message.size() == lengthPoker) {
@@ -264,58 +256,56 @@ public class Bet {
 						BigInteger chaSupply = Util.chaSupplyForBetting();
 						String validity = "invalid";
 						if (!source.equals("") && bet.compareTo(BigInteger.ZERO)>=0 && chance>0.0 && chance<100.0 && payout>1.0 && payoutChanceCongruent) {
-							if (bet.compareTo(Util.getBalance(source, "CHA"))<=0) {
-								if (chaAmount.compareTo(BigInteger.ZERO)>0) bet = chaAmount; 
-								if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
-									BetInfo betInfo = new BetInfo();
-									betInfo.bet = bet;
-									betInfo.btcAmount = btcAmount.subtract(BigInteger.valueOf(Config.feeAddressFee));
-									betInfo.chance = chance;
-									betInfo.payout = payout;
-									betInfo.source = source;
-									betInfo.txHash = txHash;
-									betInfo.betType = "poker";
-									betInfo.cards = cards;	
-									betInfo.roll = null;
-									betInfo.resolved = false;
-									betInfo.profit = null;
-									if (roll != null) {
-										Deck dealtSoFar = new Deck();
-										dealtSoFar.cards.clear();
-										Deck removedCards = new Deck();
-										removedCards.cards.clear();
-										for (String c : cards.split(" ")) {
-											Card card = new Card(c);
-											if (!card.toString().equals("??")) {
-												removedCards.cards.add(card);
-											}
-											dealtSoFar.cards.add(card);
+							if (chaAmount.compareTo(BigInteger.ZERO)>0) bet = chaAmount; 
+							if ((payout-1.0)*bet.doubleValue()<chaSupply.doubleValue()*Config.maxProfit) {
+								BetInfo betInfo = new BetInfo();
+								betInfo.bet = bet;
+								betInfo.btcAmount = btcAmount.subtract(BigInteger.valueOf(Config.feeAddressFee));
+								betInfo.chance = chance;
+								betInfo.payout = payout;
+								betInfo.source = source;
+								betInfo.txHash = txHash;
+								betInfo.betType = "poker";
+								betInfo.cards = cards;	
+								betInfo.roll = null;
+								betInfo.resolved = false;
+								betInfo.profit = null;
+								if (roll != null) {
+									Deck dealtSoFar = new Deck();
+									dealtSoFar.cards.clear();
+									Deck removedCards = new Deck();
+									removedCards.cards.clear();
+									for (String c : cards.split(" ")) {
+										Card card = new Card(c);
+										if (!card.toString().equals("??")) {
+											removedCards.cards.add(card);
 										}
-										Deck dealRandom = Deck.ShuffleAndDeal(roll / 100.0, removedCards.cards, dealtSoFar.cards.size()-removedCards.cards.size());
-										for (int j = 0; j<dealtSoFar.cards.size(); j++) {
-											if (dealtSoFar.cards.get(j).cardString().equals("??")) {
-												dealtSoFar.cards.set(j, dealRandom.cards.remove(0));
-											}
-										}
-										logger.info("Dealt cards = "+dealtSoFar.toString());
-
-										BigInteger profit = BigInteger.ZERO;
-										if (Deck.didWin(dealtSoFar.cards)) {
-											logger.info("The bet is a winner");
-											//win
-											profit = new BigDecimal(bet.doubleValue()*(payout.doubleValue()-1.0)*chaSupply.doubleValue()/(chaSupply.doubleValue()-bet.doubleValue()*payout.doubleValue())).toBigInteger();
-										} else {
-											logger.info("The bet is a loser");
-											//lose
-											profit = bet.multiply(BigInteger.valueOf(-1));
-										}
-										betInfo.profit = profit.doubleValue()/Config.unit.doubleValue();
-										betInfo.roll = roll;
-										betInfo.cards = dealtSoFar.toString();
-										betInfo.resolved = true;
+										dealtSoFar.cards.add(card);
 									}
-									bets.add(betInfo);
+									Deck dealRandom = Deck.ShuffleAndDeal(roll / 100.0, removedCards.cards, dealtSoFar.cards.size()-removedCards.cards.size());
+									for (int j = 0; j<dealtSoFar.cards.size(); j++) {
+										if (dealtSoFar.cards.get(j).cardString().equals("??")) {
+											dealtSoFar.cards.set(j, dealRandom.cards.remove(0));
+										}
+									}
+									logger.info("Dealt cards = "+dealtSoFar.toString());
+
+									BigInteger profit = BigInteger.ZERO;
+									if (Deck.didWin(dealtSoFar.cards)) {
+										logger.info("The bet is a winner");
+										//win
+										profit = new BigDecimal(bet.doubleValue()*(payout.doubleValue()-1.0)*chaSupply.doubleValue()/(chaSupply.doubleValue()-bet.doubleValue()*payout.doubleValue())).toBigInteger();
+									} else {
+										logger.info("The bet is a loser");
+										//lose
+										profit = bet.multiply(BigInteger.valueOf(-1));
+									}
+									betInfo.profit = profit.doubleValue()/Config.unit.doubleValue();
+									betInfo.roll = roll;
+									betInfo.cards = dealtSoFar.toString();
+									betInfo.resolved = true;
 								}
+								bets.add(betInfo);
 							}
 						}						
 					}
@@ -530,6 +520,12 @@ public class Bet {
 				Date blockTime = new Date((long)rs.getLong("block_time")*1000);
 
 				logger.info("Attempting to resolve bet "+txHash);
+				
+				ResultSet rsIsEarlierBetUnresolved = db.executeQuery("select * from bets where validity='valid' and resolved IS NOT 'true' and source='"+source.toString()+"' and tx_index<'"+txIndex.toString()+"' limit 1;");
+				if (rsIsEarlierBetUnresolved.next()) { //if an earlier bet by the same address is still unresolved, we can't resolve this one yet
+					break;
+				}
+				
 				ResultSet rsCouldWin = db.executeQuery("select sum(bet*(payout-1)) as total from bets,blocks where bets.block_index=blocks.block_index and bets.validity='valid' and blocks.block_index='"+blockIndex.toString()+"';");
 				Double couldWin = rsCouldWin.getDouble("total");
 				couldWin = couldWin / Config.unit;
@@ -633,61 +629,67 @@ public class Bet {
 					}
 				}
 
-				BigInteger chaCredit = BigInteger.ZERO;				
-				if (roll != null) {
-					if (cards!=null && cards.length()>0) { //poker bet
-						Deck dealtSoFar = new Deck();
-						dealtSoFar.cards.clear();
-						Deck removedCards = new Deck();
-						removedCards.cards.clear();
-						for (String c : cards.split(" ")) {
-							Card card = new Card(c);
-							if (!card.toString().equals("??")) {
-								removedCards.cards.add(card);
+				BigInteger chaBalance = Util.getBalance(source, "CHA");
+				if (bet.compareTo(chaBalance)<=0) {
+					BigInteger chaCredit = BigInteger.ZERO;				
+					if (roll != null) {
+						if (cards!=null && cards.length()>0) { //poker bet
+							Deck dealtSoFar = new Deck();
+							dealtSoFar.cards.clear();
+							Deck removedCards = new Deck();
+							removedCards.cards.clear();
+							for (String c : cards.split(" ")) {
+								Card card = new Card(c);
+								if (!card.toString().equals("??")) {
+									removedCards.cards.add(card);
+								}
+								dealtSoFar.cards.add(card);
 							}
-							dealtSoFar.cards.add(card);
-						}
-						Deck deal = Deck.ShuffleAndDeal(roll / 100.0, removedCards.cards, dealtSoFar.cards.size()-removedCards.cards.size());
-						for (int j = 0; j<dealtSoFar.cards.size(); j++) {
-							if (dealtSoFar.cards.get(j).cardString().equals("??")) {
-								dealtSoFar.cards.set(j, deal.cards.remove(0));
+							Deck deal = Deck.ShuffleAndDeal(roll / 100.0, removedCards.cards, dealtSoFar.cards.size()-removedCards.cards.size());
+							for (int j = 0; j<dealtSoFar.cards.size(); j++) {
+								if (dealtSoFar.cards.get(j).cardString().equals("??")) {
+									dealtSoFar.cards.set(j, deal.cards.remove(0));
+								}
 							}
-						}
-						logger.info("Dealt cards = "+dealtSoFar.toString());
+							logger.info("Dealt cards = "+dealtSoFar.toString());
 
-						BigInteger profit = BigInteger.ZERO;
-						if (Deck.didWin(dealtSoFar.cards)) {
-							logger.info("The bet is a winner");
-							//win
-							profit = new BigDecimal(bet.doubleValue()*(payout.doubleValue()-1.0)*chaSupply.doubleValue()/(chaSupply.doubleValue()-bet.doubleValue()*payout.doubleValue())).toBigInteger();
-							BigInteger credit = profit.add(bet);
-							chaCredit = credit;
-						} else {
-							logger.info("The bet is a loser");
-							//lose
-							profit = bet.multiply(BigInteger.valueOf(-1));
-						}
-						db.executeUpdate("update bets set cards='"+dealtSoFar.toString()+"',profit='"+profit.toString()+"', rolla='"+(rollA*100.0)+"', rollb='"+(rollB*100.0)+"', roll='"+roll+"', resolved='true' where tx_index='"+txIndex+"';");						
-					} else { //dice bet
-						logger.info("Roll = "+roll.toString()+", chance = "+chance.toString());
+							BigInteger profit = BigInteger.ZERO;
+							if (Deck.didWin(dealtSoFar.cards)) {
+								logger.info("The bet is a winner");
+								//win
+								profit = new BigDecimal(bet.doubleValue()*(payout.doubleValue()-1.0)*chaSupply.doubleValue()/(chaSupply.doubleValue()-bet.doubleValue()*payout.doubleValue())).toBigInteger();
+								BigInteger credit = profit.add(bet);
+								chaCredit = credit;
+							} else {
+								logger.info("The bet is a loser");
+								//lose
+								profit = bet.multiply(BigInteger.valueOf(-1));
+							}
+							db.executeUpdate("update bets set cards='"+dealtSoFar.toString()+"',profit='"+profit.toString()+"', rolla='"+(rollA*100.0)+"', rollb='"+(rollB*100.0)+"', roll='"+roll+"', resolved='true' where tx_index='"+txIndex+"';");						
+						} else { //dice bet
+							logger.info("Roll = "+roll.toString()+", chance = "+chance.toString());
 
-						BigInteger profit = BigInteger.ZERO;
-						if (roll<chance) {
-							logger.info("The bet is a winner");
-							//win
-							profit = new BigDecimal(bet.doubleValue()*(payout.doubleValue()-1.0)*chaSupply.doubleValue()/(chaSupply.doubleValue()-bet.doubleValue()*payout.doubleValue())).toBigInteger();
-							BigInteger credit = profit.add(bet);
-							chaCredit = credit;
-						} else {
-							logger.info("The bet is a loser");
-							//lose
-							profit = bet.multiply(BigInteger.valueOf(-1));
+							BigInteger profit = BigInteger.ZERO;
+							if (roll<chance) {
+								logger.info("The bet is a winner");
+								//win
+								profit = new BigDecimal(bet.doubleValue()*(payout.doubleValue()-1.0)*chaSupply.doubleValue()/(chaSupply.doubleValue()-bet.doubleValue()*payout.doubleValue())).toBigInteger();
+								BigInteger credit = profit.add(bet);
+								chaCredit = credit;
+							} else {
+								logger.info("The bet is a loser");
+								//lose
+								profit = bet.multiply(BigInteger.valueOf(-1));
+							}
+							db.executeUpdate("update bets set profit='"+profit.toString()+"', rolla='"+(rollA*100.0)+"', rollb='"+(rollB*100.0)+"', roll='"+roll+"', resolved='true' where tx_index='"+txIndex+"';");
 						}
-						db.executeUpdate("update bets set profit='"+profit.toString()+"', rolla='"+(rollA*100.0)+"', rollb='"+(rollB*100.0)+"', roll='"+roll+"', resolved='true' where tx_index='"+txIndex+"';");
+						Util.debit(source, "CHA", bet, "Debit bet amount", txHash, blockIndex);								
+						if (chaCredit.compareTo(BigInteger.ZERO)>0) {
+							Util.credit(source, "CHA", chaCredit, "Bet won", txHash, blockIndex);
+						}
 					}
-					if (chaCredit.compareTo(BigInteger.ZERO)>0) {
-						Util.credit(source, "CHA", chaCredit, "Bet won", txHash, blockIndex);
-					}
+				} else {
+					db.executeUpdate("update bets set validity='invalid' where tx_index='"+txIndex+"';");
 				}
 			}
 		} catch (SQLException e) {
