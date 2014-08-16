@@ -171,7 +171,7 @@
 			<div id="ajax_wait_message" class="alert alert-info" style="display:none"></div>
 			<div id="ajax_result_message" class="alert alert-info" style="display:none"></div>
 		</div>
-		<#if read_only?? || info?? || error?? || success?? || warning?? || (!read_only?? && (parsing?? || ((blocksCHA?? && blocksBTC??) && (blocksCHA!=blocksBTC || blocksBTC=0 || blocksCHA=0)))) || (version_major?? && version_minor?? && min_version_major?? && min_version_minor?? && (version_major?number<min_version_major?number || (version_major?number==min_version_major?number && version_minor?number<min_version_minor?number)))>
+		<#if (read_only?? && title?? && (title=="Casino" || title=="Exchange" || title=="Wallet")) || info?? || error?? || success?? || warning?? || (!read_only?? && (parsing?? || ((blocksCHA?? && blocksBTC??) && (blocksCHA!=blocksBTC || blocksBTC=0 || blocksCHA=0)))) || (version_major?? && version_minor?? && min_version_major?? && min_version_minor?? && (version_major?number<min_version_major?number || (version_major?number==min_version_major?number && version_minor?number<min_version_minor?number)))>
 		<div class="row section messages">
 			<#if info??>
 			<div class="alert alert-info">${info}</div>

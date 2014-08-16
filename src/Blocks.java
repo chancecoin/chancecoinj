@@ -642,40 +642,48 @@ public class Blocks implements Runnable {
 	}
 
 	public void deleteAddress(String address) throws Exception {
-		ECKey deleteKey = null;
-		String deleteAddress = address;
-		for (ECKey key : wallet.getKeys()) {
-			if (key.toAddress(params).toString().equals(deleteAddress)) {
-				deleteKey = key;
+		if (!Config.readOnly) {
+			ECKey deleteKey = null;
+			String deleteAddress = address;
+			for (ECKey key : wallet.getKeys()) {
+				if (key.toAddress(params).toString().equals(deleteAddress)) {
+					deleteKey = key;
+				}
 			}
+			if (deleteKey != null) {
+				logger.info("Deleting private key");
+				wallet.removeKey(deleteKey);
+				if (wallet.getKeys().size()<=0) {
+					ECKey newKey = new ECKey();
+					wallet.addKey(newKey);
+				}
+			} 
+		} else {
+			throw new Exception("Chancecoin is in read only mode.");			
 		}
-		if (deleteKey != null) {
-			logger.info("Deleting private key");
-			wallet.removeKey(deleteKey);
-			if (wallet.getKeys().size()<=0) {
-				ECKey newKey = new ECKey();
-				wallet.addKey(newKey);
-			}
-		} 
 	}
 
 	public String importPrivateKey(ECKey key) throws Exception {
-		String address = "";
-		logger.info("Importing private key");
-		address = key.toAddress(params).toString();
-		logger.info("Importing address "+address);
-		if (wallet.getKeys().contains(key)) {
-			wallet.removeKey(key);
-		}
-		wallet.addKey(key);
-		/*
+		if (!Config.readOnly) {
+			String address = "";
+			logger.info("Importing private key");
+			address = key.toAddress(params).toString();
+			logger.info("Importing address "+address);
+			if (wallet.getKeys().contains(key)) {
+				wallet.removeKey(key);
+			}
+			wallet.addKey(key);
+			/*
 			try {
 				importTransactionsFromAddress(address);
 			} catch (Exception e) {
 				throw new Exception(e.getMessage());
 			}
-		 */
-		return address;	
+			 */
+			return address;	
+		} else {
+			throw new Exception("Chancecoin is in read only mode.");			
+		}
 	}
 	public String importPrivateKey(String privateKey) throws Exception {
 		DumpedPrivateKey dumpedPrivateKey;
@@ -874,27 +882,34 @@ public class Blocks implements Runnable {
 	}
 
 	public Boolean sendTransaction(String source, Transaction tx) throws Exception {
-		try {
-			//System.out.println(tx);
+		return sendTransaction(source, tx, false);
+	}
+	public Boolean sendTransaction(String source, Transaction tx, Boolean force) throws Exception {
+		if (!Config.readOnly || force) {
+			try {
+				//System.out.println(tx);
 
-			byte[] rawTxBytes = tx.bitcoinSerialize();
-			String rawTx = new BigInteger(1, rawTxBytes).toString(16);
-			rawTx = "0" + rawTx;
-			//System.out.println(rawTx);
-			//System.exit(0);
+				byte[] rawTxBytes = tx.bitcoinSerialize();
+				String rawTx = new BigInteger(1, rawTxBytes).toString(16);
+				rawTx = "0" + rawTx;
+				//System.out.println(rawTx);
+				//System.exit(0);
 
-			Blocks blocks = Blocks.getInstance();
-			//blocks.wallet.commitTx(txBet);
-			if (Util.pushTx(rawTx)) {
+				Blocks blocks = Blocks.getInstance();
+				//blocks.wallet.commitTx(txBet);
+				if (Util.pushTx(rawTx)) {
 
-			} else {
-				throw new Exception("The transaction did not go through successfully. Please try again.");	
-			}
-			logger.info("Importing transaction (assigning block number -1)");
-			blocks.importTransaction(tx, null, null);
-			return true;
-		} catch (Exception e) {
-			throw new Exception(e.getMessage());
-		}		
+				} else {
+					throw new Exception("The transaction did not go through successfully. Please try again.");	
+				}
+				logger.info("Importing transaction (assigning block number -1)");
+				blocks.importTransaction(tx, null, null);
+				return true;
+			} catch (Exception e) {
+				throw new Exception(e.getMessage());
+			}		
+		} else {
+			throw new Exception("Chancecoin is in read only mode.");			
+		}
 	}
 }

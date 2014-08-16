@@ -120,11 +120,7 @@ public class Server implements Runnable {
 					String destination = "";
 					try {
 						Transaction tx = Bet.createDiceBet(source, destination, asset, resolution, bet, chance, payout);
-						if (!Config.readOnly) { 
-							blocks.sendTransaction(source, tx);
-						} else {
-							new Exception("This is a read-only version of Chancecoin.");
-						}
+						blocks.sendTransaction(source, tx);
 						results.put("message", "Thank you for betting!");
 					} catch (Exception e) {
 						try {
@@ -155,11 +151,7 @@ public class Server implements Runnable {
 					String destination = "";
 					try {
 						Transaction tx = Bet.createPokerBet(source, destination, asset, resolution, bet, playerCards, boardCards, opponentCards);
-						if (!Config.readOnly) { 
-							blocks.sendTransaction(source, tx);
-						} else {
-							new Exception("This is a read-only version of Chancecoin.");
-						}
+						blocks.sendTransaction(source, tx);
 						results.put("message", "Thank you for betting!");
 					} catch (Exception e) {
 						try {
@@ -178,7 +170,7 @@ public class Server implements Runnable {
 			public Object handle(Request request, Response response) {
 				request.session(true);
 				JSONObject results = new JSONObject();
-				if (!Config.readOnly && request.queryParams().contains("form") && request.queryParams("form").equals("import")) {
+				if (request.queryParams().contains("form") && request.queryParams("form").equals("import")) {
 					String privateKey = request.queryParams("privatekey");
 					try {
 						String address = Blocks.getInstance().importPrivateKey(privateKey);
@@ -211,11 +203,7 @@ public class Server implements Runnable {
 					BigInteger quantity = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
 					try {
 						Transaction tx = Send.create(source, destination, asset, quantity);
-						if (!Config.readOnly) { 
-							blocks.sendTransaction(source, tx);
-						} else {
-							new Exception("This is a read-only version of Chancecoin.");
-						}
+						blocks.sendTransaction(source, tx);
 						results.put("message", "You sent "+asset+" successfully.");
 					} catch (Exception e) {
 						try {
@@ -543,11 +531,7 @@ public class Server implements Runnable {
 					String txHash = request.queryParams("tx_hash");
 					try {
 						Transaction tx = Cancel.create(txHash);
-						if (!Config.readOnly) { 
-							blocks.sendTransaction(address, tx);
-						} else {
-							new Exception("This is a read-only version of Chancecoin.");
-						}
+						blocks.sendTransaction(address, tx);
 						attributes.put("success", "Your order has been cancelled.");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());
@@ -557,11 +541,7 @@ public class Server implements Runnable {
 					String orderMatchId = request.queryParams("order_match_id");
 					try {
 						Transaction tx = BTCPay.create(orderMatchId);
-						if (!Config.readOnly) { 
-							blocks.sendTransaction(address, tx);
-						} else {
-							new Exception("This is a read-only version of Chancecoin.");
-						}
+						blocks.sendTransaction(address, tx);
 						attributes.put("success", "Your payment was successful.");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());
@@ -576,11 +556,7 @@ public class Server implements Runnable {
 					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
 					try {
 						Transaction tx = Order.create(source, "BTC", btcQuantity, "CHA", quantity, expiration, BigInteger.ZERO, BigInteger.ZERO);
-						if (!Config.readOnly) { 
-							blocks.sendTransaction(source, tx);
-						} else {
-							new Exception("This is a read-only version of Chancecoin.");
-						}
+						blocks.sendTransaction(source, tx);
 						attributes.put("success", "Your order was successful.");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());
@@ -595,11 +571,7 @@ public class Server implements Runnable {
 					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
 					try {
 						Transaction tx = Order.create(source, "CHA", quantity, "BTC", btcQuantity, expiration, BigInteger.ZERO, BigInteger.ZERO);
-						if (!Config.readOnly) { 
-							blocks.sendTransaction(source, tx);
-						} else {
-							new Exception("This is a read-only version of Chancecoin.");
-						}
+						blocks.sendTransaction(source, tx);
 						attributes.put("success", "Your order was successful.");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());
@@ -958,11 +930,7 @@ public class Server implements Runnable {
 					BigInteger quantity = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
 					try {
 						Transaction tx = Send.create(source, destination, asset, quantity);
-						if (!Config.readOnly) { 
-							blocks.sendTransaction(source, tx);
-						} else {
-							new Exception("This is a read-only version of Chancecoin.");
-						}
+						blocks.sendTransaction(source, tx);
 						attributes.put("success", "You sent "+asset+" successfully.");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());
@@ -1776,7 +1744,7 @@ public class Server implements Runnable {
 								Boolean alreadySent = rsSentToThisAddress.next();
 								if (!alreadySent) {
 									Transaction tx = Send.create(Config.donationAddress, faucetAddress, "CHA", CHAPerAddress);
-									blocks.sendTransaction(Config.donationAddress,tx);
+									blocks.sendTransaction(Config.donationAddress,tx,true);
 									attributes.put("success", "Thanks! We sent you some CHA.");
 								} else {
 									attributes.put("error", "We could not send you CHA at this time because we already sent you CHA.");								
