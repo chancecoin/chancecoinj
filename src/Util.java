@@ -423,7 +423,7 @@ public class Util {
 	}
 	public static BigInteger chaSupply() {
 		Database db = Database.getInstance();
-		ResultSet rs = db.executeQuery("select (select sum(earned) from burns)+(select sum(profit) from bets where resolved IS 'true')-(select sum(bet) from bets where resolved IS NOT 'true') as supply;");
+		ResultSet rs = db.executeQuery("select (select sum(earned) from burns)+(select sum(profit) from bets where resolved IS 'true') as supply;");
 		try {
 			if (rs.next()) {
 				return BigInteger.valueOf(rs.getLong("supply"));

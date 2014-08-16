@@ -24,7 +24,7 @@ public class Config {
 	public static String ConfigFile = "./resources/chancecoin.conf";
 	public static String customConfigFile = "./resources/custom.conf";
 	public static Boolean readOnly = false;
-	public static String donationAddress = "1CHANCeWHSRAfvfi4rwo8v6NEY64RfZYqB";
+	public static String donationAddress = "1BckY64TE6VrjVcGMizYBE7gt22axnq6CM";
 	public static Integer redownloadDatabase = 144;
 	public static Double burnPrice = 0.001;
 	
