@@ -178,7 +178,7 @@ public class Server implements Runnable {
 			public Object handle(Request request, Response response) {
 				request.session(true);
 				JSONObject results = new JSONObject();
-				if (request.queryParams().contains("form") && request.queryParams("form").equals("import")) {
+				if (!Config.readOnly && request.queryParams().contains("form") && request.queryParams("form").equals("import")) {
 					String privateKey = request.queryParams("privatekey");
 					try {
 						String address = Blocks.getInstance().importPrivateKey(privateKey);
