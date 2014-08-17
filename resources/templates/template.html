@@ -17,9 +17,13 @@
   <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
 	<script type="text/javascript" src="/js/jsapi.js"></script>
 	<script type="text/javascript" src="/js/jquery.min.js"></script>
+	<#if title?? && title=="Technical">
 	<script type="text/javascript" src="/js/MathJax/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+	</#if>
 	<script type="text/javascript" src="/js/bootstrap.min.js"></script>
+	<#if title?? && title=="Casino">
 	<script type="text/javascript" src="/js/highcharts.js"></script>
+	</#if>
 	<script type="text/javascript" src="/js/exporting.js"></script>
 	<script type="text/javascript" src="/js/ajax.js"></script>
 	<script type="text/javascript" src="/js/bootstrap-select.min.js"></script>

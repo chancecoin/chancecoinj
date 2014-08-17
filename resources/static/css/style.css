@@ -140,6 +140,10 @@ input {
 	margin-bottom: 1em;
 }
 
+.centered {
+	text-align: center;
+}
+
 .center {
 	margin: 1em auto;
 }
