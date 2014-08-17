@@ -776,6 +776,7 @@ public class Blocks implements Runnable {
 					}
 				}
 			} catch (AddressFormatException e) {
+				throw new Exception("The address is not valid.");
 			}
 
 			for (int i = 0; i < dataArrayList.size(); i+=32) {
