@@ -2,9 +2,11 @@ cd createjar
 sh packager.sh
 sh makerelease.sh
 cd ../
-cp createjar/release.zip build/Chancecoin-2.7.zip
+rm build/*.zip
+cp createjar/release.zip build/Chancecoin-2.8.zip
 mkdir chancecoin.com
 mkdir chancecoin.com/downloads
+rm chancecoin.com/downloads/*.zip
 cp build/* chancecoin.com/downloads
 
 #to do a release:

@@ -46,7 +46,7 @@ public class Server implements Runnable {
 	public void run() { 
 		init(); 
 	} 
-	
+
 	public Map<String, Object> updateChatStatus(Request request, Map<String, Object> attributes) {
 		if (request.session().attributes().contains("chat_open")) {
 			attributes.put("chat_open", request.session().attribute("chat_open"));
@@ -55,7 +55,7 @@ public class Server implements Runnable {
 		}
 		return attributes;
 	}
-	
+
 	public void init() {
 		//start Blocks thread
 		Blocks blocks = Blocks.getInstance();
@@ -63,7 +63,7 @@ public class Server implements Runnable {
 		blocksThread.setDaemon(true);
 		blocksThread.start(); 
 		Config.loadUserDefined();
-		
+
 		boolean inJar = false;
 		try {
 			CodeSource cs = this.getClass().getProtectionDomain().getCodeSource();
@@ -72,9 +72,9 @@ public class Server implements Runnable {
 		catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
-		
+
 		setPort(Config.serverPort);    
-		
+
 		final Configuration configuration = new Configuration();
 		try {
 			if (inJar) {
@@ -247,7 +247,7 @@ public class Server implements Runnable {
 				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
 
 				Blocks blocks = Blocks.getInstance();
-				
+
 				if (request.queryParams().contains("reparse") && !Config.readOnly) {
 					blocks.reparse(true);
 				}
@@ -256,7 +256,7 @@ public class Server implements Runnable {
 					blocks.initialized = false;
 					blocks.init();
 				}
-				
+
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
@@ -270,9 +270,9 @@ public class Server implements Runnable {
 				attributes.put("version_minor", Config.minorVersion);
 				blocks.versionCheck();
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
-					
+
 				String address = Util.getAddresses().get(0);
-				
+
 				if (request.session().attributes().contains("address")) {
 					address = request.session().attribute("address");
 				}
@@ -296,7 +296,7 @@ public class Server implements Runnable {
 						attributes.put("own", true);
 					}
 				}
-				
+
 				//poker hand
 				List<String> pokerHand = new ArrayList<String>();
 				Deck deal = Deck.ShuffleAndDeal(new Random().nextDouble(), null, 9);
@@ -307,12 +307,12 @@ public class Server implements Runnable {
 				}
 				attributes.put("poker_chance", Deck.chanceOfWinning(deal.cards)*100.0);
 				attributes.put("poker_hand", pokerHand);
-				
+
 				Database db = Database.getInstance();
-								
+
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
-				
+
 				//get recent bets
 				ResultSet rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,cards,resolved,bets.tx_index as tx_index,block_time,transactions.btc_amount as btc_amount from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index and bets.profit!=0 order by bets.block_index desc, bets.tx_index desc limit 10;");
 				ArrayList<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
@@ -338,7 +338,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("bets", bets);
-				
+
 				//get my pending bets
 				List<BetInfo> betsPending = Bet.getPending(address);
 				bets = new ArrayList<HashMap<String, Object>>();
@@ -365,10 +365,10 @@ public class Server implements Runnable {
 					bets.add(map);
 				}
 				attributes.put("my_bets_pending", bets);
-				
+
 				//get my number of unresolved bets
 				attributes.put("num_unresolved_bets", numUnresolvedBets);
-				
+
 				return modelAndView(attributes, "index.html");
 			}
 		});
@@ -485,7 +485,7 @@ public class Server implements Runnable {
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Exchange");
 				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
-				
+
 				Blocks blocks = Blocks.getInstance();
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);
@@ -501,7 +501,7 @@ public class Server implements Runnable {
 				attributes.put("market_making_address", Config.marketMakingAddress);				
 				Blocks.getInstance().versionCheck();
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
-				
+
 				String address = Util.getAddresses().get(0);
 				if (request.session().attributes().contains("address")) {
 					address = request.session().attribute("address");
@@ -526,12 +526,12 @@ public class Server implements Runnable {
 						attributes.put("own", true);
 					}
 				}
-				
+
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("cancel")) {
 					String txHash = request.queryParams("tx_hash");
 					try {
 						Transaction tx = Cancel.create(txHash);
-						blocks.sendTransaction(address,tx);
+						blocks.sendTransaction(address, tx);
 						attributes.put("success", "Your order has been cancelled.");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());
@@ -541,7 +541,7 @@ public class Server implements Runnable {
 					String orderMatchId = request.queryParams("order_match_id");
 					try {
 						Transaction tx = BTCPay.create(orderMatchId);
-						blocks.sendTransaction(address,tx);
+						blocks.sendTransaction(address, tx);
 						attributes.put("success", "Your payment was successful.");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());
@@ -556,7 +556,7 @@ public class Server implements Runnable {
 					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
 					try {
 						Transaction tx = Order.create(source, "BTC", btcQuantity, "CHA", quantity, expiration, BigInteger.ZERO, BigInteger.ZERO);
-						blocks.sendTransaction(source,tx);
+						blocks.sendTransaction(source, tx);
 						attributes.put("success", "Your order was successful.");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());
@@ -571,15 +571,15 @@ public class Server implements Runnable {
 					BigInteger expiration = BigInteger.valueOf(Long.parseLong(request.queryParams("expiration")));
 					try {
 						Transaction tx = Order.create(source, "CHA", quantity, "BTC", btcQuantity, expiration, BigInteger.ZERO, BigInteger.ZERO);
-						blocks.sendTransaction(source,tx);
+						blocks.sendTransaction(source, tx);
 						attributes.put("success", "Your order was successful.");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());
 					}
 				}
-				
+
 				Database db = Database.getInstance();
-								
+
 				//get buy orders
 				ResultSet rs = db.executeQuery("select 1.0*give_amount/get_amount as price, get_remaining as quantity,tx_hash from orders where get_asset='CHA' and give_asset='BTC' and validity='valid' and give_remaining>0 and get_remaining>0 order by price desc, quantity desc;");
 				ArrayList<HashMap<String, Object>> ordersBuy = new ArrayList<HashMap<String, Object>>();
@@ -594,7 +594,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("orders_buy", ordersBuy);				
-				
+
 				//get sell orders
 				rs = db.executeQuery("select 1.0*get_amount/give_amount as price, give_remaining as quantity,tx_hash from orders where give_asset='CHA' and get_asset='BTC' and validity='valid' and give_remaining>0 and get_remaining>0 order by price desc, quantity asc;");
 				ArrayList<HashMap<String, Object>> ordersSell = new ArrayList<HashMap<String, Object>>();
@@ -658,7 +658,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("my_order_matches", myOrderMatches);				
-				
+
 				return modelAndView(attributes, "exchange.html");
 			}
 		});	
@@ -671,7 +671,7 @@ public class Server implements Runnable {
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Exchange");
 				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
-				
+
 				Blocks blocks = Blocks.getInstance();
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);
@@ -687,7 +687,7 @@ public class Server implements Runnable {
 				attributes.put("market_making_address", Config.marketMakingAddress);								
 				Blocks.getInstance().versionCheck();
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
-				
+
 				String address = Util.getAddresses().get(0);
 				if (request.session().attributes().contains("address")) {
 					address = request.session().attribute("address");
@@ -712,28 +712,28 @@ public class Server implements Runnable {
 						attributes.put("own", true);
 					}
 				}
-				
+
 				Database db = Database.getInstance();
-				
-//				//get quotes
-//				ResultSet rs = db.executeQuery("select * from quotes where validity='valid' order by price desc;");
-//				ArrayList<HashMap<String, Object>> quotes = new ArrayList<HashMap<String, Object>>();
-//				try {
-//					while (rs.next()) {
-//						HashMap<String,Object> map = new HashMap<String,Object>();
-//						map.put("cha_amount", BigInteger.valueOf(rs.getLong("cha_amount")).doubleValue()/Config.unit.doubleValue());
-//						map.put("cha_remaining", BigInteger.valueOf(rs.getLong("cha_remaining")).doubleValue()/Config.unit.doubleValue());
-//						Double price = rs.getDouble("price");
-//						map.put("price", price);						
-//						map.put("source", rs.getString("source"));
-//						map.put("destination", rs.getString("destination"));
-//						map.put("tx_hash", rs.getString("tx_hash"));
-//						quotes.add(map);
-//					}
-//				} catch (SQLException e) {
-//				}
-//				attributes.put("quotes", quotes);				
-				
+
+				//				//get quotes
+				//				ResultSet rs = db.executeQuery("select * from quotes where validity='valid' order by price desc;");
+				//				ArrayList<HashMap<String, Object>> quotes = new ArrayList<HashMap<String, Object>>();
+				//				try {
+				//					while (rs.next()) {
+				//						HashMap<String,Object> map = new HashMap<String,Object>();
+				//						map.put("cha_amount", BigInteger.valueOf(rs.getLong("cha_amount")).doubleValue()/Config.unit.doubleValue());
+				//						map.put("cha_remaining", BigInteger.valueOf(rs.getLong("cha_remaining")).doubleValue()/Config.unit.doubleValue());
+				//						Double price = rs.getDouble("price");
+				//						map.put("price", price);						
+				//						map.put("source", rs.getString("source"));
+				//						map.put("destination", rs.getString("destination"));
+				//						map.put("tx_hash", rs.getString("tx_hash"));
+				//						quotes.add(map);
+				//					}
+				//				} catch (SQLException e) {
+				//				}
+				//				attributes.put("quotes", quotes);				
+
 				//get buy orders
 				ResultSet rs = db.executeQuery("select 1.0*give_amount/get_amount as price, get_remaining as quantity,tx_hash from orders where get_asset='CHA' and give_asset='BTC' and validity='valid' and give_remaining>0 and get_remaining>0 order by price desc, quantity desc;");
 				ArrayList<HashMap<String, Object>> ordersBuy = new ArrayList<HashMap<String, Object>>();
@@ -748,7 +748,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("orders_buy", ordersBuy);				
-				
+
 				//get sell orders
 				rs = db.executeQuery("select 1.0*get_amount/give_amount as price, give_remaining as quantity,tx_hash from orders where give_asset='CHA' and get_asset='BTC' and validity='valid' and give_remaining>0 and get_remaining>0 order by price desc, quantity asc;");
 				ArrayList<HashMap<String, Object>> ordersSell = new ArrayList<HashMap<String, Object>>();
@@ -812,7 +812,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("my_order_matches", myOrderMatches);				
-				
+
 				return modelAndView(attributes, "exchange.html");
 			}
 		});	
@@ -825,7 +825,7 @@ public class Server implements Runnable {
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Unspents");
 				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
-				
+
 				Blocks blocks = Blocks.getInstance();
 				blocks.deletePending();
 				attributes.put("price_BTC", blocks.priceBTC);
@@ -841,7 +841,7 @@ public class Server implements Runnable {
 				attributes.put("version_minor", Config.minorVersion);
 				Blocks.getInstance().versionCheck();
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
-				
+
 				String address = Util.getAddresses().get(0);
 				request.session(true);
 				if (request.session().attributes().contains("address")) {
@@ -867,7 +867,7 @@ public class Server implements Runnable {
 						attributes.put("own", true);
 					}
 				}
-				
+
 				Double unspentTotal = 0.0;
 				List<UnspentOutput> unspentOutputs = Util.getUnspents(address);
 				ArrayList<HashMap<String, Object>> unspents = new ArrayList<HashMap<String, Object>>();
@@ -897,7 +897,7 @@ public class Server implements Runnable {
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Wallet");
 				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
-				
+
 				Blocks blocks = Blocks.getInstance();
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);
@@ -912,7 +912,7 @@ public class Server implements Runnable {
 				attributes.put("version_minor", Config.minorVersion);
 				Blocks.getInstance().versionCheck();
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
-				
+
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("delete")) {
 					try {
 						Blocks.getInstance().deleteAddress(request.queryParams("address"));
@@ -921,7 +921,7 @@ public class Server implements Runnable {
 						attributes.put("error", "Error when deleting address: "+e.getMessage());
 					}
 				}
-								
+
 				if (request.queryParams().contains("form") && request.queryParams("form").equals("send")) {
 					String source = request.queryParams("source");
 					String destination = request.queryParams("destination");
@@ -930,13 +930,13 @@ public class Server implements Runnable {
 					BigInteger quantity = new BigDecimal(rawQuantity*Config.unit).toBigInteger();
 					try {
 						Transaction tx = Send.create(source, destination, asset, quantity);
-						blocks.sendTransaction(source,tx);
+						blocks.sendTransaction(source, tx);
 						attributes.put("success", "You sent "+asset+" successfully.");
 					} catch (Exception e) {
 						attributes.put("error", e.getMessage());
 					}
 				}
-				
+
 				String address = Util.getAddresses().get(0);
 				if (request.session().attributes().contains("address")) {
 					address = request.session().attribute("address");
@@ -972,12 +972,12 @@ public class Server implements Runnable {
 					addresses.add(map);
 				}
 				attributes.put("addresses", addresses);				
-				
+
 				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
 				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
-				
+
 				Database db = Database.getInstance();
-				
+
 				//get my sends
 				ResultSet rs = db.executeQuery("select * from sends where (source='"+address+"') and asset='CHA' and validity='valid' order by block_index desc, tx_index desc;");
 				ArrayList<HashMap<String, Object>> mySends = new ArrayList<HashMap<String, Object>>();
@@ -1009,7 +1009,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("my_receives", myReceives);								
-				
+
 				//get my burns
 				rs = db.executeQuery("select * from burns where source='"+address+"' and validity='valid' order by block_index desc, tx_index desc;");
 				ArrayList<HashMap<String, Object>> myBurns = new ArrayList<HashMap<String, Object>>();
@@ -1024,7 +1024,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("my_burns", myBurns);
-				
+
 				//get sends
 				rs = db.executeQuery("select * from sends where asset='CHA' and validity='valid' order by block_index desc, tx_index desc limit 20;");
 				ArrayList<HashMap<String, Object>> sends = new ArrayList<HashMap<String, Object>>();
@@ -1040,7 +1040,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("sends", sends);			
-				
+
 				//get burns
 				rs = db.executeQuery("select * from burns where validity='valid' order by earned desc limit 20;");
 				ArrayList<HashMap<String, Object>> burns = new ArrayList<HashMap<String, Object>>();
@@ -1062,7 +1062,7 @@ public class Server implements Runnable {
 					blocks.wallet.saveToFile(new File(blocks.walletFile));
 				} catch (IOException e) {
 				}
-				
+
 				return modelAndView(attributes, "wallet.html");
 			}
 		});	
@@ -1075,7 +1075,7 @@ public class Server implements Runnable {
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Wallet");
 				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
-				
+
 				Blocks blocks = Blocks.getInstance();
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);
@@ -1090,7 +1090,7 @@ public class Server implements Runnable {
 				attributes.put("version_minor", Config.minorVersion);
 				Blocks.getInstance().versionCheck();
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
-				
+
 				String address = Util.getAddresses().get(0);
 				request.session(true);
 				if (request.session().attributes().contains("address")) {
@@ -1116,7 +1116,7 @@ public class Server implements Runnable {
 						attributes.put("own", true);
 					}
 				}
-								
+
 				Database db = Database.getInstance();
 
 				//get my sends
@@ -1150,7 +1150,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("my_receives", myReceives);								
-				
+
 				//get my burns
 				rs = db.executeQuery("select * from burns where source='"+address+"' and validity='valid' order by block_index desc, tx_index desc;");
 				ArrayList<HashMap<String, Object>> myBurns = new ArrayList<HashMap<String, Object>>();
@@ -1165,7 +1165,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("my_burns", myBurns);	
-				
+
 				//get sends
 				rs = db.executeQuery("select * from sends where asset='CHA' and validity='valid' order by block_index desc, tx_index desc limit 20;");
 				ArrayList<HashMap<String, Object>> sends = new ArrayList<HashMap<String, Object>>();
@@ -1181,7 +1181,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("sends", sends);			
-				
+
 				//get burns
 				rs = db.executeQuery("select * from burns where validity='valid' order by earned desc limit 20;");
 				ArrayList<HashMap<String, Object>> burns = new ArrayList<HashMap<String, Object>>();
@@ -1210,7 +1210,7 @@ public class Server implements Runnable {
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Casino");
 				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
-				
+
 				Blocks blocks = Blocks.getInstance();
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);
@@ -1250,14 +1250,14 @@ public class Server implements Runnable {
 						attributes.put("own", true);
 					}
 				}
-				
+
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("max_profit_percentage", Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
 				attributes.put("cards", (new Deck()).cardStrings());
-				
+
 				Database db = Database.getInstance();
-				
+
 				//poker hand
 				List<String> pokerHand = new ArrayList<String>();
 				Deck deal = Deck.ShuffleAndDeal(new Random().nextDouble(), null, 9);
@@ -1268,7 +1268,7 @@ public class Server implements Runnable {
 				}
 				attributes.put("poker_chance", Deck.chanceOfWinning(deal.cards)*100.0);
 				attributes.put("poker_hand", pokerHand);
-												
+
 				//get last 100 bets
 				ResultSet rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,cards,resolved,bets.tx_index as tx_index,block_time,transactions.btc_amount as btc_amount from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 100;");
 				List<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
@@ -1320,7 +1320,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("my_bets", bets);
-								
+
 				//get my pending bets
 				List<BetInfo> betsPending = Bet.getPending(address);
 				bets = new ArrayList<HashMap<String, Object>>();
@@ -1347,10 +1347,10 @@ public class Server implements Runnable {
 					bets.add(map);
 				}
 				attributes.put("my_bets_pending", bets);
-				
+
 				//get my number of unresolved bets
 				attributes.put("num_unresolved_bets", numUnresolvedBets);
-								
+
 				return modelAndView(attributes, "casino.html");
 			}
 		});
@@ -1363,7 +1363,7 @@ public class Server implements Runnable {
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Casino");
 				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
-				
+
 				Blocks blocks = Blocks.getInstance();
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);
@@ -1378,7 +1378,7 @@ public class Server implements Runnable {
 				attributes.put("version_minor", Config.minorVersion);
 				Blocks.getInstance().versionCheck();
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
-				
+
 				String address = Util.getAddresses().get(0);
 				if (request.session().attributes().contains("address")) {
 					address = request.session().attribute("address");
@@ -1403,14 +1403,14 @@ public class Server implements Runnable {
 						attributes.put("own", true);
 					}
 				}
-				
+
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("max_profit_percentage", Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
 				attributes.put("cards", (new Deck()).cardStrings());
 				Database db = Database.getInstance();
-								
+
 				//poker hand
 				List<String> pokerHand = new ArrayList<String>();
 				Deck deal = Deck.ShuffleAndDeal(new Random().nextDouble(), null, 9);
@@ -1421,7 +1421,7 @@ public class Server implements Runnable {
 				}
 				attributes.put("poker_chance", Deck.chanceOfWinning(deal.cards)*100.0);
 				attributes.put("poker_hand", pokerHand);
-				
+
 				//get last 100 bets
 				ResultSet rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,cards,resolved,bets.tx_index as tx_index,block_time,transactions.btc_amount as btc_amount from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 100;");
 				List<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
@@ -1473,7 +1473,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("my_bets", bets);
-					
+
 				//get my pending bets
 				List<BetInfo> betsPending = Bet.getPending(address);
 				bets = new ArrayList<HashMap<String, Object>>();
@@ -1500,10 +1500,10 @@ public class Server implements Runnable {
 					bets.add(map);
 				}
 				attributes.put("my_bets_pending", bets);
-				
+
 				//get my number of unresolved bets
 				attributes.put("num_unresolved_bets", numUnresolvedBets);
-				
+
 				return modelAndView(attributes, "casino.html");
 			}
 		});
@@ -1516,7 +1516,7 @@ public class Server implements Runnable {
 				attributes = updateChatStatus(request, attributes);
 				attributes.put("title", "Casino");
 				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
-				
+
 				Blocks blocks = Blocks.getInstance();
 				attributes.put("price_BTC", blocks.priceBTC);
 				attributes.put("price_CHA", blocks.priceCHA);
@@ -1531,7 +1531,7 @@ public class Server implements Runnable {
 				attributes.put("version_minor", Config.minorVersion);
 				Blocks.getInstance().versionCheck();
 				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
-				
+
 				String address = Util.getAddresses().get(0);
 				if (request.session().attributes().contains("address")) {
 					address = request.session().attribute("address");
@@ -1556,14 +1556,14 @@ public class Server implements Runnable {
 						attributes.put("own", true);
 					}
 				}
-				
+
 				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
 				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
 				attributes.put("max_profit_percentage", Config.maxProfit);
 				attributes.put("house_edge", Config.houseEdge);
 				attributes.put("cards", (new Deck()).cardStrings());
 				Database db = Database.getInstance();
-								
+
 				//poker hand
 				List<String> pokerHand = new ArrayList<String>();
 				Deck deal = Deck.ShuffleAndDeal(new Random().nextDouble(), null, 9);
@@ -1574,7 +1574,7 @@ public class Server implements Runnable {
 				}
 				attributes.put("poker_chance", Deck.chanceOfWinning(deal.cards)*100.0);
 				attributes.put("poker_hand", pokerHand);
-				
+
 				//get profit by time
 				ResultSet rs = db.executeQuery("select blocks.block_time as block_time, (select -sum(bets2.profit) from bets bets2 where bets2.block_index <= bets1.block_index ) as profit, (select sum((1-bets2.payout*bets2.chance/100.0)*bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index ) as expected_profit, (select sum(bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index ) as volume, (select count(bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index ) as nbets from bets bets1, blocks blocks where blocks.block_index=bets1.block_index order by blocks.block_index asc;");
 				ArrayList<HashMap<String, Object>> vstimes = new ArrayList<HashMap<String, Object>>();
@@ -1591,7 +1591,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("vstimes", vstimes);
-				
+
 				//get my profit by time
 				rs = db.executeQuery("select blocks.block_time as block_time, (select sum(bets2.profit) from bets bets2 where bets2.block_index <= bets1.block_index and bets2.source='"+address+"' ) as profit, (select sum((1-bets2.payout*bets2.chance/100.0)*bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index and bets2.source='"+address+"' ) as expected_profit, (select sum(bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index and bets2.source='"+address+"' ) as volume, (select count(bets2.bet) from bets bets2 where bets2.block_index <= bets1.block_index and bets2.source='"+address+"' ) as nbets from bets bets1, blocks blocks where blocks.block_index=bets1.block_index and bets1.source='"+address+"' order by blocks.block_index asc;");
 				ArrayList<HashMap<String, Object>> my_vstimes = new ArrayList<HashMap<String, Object>>();
@@ -1608,7 +1608,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("my_vstimes", my_vstimes);
-				
+
 				//get top winners
 				rs = db.executeQuery("select source, count(bet) as bet_count, avg(bet) as avg_bet, avg(chance) as avg_chance, sum(profit) as sum_profit from bets where validity='valid' group by source order by sum(profit) desc limit 10;");
 				ArrayList<HashMap<String, Object>> winners = new ArrayList<HashMap<String, Object>>();
@@ -1625,7 +1625,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("winners", winners);				
-				
+
 				//get top 10 highest rollers
 				rs = db.executeQuery("select source, count(bet) as bet_count, sum(bet) as sum_bet, avg(chance) as avg_chance, sum(profit) as sum_profit from bets where validity='valid' group by source order by sum(bet) desc limit 10;");
 				ArrayList<HashMap<String, Object>> highRollers = new ArrayList<HashMap<String, Object>>();
@@ -1642,7 +1642,7 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("high_rollers", highRollers);	
-				
+
 				//get top 10 largest bets
 				rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,cards,resolved,bets.tx_index as tx_index,block_time from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.bet desc limit 10;");
 				ArrayList<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
@@ -1667,10 +1667,164 @@ public class Server implements Runnable {
 				} catch (SQLException e) {
 				}
 				attributes.put("largest_bets", bets);
-				
+
 				return modelAndView(attributes, "casino_stats.html");
 			}
 		});
+		post(new FreeMarkerRoute("/faucet") {
+			@Override
+			public ModelAndView handle(Request request, Response response) {
+				setConfiguration(configuration);
+				Map<String, Object> attributes = new HashMap<String, Object>();
+				request.session(true);
+				attributes = updateChatStatus(request, attributes);
+				attributes.put("title", "Faucet");
+				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
+
+				Blocks blocks = Blocks.getInstance();
+				attributes.put("price_BTC", blocks.priceBTC);
+				attributes.put("price_CHA", blocks.priceCHA);
+				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
+				attributes.put("blocksBTC", blocks.bitcoinBlock);
+				attributes.put("blocksCHA", blocks.chancecoinBlock);
+				attributes.put("version", Config.version);
+				attributes.put("min_version", Util.getMinVersion());
+				attributes.put("min_version_major", Util.getMinMajorVersion());
+				attributes.put("min_version_minor", Util.getMinMinorVersion());
+				attributes.put("version_major", Config.majorVersion);
+				attributes.put("version_minor", Config.minorVersion);
+				Blocks.getInstance().versionCheck();
+				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
+
+				String address = Util.getAddresses().get(0);
+				if (request.session().attributes().contains("address")) {
+					address = request.session().attribute("address");
+				}
+				if (request.queryParams().contains("address")) {
+					address = request.queryParams("address");
+					request.session().attribute("address", address);
+				}
+				attributes.put("address", address);		
+				for (ECKey key : blocks.wallet.getKeys()) {
+					if (key.toAddress(blocks.params).toString().equals(address)) {
+						attributes.put("own", true);
+					}
+				}
+
+				ArrayList<HashMap<String, Object>> addresses = new ArrayList<HashMap<String, Object>>();
+				for (String addr : Util.getAddresses()) {
+					HashMap<String,Object> map = new HashMap<String,Object>();	
+					map.put("address", addr);
+					map.put("balance_CHA", Util.getBalance(addr, "CHA").floatValue() / Config.unit.floatValue());
+					addresses.add(map);
+				}
+				attributes.put("addresses", addresses);				
+
+				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
+
+				Database db = Database.getInstance();
+				if (request.queryParams().contains("form") && request.queryParams("form").equals("faucet")) {
+					String faucetAddress = request.queryParams("faucet_address");
+					Integer blockCutoff = blocks.bitcoinBlock-144;
+					BigInteger chaSentRecently = BigInteger.ZERO;
+					BigInteger maxCHAPerDay = BigInteger.valueOf(Config.unit);
+					BigInteger CHAPerAddress = BigInteger.valueOf(Config.unit/20);
+					try {
+						ResultSet rsRecentSends = db.executeQuery("select sum(amount)+0 as amount from sends where source='"+Config.donationAddress+"' and block_index>"+blockCutoff.toString()+";");
+						if (rsRecentSends.next()) {
+							chaSentRecently = BigInteger.valueOf(rsRecentSends.getLong("amount"));
+						}
+					} catch (Exception e) {
+					}
+					try {
+						if (chaSentRecently.compareTo(maxCHAPerDay)<=0) {							
+							if (!Util.hasBalance(faucetAddress, "CHA")) {
+								ResultSet rsSentToThisAddress = db.executeQuery("select * from transactions where source='"+Config.donationAddress+"' and destination='"+faucetAddress+"';");
+								Boolean alreadySent = rsSentToThisAddress.next();
+								if (!alreadySent) {
+									Transaction tx = Send.create(Config.donationAddress, faucetAddress, "CHA", CHAPerAddress);
+									blocks.sendTransaction(Config.donationAddress,tx,true);
+									attributes.put("success", "Thanks! We sent you some CHA.");
+								} else {
+									attributes.put("error", "We could not send you CHA at this time because we already sent you CHA.");								
+								}
+							} else {
+								attributes.put("error", "We could not send you CHA at this time because you already own CHA.");								
+							}
+						} else {
+							attributes.put("error", "We could not send you CHA at this time because we ran out of funds for the day.");								
+						}
+					} catch (Exception e) {
+						attributes.put("error", "We could not send you CHA at this time. Either your balance is already non-zero, or we ran out of funds for the day.");
+					}
+				}
+
+				//save wallet file
+				try {
+					blocks.wallet.saveToFile(new File(blocks.walletFile));
+				} catch (IOException e) {
+				}
+
+				return modelAndView(attributes, "faucet.html");
+			}
+		});	
+		get(new FreeMarkerRoute("/faucet") {
+			@Override
+			public ModelAndView handle(Request request, Response response) {
+				setConfiguration(configuration);
+				Map<String, Object> attributes = new HashMap<String, Object>();
+				request.session(true);
+				attributes = updateChatStatus(request, attributes);
+				attributes.put("title", "Faucet");
+				if (Config.readOnly) attributes.put("read_only", Config.readOnly);
+
+				Blocks blocks = Blocks.getInstance();
+				attributes.put("price_BTC", blocks.priceBTC);
+				attributes.put("price_CHA", blocks.priceCHA);
+				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
+				attributes.put("blocksBTC", blocks.bitcoinBlock);
+				attributes.put("blocksCHA", blocks.chancecoinBlock);
+				attributes.put("version", Config.version);
+				attributes.put("min_version", Util.getMinVersion());
+				attributes.put("min_version_major", Util.getMinMajorVersion());
+				attributes.put("min_version_minor", Util.getMinMinorVersion());
+				attributes.put("version_major", Config.majorVersion);
+				attributes.put("version_minor", Config.minorVersion);
+				Blocks.getInstance().versionCheck();
+				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
+
+				String address = Util.getAddresses().get(0);
+				request.session(true);
+				if (request.session().attributes().contains("address")) {
+					address = request.session().attribute("address");
+				}
+				if (request.queryParams().contains("address")) {
+					address = request.queryParams("address");
+					request.session().attribute("address", address);
+				}
+				ArrayList<HashMap<String, Object>> addresses = new ArrayList<HashMap<String, Object>>();
+				for (String addr : Util.getAddresses()) {
+					HashMap<String,Object> map = new HashMap<String,Object>();	
+					map.put("address", addr);
+					map.put("balance_CHA", Util.getBalance(addr, "CHA").floatValue() / Config.unit.floatValue());
+					addresses.add(map);
+				}
+				attributes.put("address", address);
+				attributes.put("addresses", addresses);
+				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
+				for (ECKey key : blocks.wallet.getKeys()) {
+					if (key.toAddress(blocks.params).toString().equals(address)) {
+						attributes.put("own", true);
+					}
+				}
+
+				Database db = Database.getInstance();
+
+				return modelAndView(attributes, "faucet.html");
+			}
+		});	
 		get(new FreeMarkerRoute("/error") {
 			@Override
 			public ModelAndView handle(Request request, Response response) {

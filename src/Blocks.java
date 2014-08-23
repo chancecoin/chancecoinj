@@ -265,7 +265,7 @@ public class Blocks implements Runnable {
 				bitcoinBlock = blockHeight;
 				chancecoinBlock = lastBlock;
 
-				if (chancecoinBlock>0 && bitcoinBlock>0 && chancecoinBlock < bitcoinBlock-Config.redownloadDatabase) { 
+				if (chancecoinBlock>0 && bitcoinBlock>0 && Config.redownloadDatabase>0 && chancecoinBlock < bitcoinBlock-Config.redownloadDatabase) { 
 					//if more than 144 blocks out of date (about a day), we re-download the databases
 					deleteDatabases();
 					initialized = false;
@@ -686,20 +686,16 @@ public class Blocks implements Runnable {
 		}
 	}
 	public String importPrivateKey(String privateKey) throws Exception {
-		if (!Config.readOnly) {
-			DumpedPrivateKey dumpedPrivateKey;
-			String address = "";
-			ECKey key = null;
-			logger.info("Importing private key");
-			try {
-				dumpedPrivateKey = new DumpedPrivateKey(params, privateKey);
-				key = dumpedPrivateKey.getKey();
-				return importPrivateKey(key);
-			} catch (AddressFormatException e) {
-				throw new Exception(e.getMessage());
-			}
-		} else {
-			throw new Exception("Chancecoin is in read only mode.");			
+		DumpedPrivateKey dumpedPrivateKey;
+		String address = "";
+		ECKey key = null;
+		logger.info("Importing private key");
+		try {
+			dumpedPrivateKey = new DumpedPrivateKey(params, privateKey);
+			key = dumpedPrivateKey.getKey();
+			return importPrivateKey(key);
+		} catch (AddressFormatException e) {
+			throw new Exception(e.getMessage());
 		}
 	}
 
@@ -780,6 +776,7 @@ public class Blocks implements Runnable {
 					}
 				}
 			} catch (AddressFormatException e) {
+				throw new Exception("The address is not valid.");
 			}
 
 			for (int i = 0; i < dataArrayList.size(); i+=32) {
@@ -886,7 +883,10 @@ public class Blocks implements Runnable {
 	}
 
 	public Boolean sendTransaction(String source, Transaction tx) throws Exception {
-		if (!Config.readOnly) {
+		return sendTransaction(source, tx, false);
+	}
+	public Boolean sendTransaction(String source, Transaction tx, Boolean force) throws Exception {
+		if (!Config.readOnly || force) {
 			try {
 				//System.out.println(tx);
 

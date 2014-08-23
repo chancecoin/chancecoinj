@@ -1,0 +1,29 @@
+<#import "template.html" as template>
+<@template.content>
+    <div class="row section">
+
+      <h2 style="text-align: center;">Faucet &#8212; get your first Chancecoins for free!</h2>
+      <form id="faucet_form" action="/faucet" method="post">
+          <input type="hidden" name="form" value="faucet">
+
+          <div class="input-group">
+            <span class="input-group-addon">ADDR</span>
+            <input type="text" placeholder="Bitcoin address" name="faucet_address" data-toggle="tooltip" data-placement="bottom" title="A Bitcoin address is also a Chancecoin address. Enter your Bitcoin address and we'll send free Chancecoins there.">
+          </div>
+          <script>
+          $('input[type=text][name=privatekey]').tooltip({
+          placement: "bottom",
+          trigger: "hover"
+          });
+          </script>
+
+          <div class="input-group">
+            <span class="input-group-btn">
+              <button class="btn btn-default" type="submit">Get free Chancecoins</button>
+            </span>
+          </div>
+      </form>
+
+
+    </div>
+</@template.content>
