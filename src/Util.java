@@ -326,7 +326,7 @@ public class Util {
 	}
 
 	public static String transactionDetailAddress(String txHash) {
-		return "http://insight.bitpay.com/api/tx/"+txHash;
+		return "https://insight.bitpay.com/api/tx/"+txHash;
 	}
 
 	public static TransactionInfoInsight getTransactionInsight(String txHash) {
