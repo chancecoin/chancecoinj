@@ -607,7 +607,7 @@ public class Util {
 					offersInBTCFound += btcToPurchase - offersInBTCFound;
 				}
 			}
-			return offerWeightedAvg * 0.998; //taking 0.2% off for poloniex fees
+			return offerWeightedAvg / 0.998; //taking 0.2% off for poloniex fees
 		} catch (Exception e) {
 			logger.error(e.toString());
 		}		
