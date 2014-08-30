@@ -19,9 +19,8 @@
 	<script type="text/javascript" src="http://chancecoin.com/js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="http://chancecoin.com/js/highcharts.js"></script>
 	<script type="text/javascript" src="http://chancecoin.com/js/exporting.js"></script>
-	<script type="text/javascript" src="http://chancecoin.com/js/ajax.js"></script>
 	<script type="text/javascript" src="http://chancecoin.com/js/bootstrap-select.min.js"></script>
-  <script type="text/javascript" src="http://chancecoin.com/js/bitcoinjs-min.js"></script>
+  <script type="text/javascript" src="http://chancecoin.com/js/bitcoinjs.min.js"></script>
   <script type="text/javascript">
     $(window).on('load', function () {
         $('.selectpicker').selectpicker({
@@ -30,24 +29,38 @@
         importPrivateKey();
     });
     function importPrivateKey() {
-      var key = $( "input[name=privatekey]" ).val();
-      if (key) {
-          createCookie("private_key", key, 999999);
-      } else {
-          eraseCookie("private_key");
-      }
-      if (readCookie("private_key")) {
+      var privateKey = $( "input[name=privatekey]" ).val();
+      if (privateKey) {
           try {
-              var key = new Bitcoin.ECKey.fromWIF(readCookie("private_key"));
-              //var address = key.pub.getAddress().toString();
-              //address = readCookie("private_key");
-              //$("#addresses").empty();
-              //$("#addresses").append('<li><a href="?address='+address+'"><strong>'+address+'</strong> <span class="badge"> CHA</span></a></li>');
-              //$("#address").html(address.substring(0,6)+'... <b class="caret"></b>');
+              var key = new Bitcoin.ECKey.fromWIF(privateKey);
+              var address = key.pub.getAddress().toString();
+              createCookie("private_key", privateKey, 999999);
+              createCookie("address", address, 999999);
           } catch (e) {
-              alert(e);
+          }
+      } else {
+          //eraseCookie("private_key");
+          //eraseCookie("address");
+      }
+      if (readCookie("address")) {
+          try {
+              var address = readCookie("address");
+              //$("#addresses").empty();
+              $("#addresses").append('<li><a href="?address='+address+'"><strong>'+address+'</strong> <span class="badge"> CHA</span></a></li>');
+              $("#address").html(address.substring(0,6)+'... <b class="caret"></b>');
+          } catch (e) {
           }
       }
+    }
+    function processBet(formName) {
+        var bet = $( "input[name=bet]" ).val();
+        var resolution = $( "input[name=resolution]" ).val();
+        var asset = $( "input[name=asset]" ).val();
+        var chance = $( "input[name=chance]" ).val();
+        var payout = $( "input[name=payout]" ).val();
+        if (bet && resolution && asset && chance && payout) {
+            
+        }
     }
 		$(document).ready(function() {
 			if(location.hash) {
@@ -121,7 +134,7 @@
 	        <span class="icon-bar"></span>
 	        <span class="icon-bar"></span>
 	      </button>
-	      <a class="navbar-brand logo" href="http://chancecoin.com/">Chancecoin</a>
+	      <a class="navbar-brand logo" href="#">Chancecoin</a>
 	    </div>
 
 	    <!-- Collect the nav links, forms, and other content for toggling -->
@@ -202,7 +215,6 @@
 								<form id="dice1" action="/casino" class="form-inline" method="post">
 
 										<input type="hidden" name="form" value="bet_dice">
-										<input type="hidden" name="source" value="1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes">
 
 										<div class="form-group">
 											<img src="http://chancecoin.com/images/dice.png" class="casino-icon" />
@@ -259,7 +271,6 @@
 								<form id="poker1" action="/casino" class="form-inline" method="post">
 
 										<input type="hidden" name="form" value="bet_poker">
-										<input type="hidden" name="source" value="1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes">
 
 										<div class="form-group">
 											<img src="http://chancecoin.com/images/poker.png" class="casino-icon" />
