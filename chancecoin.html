@@ -38,12 +38,12 @@
       }
       if (readCookie("private_key")) {
           try {
-              var key = new bitcoin.ECKey.fromWIF(readCookie("private_key"));
-              var address = key.pub.getAddress().toString();
-              address = readCookie("private_key");
-              $("#addresses").empty();
-              $("#addresses").append('<li><a href="?address='+address+'"><strong>'+address+'</strong> <span class="badge"> CHA</span></a></li>');
-              $("#address").html(address.substring(0,6)+'... <b class="caret"></b>');
+              var key = new Bitcoin.ECKey.fromWIF(readCookie("private_key"));
+              //var address = key.pub.getAddress().toString();
+              //address = readCookie("private_key");
+              //$("#addresses").empty();
+              //$("#addresses").append('<li><a href="?address='+address+'"><strong>'+address+'</strong> <span class="badge"> CHA</span></a></li>');
+              //$("#address").html(address.substring(0,6)+'... <b class="caret"></b>');
           } catch (e) {
               alert(e);
           }
