@@ -21,12 +21,34 @@
 	<script type="text/javascript" src="http://chancecoin.com/js/exporting.js"></script>
 	<script type="text/javascript" src="http://chancecoin.com/js/ajax.js"></script>
 	<script type="text/javascript" src="http://chancecoin.com/js/bootstrap-select.min.js"></script>
+  <script type="text/javascript" src="http://chancecoin.com/js/bitcoinjs-min.js"></script>
   <script type="text/javascript">
     $(window).on('load', function () {
         $('.selectpicker').selectpicker({
             'selectedText': 'cat'
         });
+        importPrivateKey();
     });
+    function importPrivateKey() {
+      var key = $( "input[name=privatekey]" ).val();
+      if (key) {
+          createCookie("private_key", key, 999999);
+      } else {
+          eraseCookie("private_key");
+      }
+      if (readCookie("private_key")) {
+          try {
+              var key = new bitcoin.ECKey.fromWIF(readCookie("private_key"));
+              var address = key.pub.getAddress().toString();
+              address = readCookie("private_key");
+              $("#addresses").empty();
+              $("#addresses").append('<li><a href="?address='+address+'"><strong>'+address+'</strong> <span class="badge"> CHA</span></a></li>');
+              $("#address").html(address.substring(0,6)+'... <b class="caret"></b>');
+          } catch (e) {
+              alert(e);
+          }
+      }
+    }
 		$(document).ready(function() {
 			if(location.hash) {
 				$('a[href=' + location.hash + ']').tab('show');
@@ -117,9 +139,35 @@
 						</ul>
 					</li>
 	        <li class="dropdown">
-	          <a href="#" class="dropdown-toggle" data-toggle="dropdown">1FAnfg... <b class="caret"></b></a>
-	          <ul class="dropdown-menu">
-									<li><a href="?address=1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes"><strong>1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes</strong> <span class="badge">1.56 CHA</span></a></li>
+	          <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="address">Import private key <b class="caret"></b></a>
+	          <ul class="dropdown-menu" id="addresses">
+                <li>
+                    <div style="padding: 1em;">
+                        <form id="import_private_key_form" method="post" class="form-inline">
+                            <input type="hidden" name="form" value="import">
+
+                            <div class="form-group">
+                                <div class="input-group">
+                                  <span class="input-group-addon">PK</span>
+                                  <input type="text" placeholder="private key" name="privatekey" data-toggle="tooltip" data-placement="bottom" title="Your private key should be in WIF format. For more information about where to find this, see the Participate page.">
+                                </div>
+                                <script>
+                                $('input[type=text][name=privatekey]').tooltip({
+                                placement: "bottom",
+                                trigger: "hover"
+                                });
+                                </script>
+                            </div>
+                            <div class="form-group">
+                                <div class="input-group">
+                                  <span class="input-group-btn">
+                                    <button class="btn btn-default" onclick="importPrivateKey(); return false;">Import private key</button>
+                                  </span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </li>
 	          </ul>
 	        </li>
 					<li class="dropdown">
@@ -142,39 +190,6 @@
 		</div>
 
 		<div id="num_unresolved_bets" style="display:none">0</div>
-
-    <script type="text/javascript">
-    if (readCookie("private_key")) {
-      document.write('
-      <div class="row section">
-          <h2>Import private key</h2>
-          <form id="import_private_key_form" action="#" method="post" class="form-inline">
-              <input type="hidden" name="form" value="import">
-
-              <div class="form-group">
-                  <div class="input-group">
-                    <span class="input-group-addon">PK</span>
-                    <input type="text" placeholder="private key" name="privatekey" data-toggle="tooltip" data-placement="bottom" title="Your private key should be in WIF format. For more information about where to find this, see the Participate page.">
-                  </div>
-                  <script>
-                  $('input[type=text][name=privatekey]').tooltip({
-                  placement: "bottom",
-                  trigger: "hover"
-                  });
-                  </script>
-              </div>
-              <div class="form-group">
-                  <div class="input-group">
-                    <span class="input-group-btn">
-                      <button class="btn btn-default" type="submit">Import private key</button>
-                    </span>
-                  </div>
-              </div>
-          </form>
-      </div>
-      ');
-    }
-    </script>
 
 		<div class="row section">
 				<ul id="tabs" class="nav nav-tabs" data-tabs="tabs" style="margin-top: 2em;">
