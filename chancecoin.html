@@ -60,6 +60,31 @@
 				return "clubs";
 			}
 		}
+
+    function createCookie(name,value,days) {
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime()+(days*24*60*60*1000));
+            var expires = "; expires="+date.toGMTString();
+        }
+        else var expires = "";
+        document.cookie = name+"="+value+expires+"; path=/";
+    }
+
+    function readCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    }
+
+    function eraseCookie(name) {
+        createCookie(name,"",-1);
+    }
 	</script>
 </head>
 <body>
@@ -117,6 +142,40 @@
 		</div>
 
 		<div id="num_unresolved_bets" style="display:none">0</div>
+
+    <script type="text/javascript">
+    if (readCookie("private_key")) {
+      document.write('
+      <div class="row section">
+          <h2>Import private key</h2>
+          <form id="import_private_key_form" action="#" method="post" class="form-inline">
+              <input type="hidden" name="form" value="import">
+
+              <div class="form-group">
+                  <div class="input-group">
+                    <span class="input-group-addon">PK</span>
+                    <input type="text" placeholder="private key" name="privatekey" data-toggle="tooltip" data-placement="bottom" title="Your private key should be in WIF format. For more information about where to find this, see the Participate page.">
+                  </div>
+                  <script>
+                  $('input[type=text][name=privatekey]').tooltip({
+                  placement: "bottom",
+                  trigger: "hover"
+                  });
+                  </script>
+              </div>
+              <div class="form-group">
+                  <div class="input-group">
+                    <span class="input-group-btn">
+                      <button class="btn btn-default" type="submit">Import private key</button>
+                    </span>
+                  </div>
+              </div>
+          </form>
+      </div>
+      ');
+    }
+    </script>
+
 		<div class="row section">
 				<ul id="tabs" class="nav nav-tabs" data-tabs="tabs" style="margin-top: 2em;">
 						<li class="active"><a href="#dice" data-toggle="tab">Dice</a></li>
