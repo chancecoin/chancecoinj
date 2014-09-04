@@ -19,7 +19,7 @@
 	<script type="text/javascript" src="http://chancecoin.com/js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="http://chancecoin.com/js/highcharts.js"></script>
 	<script type="text/javascript" src="http://chancecoin.com/js/exporting.js"></script>
-	<script type="text/javascript" src="http://chancecoin.com/js/ajax.js"></script>
+	<script type="text/javascript" src="http://0.0.0.0:8080/js/ajax.js"></script>
 	<script type="text/javascript" src="http://chancecoin.com/js/bootstrap-select.min.js"></script>
   <script type="text/javascript">
     $(window).on('load', function () {
@@ -62,7 +62,7 @@
 		}
 	</script>
 </head>
-<body>
+<body onload="getCasinoInfo();">
 	<div class="playingCards fourColours rotateHand simpleCards">
 	<nav class="navbar navbar-default" role="navigation">
 	  <div class="container-fluid">
@@ -340,7 +340,7 @@
 		    <div id="my-tab-content" class="tab-content">
 		        <div class="tab-pane active" id="recent_bets">
 								<h2>Recent bets</h2>
-
+								<div id="bets_content">
 								<table class="table table-striped">
 										<thead>
 												<tr>
@@ -353,7 +353,7 @@
 												</tr>
 										</thead>
 
-										<tbody>
+										<!-- <tbody>
 													<tr>
 															<td><a href="?address=1JX7HnzDy2vZ6ytwKdKoZZiVEjaWR5Ykw8">1JX7Hn...</a></td>
 															<td>2014-08-23 12:36:38</td>
@@ -364,8 +364,10 @@
 
 															<td>10.78 CHA</td>
 													</tr>
-										</tbody>
+
+										</tbody> -->
 								</table>
+							</div>
 
 						</div>
 
@@ -382,7 +384,7 @@
 														<th>Profit</th>
 												</tr>
 										</thead>
-										<tbody>
+										<!-- <tbody>
 													<tr>
 															<td><a href="?address=1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes">1FAnfg...</a></td>
 															<td>2014-08-23 12:36:38</td>
@@ -393,7 +395,7 @@
 
 															<td>-0.1 CHA</td>
 													</tr>
-										</tbody>
+										</tbody> -->
 								</table>
 						</div>
 		    </div>
