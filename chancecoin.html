@@ -21,12 +21,48 @@
 	<script type="text/javascript" src="http://chancecoin.com/js/exporting.js"></script>
 	<script type="text/javascript" src="http://0.0.0.0:8080/js/ajax.js"></script>
 	<script type="text/javascript" src="http://chancecoin.com/js/bootstrap-select.min.js"></script>
+  <script type="text/javascript" src="http://chancecoin.com/js/bitcoinjs.min.js"></script>
   <script type="text/javascript">
     $(window).on('load', function () {
         $('.selectpicker').selectpicker({
             'selectedText': 'cat'
         });
+        importPrivateKey();
     });
+    function importPrivateKey() {
+      var privateKey = $( "input[name=privatekey]" ).val();
+      if (privateKey) {
+          try {
+              var key = new Bitcoin.ECKey.fromWIF(privateKey);
+              var address = key.pub.getAddress().toString();
+              createCookie("private_key", privateKey, 999999);
+              createCookie("address", address, 999999);
+          } catch (e) {
+          }
+      } else {
+          //eraseCookie("private_key");
+          //eraseCookie("address");
+      }
+      if (readCookie("address")) {
+          try {
+              var address = readCookie("address");
+              //$("#addresses").empty();
+              $("#addresses").append('<li><a href="?address='+address+'"><strong>'+address+'</strong> <span class="badge"> CHA</span></a></li>');
+              $("#address").html(address.substring(0,6)+'... <b class="caret"></b>');
+          } catch (e) {
+          }
+      }
+    }
+    function processBet(formName) {
+        var bet = $( "input[name=bet]" ).val();
+        var resolution = $( "input[name=resolution]" ).val();
+        var asset = $( "input[name=asset]" ).val();
+        var chance = $( "input[name=chance]" ).val();
+        var payout = $( "input[name=payout]" ).val();
+        if (bet && resolution && asset && chance && payout) {
+
+        }
+    }
 		$(document).ready(function() {
 			if(location.hash) {
 				$('a[href=' + location.hash + ']').tab('show');
@@ -60,6 +96,31 @@
 				return "clubs";
 			}
 		}
+
+    function createCookie(name,value,days) {
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime()+(days*24*60*60*1000));
+            var expires = "; expires="+date.toGMTString();
+        }
+        else var expires = "";
+        document.cookie = name+"="+value+expires+"; path=/";
+    }
+
+    function readCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    }
+
+    function eraseCookie(name) {
+        createCookie(name,"",-1);
+    }
 	</script>
 </head>
 <body onload="getCasinoInfo();">
@@ -74,7 +135,7 @@
 	        <span class="icon-bar"></span>
 	        <span class="icon-bar"></span>
 	      </button>
-	      <a class="navbar-brand logo" href="http://chancecoin.com/">Chancecoin</a>
+	      <a class="navbar-brand logo" href="#">Chancecoin</a>
 	    </div>
 
 	    <!-- Collect the nav links, forms, and other content for toggling -->
@@ -92,9 +153,35 @@
 						</ul>
 					</li>
 	        <li class="dropdown">
-	          <a href="#" class="dropdown-toggle" data-toggle="dropdown">1FAnfg... <b class="caret"></b></a>
-	          <ul class="dropdown-menu">
-									<li><a href="?address=1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes"><strong>1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes</strong> <span class="badge">1.56 CHA</span></a></li>
+	          <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="address">Import private key <b class="caret"></b></a>
+	          <ul class="dropdown-menu" id="addresses">
+                <li>
+                    <div style="padding: 1em;">
+                        <form id="import_private_key_form" method="post" class="form-inline">
+                            <input type="hidden" name="form" value="import">
+
+                            <div class="form-group">
+                                <div class="input-group">
+                                  <span class="input-group-addon">PK</span>
+                                  <input type="text" placeholder="private key" name="privatekey" data-toggle="tooltip" data-placement="bottom" title="Your private key should be in WIF format. For more information about where to find this, see the Participate page.">
+                                </div>
+                                <script>
+                                $('input[type=text][name=privatekey]').tooltip({
+                                placement: "bottom",
+                                trigger: "hover"
+                                });
+                                </script>
+                            </div>
+                            <div class="form-group">
+                                <div class="input-group">
+                                  <span class="input-group-btn">
+                                    <button class="btn btn-default" onclick="importPrivateKey(); return false;">Import private key</button>
+                                  </span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </li>
 	          </ul>
 	        </li>
 					<li class="dropdown">
@@ -117,6 +204,7 @@
 		</div>
 
 		<div id="num_unresolved_bets" style="display:none">0</div>
+
 		<div class="row section">
 				<ul id="tabs" class="nav nav-tabs" data-tabs="tabs" style="margin-top: 2em;">
 						<li class="active"><a href="#dice" data-toggle="tab">Dice</a></li>
@@ -128,7 +216,6 @@
 								<form id="dice1" action="/casino" class="form-inline" method="post">
 
 										<input type="hidden" name="form" value="bet_dice">
-										<input type="hidden" name="source" value="1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes">
 
 										<div class="form-group">
 											<img src="http://chancecoin.com/images/dice.png" class="casino-icon" />
@@ -185,7 +272,6 @@
 								<form id="poker1" action="/casino" class="form-inline" method="post">
 
 										<input type="hidden" name="form" value="bet_poker">
-										<input type="hidden" name="source" value="1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes">
 
 										<div class="form-group">
 											<img src="http://chancecoin.com/images/poker.png" class="casino-icon" />
