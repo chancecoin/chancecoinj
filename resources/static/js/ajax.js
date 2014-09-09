@@ -103,6 +103,7 @@ function getCardSuit(card) {
 	} else if (card.charAt(1) == "C") {
 		return "clubs";
 	}
+}
 
 function getCasinoInfo() {
 	$.ajax({
