@@ -127,7 +127,7 @@ function getCasinoInfo() {
 
 			html += "<tbody>";
 
-	 		for (betInfo of responseObj.bets) {
+	 		for (betInfo in responseObj.bets) {
 				html += "<tr>";
 				html += "<td>"+betInfo["source"].substring(0,6)+"...</td>";
 				html += "<td>"+betInfo["block_time"]+"</td>";
