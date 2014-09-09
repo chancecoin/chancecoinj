@@ -1,3 +1,26 @@
+$(window).on('load', function () {
+		$('.selectpicker').selectpicker({
+				'selectedText': 'cat'
+		});
+});
+
+$(document).ready(function() {
+	if(location.hash) {
+		$('a[href=' + location.hash + ']').tab('show');
+	}
+	$(document.body).on("click", "a[data-toggle]", function(event) {
+		location.hash = this.getAttribute("href");
+	});
+	if($("#num_unresolved_bets").html() > 0) {
+		setInterval(function(){updateUnresolvedBets();}, 5000);
+	}
+});
+
+$(window).on('popstate', function() {
+	var anchor = location.hash || $("a[data-toggle=tab]").first().attr("href");
+	$('a[href=' + anchor + ']').tab('show');
+});
+
 function updateChatStatus() {
 	$.ajax({
 		url: "/chat_status_update?chat_open="+$('#chat_open').html(),
@@ -61,4 +84,23 @@ function updateUnresolvedBets() {
 			}
 		}
 	});
+}
+
+function getCardRank(card) {
+	if (card.charAt(0) == "T") {
+		return 10;
+	} else {
+		return card.charAt(0);
+	}
+}
+function getCardSuit(card) {
+	if (card.charAt(1) == "D") {
+		return "diams";
+	} else if (card.charAt(1) == "H") {
+		return "hearts";
+	} else if (card.charAt(1) == "S") {
+		return "spades";
+	} else if (card.charAt(1) == "C") {
+		return "clubs";
+	}
 }
