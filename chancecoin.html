@@ -1,0 +1,511 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Chancecoin is a coin for betting on dice in a decentralized casino.">
+
+	<title>Chancecoin - Casino</title>
+	<link rel="stylesheet" href="http://chancecoin.com/css/bootstrap.min.css">
+	<link rel="stylesheet" href="http://chancecoin.com/css/style.css">
+	<link rel="stylesheet" href="http://chancecoin.com/css/bootstrap-select.min.css">
+	<link rel="stylesheet" href="http://chancecoin.com/css/cards.css">
+	<link rel="stylesheet" href="http://chancecoin.com/css/cards-ie.css">
+	<link rel="stylesheet" href="http://chancecoin.com/css/cards-ie9.css">
+	<link rel="shortcut icon" href="http://chancecoin.com/images/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="http://chancecoin.com/images/favicon.ico" type="image/x-icon">
+	<script type="text/javascript" src="http://chancecoin.com/js/jsapi.js"></script>
+	<script type="text/javascript" src="http://chancecoin.com/js/jquery.min.js"></script>
+	<script type="text/javascript" src="http://chancecoin.com/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="http://chancecoin.com/js/highcharts.js"></script>
+	<script type="text/javascript" src="http://chancecoin.com/js/exporting.js"></script>
+	<script type="text/javascript" src="http://0.0.0.0:8080/js/ajax.js"></script>
+	<script type="text/javascript" src="http://chancecoin.com/js/bootstrap-select.min.js"></script>
+  <script type="text/javascript" src="http://chancecoin.com/js/bitcoinjs.min.js"></script>
+	<script type="text/javascript" src="http://chancecoin.com/js/ByteBufferAB.min.js"></script>
+	<script type="text/javascript" src="resources/static/js/lite.js"></script>
+  <script type="text/javascript">
+    $(window).on('load', function () {
+        $('.selectpicker').selectpicker({
+            'selectedText': 'cat'
+        });
+        importPrivateKey();
+    });
+    function importPrivateKey() {
+      var privateKey = $( "input[name=privatekey]" ).val();
+      if (privateKey) {
+          try {
+              var key = new Bitcoin.ECKey.fromWIF(privateKey);
+              var address = key.pub.getAddress().toString();
+              createCookie("private_key", privateKey, 999999);
+              createCookie("address", address, 999999);
+          } catch (e) {
+          }
+      } else {
+          //eraseCookie("private_key");
+          //eraseCookie("address");
+      }
+      if (readCookie("address")) {
+          try {
+              var address = readCookie("address");
+              //$("#addresses").empty();
+              $("#addresses").append('<li><a href="?address='+address+'"><strong>'+address+'</strong> <span class="badge"> CHA</span></a></li>');
+              $("#address").html(address.substring(0,6)+'... <b class="caret"></b>');
+          } catch (e) {
+          }
+      }
+    }
+    function processBet(formName) {
+        var bet = $( "input[name=bet]" ).val();
+        var resolution = $( "input[name=resolution]" ).val();
+        var asset = $( "input[name=asset]" ).val();
+        var chance = $( "input[name=chance]" ).val();
+        var payout = $( "input[name=payout]" ).val();
+        if (bet && resolution && asset && chance && payout) {
+
+        }
+    }
+		$(document).ready(function() {
+			if(location.hash) {
+				$('a[href=' + location.hash + ']').tab('show');
+			}
+			$(document.body).on("click", "a[data-toggle]", function(event) {
+				location.hash = this.getAttribute("href");
+			});
+			if($("#num_unresolved_bets").html() > 0) {
+				setInterval(function(){updateUnresolvedBets();}, 5000);
+			}
+		});
+		$(window).on('popstate', function() {
+			var anchor = location.hash || $("a[data-toggle=tab]").first().attr("href");
+			$('a[href=' + anchor + ']').tab('show');
+		});
+		function getCardRank(card) {
+			if (card.charAt(0) == "T") {
+				return 10;
+			} else {
+				return card.charAt(0);
+			}
+		}
+		function getCardSuit(card) {
+			if (card.charAt(1) == "D") {
+				return "diams";
+			} else if (card.charAt(1) == "H") {
+				return "hearts";
+			} else if (card.charAt(1) == "S") {
+				return "spades";
+			} else if (card.charAt(1) == "C") {
+				return "clubs";
+			}
+		}
+
+    function createCookie(name,value,days) {
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime()+(days*24*60*60*1000));
+            var expires = "; expires="+date.toGMTString();
+        }
+        else var expires = "";
+        document.cookie = name+"="+value+expires+"; path=/";
+    }
+
+    function readCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    }
+
+    function eraseCookie(name) {
+        createCookie(name,"",-1);
+    }
+	</script>
+</head>
+<body onload="getCasinoInfo();">
+	<div class="playingCards fourColours rotateHand simpleCards">
+	<nav class="navbar navbar-default" role="navigation">
+	  <div class="container-fluid">
+	    <!-- Brand and toggle get grouped for better mobile display -->
+	    <div class="navbar-header">
+	      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-navbar-collapse-1">
+	        <span class="sr-only">Toggle navigation</span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	      </button>
+	      <a class="navbar-brand logo" href="#">Chancecoin</a>
+	    </div>
+
+	    <!-- Collect the nav links, forms, and other content for toggling -->
+	    <div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
+	      <ul class="nav navbar-nav">
+	      </ul>
+	      <ul class="nav navbar-nav navbar-right">
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">1 CHA = $0.25 <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="#">CHA Supply <span class="badge">516,326.12</span></a></li>
+							<li><a href="#">BTC price <span class="badge">$506.47</span></a></li>
+							<li><a href="#">CHA price <span class="badge">0.0005 BTC</span></a></li>
+							<li><a href="#">Market cap <span class="badge">$131,586.04</span></a></li>
+						</ul>
+					</li>
+	        <li class="dropdown">
+	          <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="address">Import private key <b class="caret"></b></a>
+	          <ul class="dropdown-menu" id="addresses">
+                <li>
+                    <div style="padding: 1em;">
+                        <form id="import_private_key_form" method="post" class="form-inline">
+                            <input type="hidden" name="form" value="import">
+
+                            <div class="form-group">
+                                <div class="input-group">
+                                  <span class="input-group-addon">PK</span>
+                                  <input type="text" placeholder="private key" name="privatekey" data-toggle="tooltip" data-placement="bottom" title="Your private key should be in WIF format. For more information about where to find this, see the Participate page.">
+                                </div>
+                                <script>
+                                $('input[type=text][name=privatekey]').tooltip({
+                                placement: "bottom",
+                                trigger: "hover"
+                                });
+                                </script>
+                            </div>
+                            <div class="form-group">
+                                <div class="input-group">
+                                  <span class="input-group-btn">
+                                    <button class="btn btn-default" onclick="importPrivateKey(); return false;">Import private key</button>
+                                  </span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </li>
+	          </ul>
+	        </li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">317,140 / 317,140 <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="#">CHA blocks <span class="badge">317,140</span></a></li>
+							<li><a href="#">BTC blocks <span class="badge">317,140</span></a></li>
+							<li><a href="#">Version <span class="badge">2.8</span></a></li>
+						</ul>
+					</li>
+	      </ul>
+	    </div>
+	  </div>
+	</nav>
+
+	<div class="container-fluid content">
+		<div id="ajax_message" class="row section messages" style="display:none">
+			<div id="ajax_wait_message" class="alert alert-info" style="display:none"></div>
+			<div id="ajax_result_message" class="alert alert-info" style="display:none"></div>
+		</div>
+
+		<div id="num_unresolved_bets" style="display:none">0</div>
+
+		<div class="row section">
+				<ul id="tabs" class="nav nav-tabs" data-tabs="tabs" style="margin-top: 2em;">
+						<li class="active"><a href="#dice" data-toggle="tab">Dice</a></li>
+						<li><a href="#poker" data-toggle="tab">Poker</a></li>
+				</ul>
+
+				<div id="my-tab-content1" class="tab-content">
+						<div class="tab-pane active" id="dice">
+								<form id="dice1" action="/casino" class="form-inline" method="post">
+
+										<input type="hidden" name="form" value="bet_dice">
+
+										<div class="form-group">
+											<img src="http://chancecoin.com/images/dice.png" class="casino-icon" />
+										</div>
+
+										<div class="form-group">
+											<div class="input-group">
+												<span class="input-group-addon">#</span>
+												<input type="text" placeholder="bet size" name="bet">
+											</div>
+										</div>
+										<input type="hidden" name="resolution" value="instant">
+										<!--
+										<div class="form-group">
+											<div class="input-group">
+												<select name="resolution">
+													<option value="instant" selected="selected">Instant</option>
+													<option value="regular">Regular</option>
+												</select>
+											</div>
+										</div>
+										-->
+										<div class="form-group">
+											<div class="input-group">
+												<select name="asset">
+													<option value="BTC">BTC</option>
+													<option value="CHA" selected="selected">CHA</option>
+												</select>
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="input-group">
+												<span class="input-group-addon">%</span>
+												<input type="text" placeholder="chance to win" name="chance" onchange="document.getElementsByName('payout')[0].value=100/parseFloat(document.getElementsByName('chance')[0].value)*(0.99);">
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="input-group">
+												<span class="input-group-addon">X</span>
+												<input type="text" placeholder="payout" name="payout" onchange="document.getElementsByName('chance')[0].value=100/(parseFloat(document.getElementsByName('payout')[0].value)/(0.99));">
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="input-group">
+												<span class="input-group-btn">
+													<button class="btn btn-default" onclick="processBet('dice1'); return false;" >Roll dice</button>
+												</span>
+											</div>
+										</div>
+
+								</form>
+						</div>
+						<div class="tab-pane" id="poker">
+								<form id="poker1" action="/casino" class="form-inline" method="post">
+
+										<input type="hidden" name="form" value="bet_poker">
+
+										<div class="form-group">
+											<img src="http://chancecoin.com/images/poker.png" class="casino-icon" />
+										</div>
+
+										<div class="form-group">
+											<div class="input-group">
+												<span class="input-group-addon">#</span>
+												<input type="text" placeholder="bet size" name="bet">
+											</div>
+										</div>
+										<input type="hidden" name="resolution" value="instant">
+										<!--
+										<div class="form-group">
+											<div class="input-group">
+												<select name="resolution">
+													<option value="instant" selected="selected">Instant</option>
+													<option value="regular">Regular</option>
+												</select>
+											</div>
+										</div>
+										-->
+										<div class="form-group">
+											<div class="input-group">
+												<select name="asset">
+													<option value="BTC">BTC</option>
+													<option value="CHA" selected="selected">CHA</option>
+												</select>
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="input-group">
+												<span class="input-group-btn">
+													<button class="btn btn-default" onclick="processBet('poker1'); return false;" >Bet</button>
+												</span>
+											</div>
+										</div>
+
+										<div class="form-group">
+											<div class="input-group">
+												<span class="input-group-btn">
+													<button class="btn btn-default" onclick="window.location.reload(true); return false;">Fold</button>
+												</span>
+											</div>
+										</div>
+
+										<div class="form-group" style="clear: both; display: block;">
+										</div>
+
+										<div class="form-group">
+											<div class="input-group">
+												<span class="help-block">You</span>
+													<input type="hidden" name="card1" value="JS">
+													<div class="card rank-J spades">
+															<span class="rank">J</span>
+															<span class="suit">&spades;</span>
+													</div>
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="input-group">
+												<span class="help-block">&nbsp;</span>
+													<input type="hidden" name="card2" value="3D">
+													<div class="card rank-3 diams">
+															<span class="rank">3</span>
+															<span class="suit">&diams;</span>
+													</div>
+											</div>
+										</div>
+										<div class="form-group" style="clear: both; width: 4em;">
+										</div>
+										<div class="form-group">
+											<div class="input-group">
+												<span class="help-block">Board</span>
+													<input type="hidden" name="card3" value="6C">
+													<div class="card rank-6 clubs">
+															<span class="rank">6</span>
+															<span class="suit">&clubs;</span>
+													</div>
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="input-group">
+												<span class="help-block">&nbsp;</span>
+													<input type="hidden" name="card4" value="JH">
+													<div class="card rank-J hearts">
+															<span class="rank">J</span>
+															<span class="suit">&hearts;</span>
+													</div>
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="input-group">
+												<span class="help-block">&nbsp;</span>
+													<input type="hidden" name="card5" value="7H">
+													<div class="card rank-7 hearts">
+															<span class="rank">7</span>
+															<span class="suit">&hearts;</span>
+													</div>
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="input-group">
+												<span class="help-block">&nbsp;</span>
+													<input type="hidden" name="card6" value="??">
+													<div class="card back">*</div>
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="input-group">
+												<span class="help-block">&nbsp;</span>
+													<input type="hidden" name="card7" value="??">
+													<div class="card back">*</div>
+											</div>
+										</div>
+										<div class="form-group" style="clear: both; width: 4em;">
+										</div>
+										<div class="form-group">
+											<div class="input-group">
+												<span class="help-block">Opponent</span>
+													<input type="hidden" name="card8" value="7C">
+													<div class="card rank-7 clubs">
+															<span class="rank">7</span>
+															<span class="suit">&clubs;</span>
+													</div>
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="input-group">
+												<span class="help-block">&nbsp;</span>
+													<input type="hidden" name="card9" value="9S">
+													<div class="card rank-9 spades">
+															<span class="rank">9</span>
+															<span class="suit">&spades;</span>
+													</div>
+											</div>
+										</div>
+										<div class="form-group" style="clear: both; width: 4em;">
+										</div>
+										<p>Chance of winning: 78.384%</p>
+								</form>
+						</div>
+				</div>
+		</div>
+
+		<div class="row section padding-top">
+		    <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
+		        <li class="active"><a href="#recent_bets" data-toggle="tab">Recent bets</a></li>
+						<li><a href="#my_bets" data-toggle="tab">My bets</a></li>
+		    </ul>
+
+		    <div id="my-tab-content" class="tab-content">
+		        <div class="tab-pane active" id="recent_bets">
+								<h2>Recent bets</h2>
+								<div id="bets_content">
+								<table class="table table-striped">
+										<thead>
+												<tr>
+														<th>Source address</th>
+														<th>Time</th>
+														<th>Bet size</th>
+														<th>Chance to win / payout multiplier</th>
+														<th>Result</th>
+														<th>Profit</th>
+												</tr>
+										</thead>
+
+										<!-- <tbody>
+													<tr>
+															<td><a href="?address=1JX7HnzDy2vZ6ytwKdKoZZiVEjaWR5Ykw8">1JX7Hn...</a></td>
+															<td>2014-08-23 12:36:38</td>
+															<td>11 CHA</td>
+															<td>50% / 1.98X</td>
+
+															<td><img src="http://chancecoin.com/images/dice.png" style="height: 25px; display: inline;" /> 22.72</td>
+
+															<td>10.78 CHA</td>
+													</tr>
+
+										</tbody> -->
+								</table>
+							</div>
+
+						</div>
+
+		        <div class="tab-pane" id="my_bets">
+								<h2>My bets</h2>
+								<table class="table table-striped">
+										<thead>
+												<tr>
+														<th>Source address</th>
+														<th>Time</th>
+														<th>Bet size</th>
+														<th>Chance to win / payout multiplier</th>
+														<th>Result</th>
+														<th>Profit</th>
+												</tr>
+										</thead>
+										<!-- <tbody>
+													<tr>
+															<td><a href="?address=1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes">1FAnfg...</a></td>
+															<td>2014-08-23 12:36:38</td>
+															<td>0.1 CHA</td>
+															<td>33% / 3X</td>
+
+															<td><img src="http://chancecoin.com/images/dice.png" style="height: 25px; display: inline;" /> 74.138</td>
+
+															<td>-0.1 CHA</td>
+													</tr>
+										</tbody> -->
+								</table>
+						</div>
+		    </div>
+		</div>
+
+	</div>
+
+	<div class="container-fluid footer">
+	Chancecoin &copy; 2014. Released under the <a href="http://opensource.org/licenses/mit-license.php">MIT License</a>.
+	</div>
+
+	<script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+	  ga('create', 'UA-49712885-1', 'chancecoin.com');
+	  ga('send', 'pageview');
+
+	</script>
+
+</div>
+</body>
+</html>

@@ -382,7 +382,7 @@ public class Util {
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			PushTxResult pushTxResult = objectMapper.readValue(result, new TypeReference<PushTxResult>() {});
-			if (pushTxResult.status.equals("200") && pushTxResult.result.length()>10) {
+			if ((pushTxResult.status.equals("200") || pushTxResult.status.equals("201")) && pushTxResult.result.length()>10) {
 				return true;				 
 			} else {
 				return false;
