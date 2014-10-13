@@ -169,7 +169,7 @@ public class Roll {
 	}
 
 	public static void serviceRollRequests() {
-		if (Util.isOwnAddress(Config.feeAddress)) {
+		if (Util.isOwnAddress(Config.feeAddress) && Blocks.getInstance().initialized) {
 			List<RollRequestInfo> rollsPending = getPendingRollRequests(Config.feeAddress);
 			Blocks blocks = Blocks.getInstance();
 			Database db = Database.getInstance();
