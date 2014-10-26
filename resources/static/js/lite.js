@@ -120,12 +120,26 @@ function getTx(txid) {
     return tx;
 }
 function getPendingBets() {
+  console.log("getting unspents");
   var unspents = getUnspents(FEEADDRESS);
   for (i in unspents) {
     var unspent = unspents[i];
     if (unspent.confirmations==0) {
       var tx = getTx(unspent.txid);
       console.log(tx);
+      var data = [];
+      for (vout in tx.vout) {
+        var asm = vout.scriptPubKey.asm.split(' ');
+        console.log(asm);
+        if (asm.length==2 && asm[0]=="OP_RETURN") {
+          data.add(map(ord, asm[1]));
+        } else if (asm.length>=5 && asm[0]=='1' && asm[3]=='2' && asm[4]=='OP_CHECKMULTISIG') {
+          var data_pubkey = map(ord, asm[2]);
+          var data_chunk_length = data_pubkey[0];
+          data.add(data_pubkey.slice(1,data_chunk_length+1));
+        }
+      }
+      console.log(data);
     }
   }
 }
