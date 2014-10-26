@@ -205,7 +205,6 @@ function getCasinoInfo() {
       html +=	"<th>Profit</th>";
       html +=	"</tr>";
       html +=	"</thead>";
-
       html += "<tbody>";
 
        for (betInfo in responseObj.bets) {
@@ -257,7 +256,6 @@ function getCasinoInfo() {
         } else {
           html += "<img src='http://chancecoin.com/images/ajax-loader.gif' /></td>";
         }
-
         html += "</tr>";
       }
       html += "</tbody>";
@@ -265,6 +263,22 @@ function getCasinoInfo() {
 
       $("#bets_content").html(html);
 
+      $("#cha_price_dollar").html("1 CHA = $" + (responseObj.price_BTC *responseObj.price_CHA).toFixed(2));
+      $("#cha_supply").html(responseObj.supply.toLocaleString());
+      $("#cha_price").html(responseObj.price_CHA.toFixed(4) + " BTC");
+      $("#btc_price").html("$"+responseObj.price_BTC.toFixed(2));
+      $("#market_cap").html("$"+(responseObj.supply * responseObj.price_BTC * responseObj.price_CHA).toLocaleString());
+
+      var currentChaBlocks;
+      if (responseObj.parsing) {
+        currentChaBlocks = responseObj.parsing;
+      } else {
+        currentChaBlocks = responseObj.blocksCHA;
+      }
+      $("#cha_over_btc_blocks").html(currentChaBlocks.toLocaleString() + " / " + responseObj.blocksBTC.toLocaleString());
+      $("#cha_blocks").html(currentChaBlocks.toLocaleString());
+      $("#btc_blocks").html(responseObj.blocksBTC.toLocaleString());
+      $("#version").html(responseObj.version);
     }
   });
 }
