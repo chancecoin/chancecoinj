@@ -177,7 +177,7 @@ function getCasinoInfo() {
     url: "http://0.0.0.0:8080/get_casino_info",
     crossDomain: true,
     success: function(response) {
-      var responseObj = jQuery.parseJSON(response);
+      var responseObj = JSON.parse(response);
       var betInfo;
       var html = "";
       html += "<table class='table table-striped'>"
@@ -193,13 +193,14 @@ function getCasinoInfo() {
       html +=	"</thead>";
       html += "<tbody>";
 
-       for (betInfo in responseObj.bets) {
+      for (var i = 0; i < responseObj.bets.length; i++) {
+        betInfo = responseObj.bets[i];
         html += "<tr>";
-        html += "<td>"+betInfo["source"];//.substring(0,6)+"...</td>";
+        html += "<td>"+betInfo["source"].substring(0,6)+"...</td>";
         html += "<td>"+betInfo["block_time"]+"</td>";
         html += "<td>"+betInfo["bet"]+" CHA</td>";
-        //html += "<td>"+parseFloat(betInfo["chance"].toPrecision(3))+"%"+" / "+parseFloat(betInfo["payout"].toPrecision(3))+"X</td>";
-        html += "<td>"+parseFloat(betInfo["chance"])+"%"+" / "+parseFloat(betInfo["payout"])+"X</td>";
+        html += "<td>"+parseFloat(betInfo["chance"].toPrecision(3))+"%"+" / "+parseFloat(betInfo["payout"].toPrecision(3))+"X</td>";
+        //html += "<td>"+parseFloat(betInfo["chance"])+"%"+" / "+parseFloat(betInfo["payout"])+"X</td>";
 
         if (betInfo["cards"]) {
           html += "<td>";
@@ -248,7 +249,6 @@ function getCasinoInfo() {
       html += "</table>";
 
       $("#bets_content").html(html);
-
       $("#cha_price_dollar").html("1 CHA = $" + (responseObj.price_BTC *responseObj.price_CHA).toFixed(2));
       $("#cha_supply").html(responseObj.supply.toLocaleString());
       $("#cha_price").html(responseObj.price_CHA.toFixed(4) + " BTC");

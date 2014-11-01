@@ -92,87 +92,95 @@ public class Server implements Runnable {
 			@Override
 			public Object handle(Request request, Response response) {
 				response.header("Access-Control-Allow-Origin", "*");
-				JSONObject jsonArray = new JSONObject();
-				Map<String, Object> attributes = new HashMap<String, Object>();
+				JSONObject attributes = new JSONObject();
+//				Map<String, Object> attributes = new HashMap<String, Object>();
 				request.session(true);
 				Blocks blocks = Blocks.getInstance();
-				attributes.put("price_BTC", blocks.priceBTC);
-				attributes.put("price_CHA", blocks.priceCHA);
-				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
-				attributes.put("blocksBTC", blocks.bitcoinBlock);
-				attributes.put("blocksCHA", blocks.chancecoinBlock);
-				attributes.put("version", Config.version);
-				attributes.put("min_version", Util.getMinVersion());
-				attributes.put("min_version_major", Util.getMinMajorVersion());
-				attributes.put("min_version_minor", Util.getMinMinorVersion());
-				attributes.put("version_major", Config.majorVersion);
-				attributes.put("version_minor", Config.minorVersion);
-				Blocks.getInstance().versionCheck();
-				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
-
-//				String address = Util.getAddresses().get(0);
-//				if (request.session().attributes().contains("address")) {
-//					address = request.session().attribute("address");
-//				}
-//				if (request.queryParams().contains("address")) {
-//					address = request.queryParams("address");
-//					request.session().attribute("address", address);
-//				}
-//				ArrayList<HashMap<String, Object>> addresses = new ArrayList<HashMap<String, Object>>();
-//				for (String addr : Util.getAddresses()) {
-//					HashMap<String,Object> map = new HashMap<String,Object>();	
-//					map.put("address", addr);
-//					map.put("balance_CHA", Util.getBalance(addr, "CHA").floatValue() / Config.unit.floatValue());
-//					addresses.add(map);
-//				}
-//				attributes.put("address", address);				
-//				attributes.put("addresses", addresses);
-//				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
-//				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
-				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
-				attributes.put("max_profit_percentage", Config.maxProfit);
-				attributes.put("house_edge", Config.houseEdge);
-				attributes.put("cards", (new Deck()).cardStrings());
-
-				Database db = Database.getInstance();
-
-				//poker hand
-				List<String> pokerHand = new ArrayList<String>();
-				Deck deal = Deck.ShuffleAndDeal(new Random().nextDouble(), null, 9);
-				deal.cards.set(5, new Card("??"));
-				deal.cards.set(6, new Card("??"));
-				for (Card c : deal.cards) {
-					pokerHand.add(c.toString());
-				}
-				attributes.put("poker_chance", Deck.chanceOfWinning(deal.cards)*100.0);
-				attributes.put("poker_hand", pokerHand);
-
-				//get last 100 bets
-				ResultSet rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,cards,resolved,bets.tx_index as tx_index,block_time,transactions.btc_amount as btc_amount from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 100;");
-				List<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
 				try {
-					while (rs.next()) {
-						HashMap<String,Object> map = new HashMap<String,Object>();
-						map.put("source", rs.getString("source"));
-						map.put("bet", BigInteger.valueOf(rs.getLong("bet")).doubleValue()/Config.unit.doubleValue());
-						map.put("btc_amount", BigInteger.valueOf(rs.getLong("btc_amount")).doubleValue()/Config.unit.doubleValue());
-						map.put("chance", rs.getDouble("chance"));
-						map.put("payout", rs.getDouble("payout"));
-						map.put("tx_hash", rs.getString("tx_hash"));
-						map.put("roll", rs.getDouble("roll"));
-						map.put("cards", rs.getString("cards"));
-						if (rs.getString("cards")!=null && rs.getString("resolved")!=null && rs.getString("resolved").equals("true")) {
-							map.put("cards_result", Deck.result(new Deck(rs.getString("cards")).cards));
-						}
-						map.put("resolved", rs.getString("resolved"));
-						map.put("block_time", Util.timeFormat(rs.getInt("block_time")));
-						map.put("profit", BigInteger.valueOf(rs.getLong("profit")).doubleValue()/Config.unit.doubleValue());
-						bets.add(map);
+					attributes.put("price_BTC", blocks.priceBTC);
+					attributes.put("price_CHA", blocks.priceCHA);
+					attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
+					attributes.put("blocksBTC", blocks.bitcoinBlock);
+					attributes.put("blocksCHA", blocks.chancecoinBlock);
+					attributes.put("version", Config.version);
+					attributes.put("min_version", Util.getMinVersion());
+					attributes.put("min_version_major", Util.getMinMajorVersion());
+					attributes.put("min_version_minor", Util.getMinMinorVersion());
+					attributes.put("version_major", Config.majorVersion);
+					attributes.put("version_minor", Config.minorVersion);
+					Blocks.getInstance().versionCheck();
+					if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
+
+//					String address = Util.getAddresses().get(0);
+//					if (request.session().attributes().contains("address")) {
+//						address = request.session().attribute("address");
+//					}
+//					if (request.queryParams().contains("address")) {
+//						address = request.queryParams("address");
+//						request.session().attribute("address", address);
+//					}
+//					ArrayList<HashMap<String, Object>> addresses = new ArrayList<HashMap<String, Object>>();
+//					for (String addr : Util.getAddresses()) {
+//						HashMap<String,Object> map = new HashMap<String,Object>();	
+//						map.put("address", addr);
+//						map.put("balance_CHA", Util.getBalance(addr, "CHA").floatValue() / Config.unit.floatValue());
+//						addresses.add(map);
+//					}
+//					attributes.put("address", address);				
+//					attributes.put("addresses", addresses);
+//					attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+//					attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
+					attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
+					attributes.put("max_profit_percentage", Config.maxProfit);
+					attributes.put("house_edge", Config.houseEdge);
+					attributes.put("cards", (new Deck()).cardStrings());
+
+					Database db = Database.getInstance();
+
+					//poker hand
+					List<String> pokerHand = new ArrayList<String>();
+					Deck deal = Deck.ShuffleAndDeal(new Random().nextDouble(), null, 9);
+					deal.cards.set(5, new Card("??"));
+					deal.cards.set(6, new Card("??"));
+					for (Card c : deal.cards) {
+						pokerHand.add(c.toString());
 					}
-				} catch (SQLException e) {
+					attributes.put("poker_chance", Deck.chanceOfWinning(deal.cards)*100.0);
+					attributes.put("poker_hand", pokerHand);
+
+					//get last 100 bets
+					ResultSet rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,cards,resolved,bets.tx_index as tx_index,block_time,transactions.btc_amount as btc_amount from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 100;");
+//					List<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
+					List<JSONObject> bets = new ArrayList<JSONObject>();
+					try {
+						while (rs.next()) {
+//							HashMap<String,Object> map = new HashMap<String,Object>();
+							JSONObject map = new JSONObject();
+							map.put("source", rs.getString("source"));
+							map.put("bet", BigInteger.valueOf(rs.getLong("bet")).doubleValue()/Config.unit.doubleValue());
+							map.put("btc_amount", BigInteger.valueOf(rs.getLong("btc_amount")).doubleValue()/Config.unit.doubleValue());
+							map.put("chance", rs.getDouble("chance"));
+							map.put("payout", rs.getDouble("payout"));
+							map.put("tx_hash", rs.getString("tx_hash"));
+							map.put("roll", rs.getDouble("roll"));
+							map.put("cards", rs.getString("cards"));
+							if (rs.getString("cards")!=null && rs.getString("resolved")!=null && rs.getString("resolved").equals("true")) {
+								map.put("cards_result", Deck.result(new Deck(rs.getString("cards")).cards));
+							}
+							map.put("resolved", rs.getString("resolved"));
+							map.put("block_time", Util.timeFormat(rs.getInt("block_time")));
+							map.put("profit", BigInteger.valueOf(rs.getLong("profit")).doubleValue()/Config.unit.doubleValue());
+							bets.add(map);
+						}
+					} catch (SQLException e) {
+					}
+					attributes.put("bets", bets);
+				} catch (JSONException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
 				}
-				attributes.put("bets", bets);
-				return JSONObject.wrap(attributes);
+				System.out.println(attributes.toString());
+				return attributes.toString();
 			}
 		});
 		get(new Route("/supply") {
