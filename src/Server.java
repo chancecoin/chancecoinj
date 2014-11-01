@@ -179,7 +179,6 @@ public class Server implements Runnable {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				System.out.println(attributes.toString());
 				return attributes.toString();
 			}
 		});
