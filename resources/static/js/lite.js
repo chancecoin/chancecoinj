@@ -80,6 +80,7 @@ function importPrivateKey() {
 function getUnspents(address) {
     var url = "http://api.bitwatch.co/listunspent/"+address+"?verbose=1&minconf=0";
     var unspents = [];
+    console.log(url);
     $.ajax({
       url: url,
       cache: false,
@@ -119,6 +120,23 @@ function getTx(txid) {
     });
     return tx;
 }
+function parseHexString(str) {
+    var result = [];
+    var len = 2;
+    while (str.length >= len) {
+        result.push(parseInt(str.substring(0, len), 16));
+
+        str = str.substring(len, str.length);
+    }
+
+    return result;
+}
+function getMessage(data) {
+  return data.slice(4,data.length);
+}
+function getMessageType(data) {
+  return data.slice(0,4);
+}
 function getPendingBets() {
   console.log("getting unspents");
   var unspents = getUnspents(FEEADDRESS);
@@ -126,20 +144,23 @@ function getPendingBets() {
     var unspent = unspents[i];
     if (unspent.confirmations==0) {
       var tx = getTx(unspent.txid);
-      console.log(tx);
       var data = [];
       for (vout in tx.vout) {
+        var vout = tx.vout[vout];
         var asm = vout.scriptPubKey.asm.split(' ');
-        console.log(asm);
+        //console.log(asm);
         if (asm.length==2 && asm[0]=="OP_RETURN") {
-          data.add(map(ord, asm[1]));
+          data = data.concat(parseHexString(asm[1]));
         } else if (asm.length>=5 && asm[0]=='1' && asm[3]=='2' && asm[4]=='OP_CHECKMULTISIG') {
-          var data_pubkey = map(ord, asm[2]);
+          var data_pubkey = parseHexString(asm[2]);
           var data_chunk_length = data_pubkey[0];
-          data.add(data_pubkey.slice(1,data_chunk_length+1));
+          data = data.concat(data_pubkey);
+          data = data.concat(data_pubkey.slice(1,data_chunk_length+1));
         }
       }
-      console.log(data);
+      var message = getMessage(data);
+      var messageType = getMessageType(data);
+      console.log(messageType);
     }
   }
 }
