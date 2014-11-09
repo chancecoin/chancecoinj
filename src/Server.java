@@ -11,7 +11,6 @@ import java.security.CodeSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +31,6 @@ import spark.template.freemarker.FreeMarkerRoute;
 
 import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.Transaction;
-import com.google.common.collect.Lists;
 
 import freemarker.template.Configuration;
 
@@ -111,10 +109,6 @@ public class Server implements Runnable {
 					Blocks.getInstance().versionCheck();
 					if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
 
-					
-					
-					
-					
 //					String address = Util.getAddresses().get(0);
 //					if (request.session().attributes().contains("address")) {
 //						address = request.session().attribute("address");
@@ -181,9 +175,20 @@ public class Server implements Runnable {
 					attributes.put("bets", bets);
 					
 					//my bets
-					String address = null;
-					if (request.queryParams().contains("address") && request.queryParams("address") != null) {
-						address = request.queryParams("address");	
+					if (request.queryParams().contains("address") && request.queryParams("address") != null &&
+						request.queryParams().contains("addresses") && request.queryParams("addresses") != null) {
+						JSONArray addressesArray = new JSONArray(request.queryParams("addresses"));
+						ArrayList<JSONObject> addressInfos = new ArrayList<JSONObject>();
+						for (int i = 0; i < addressesArray.length(); i++) {
+							JSONObject addressInfo = new JSONObject();
+							String addressString = addressesArray.getString(i);
+							addressInfo.put("address", addressString);
+							addressInfo.put("balanceCHA", Util.getBalance(addressString, "CHA").doubleValue() / Config.unit.doubleValue());
+							addressInfos.add(addressInfo);
+						}
+						attributes.put("addressInfos", addressInfos);
+						
+						String address = request.queryParams("address");
 						attributes.put("address", address);
 						attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
 					
@@ -218,11 +223,6 @@ public class Server implements Runnable {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				
-				
-				
-				
-				
 				return attributes.toString();
 			}
 		});

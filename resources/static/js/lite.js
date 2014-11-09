@@ -59,22 +59,95 @@ function importPrivateKey() {
       try {
           var key = new Bitcoin.ECKey.fromWIF(privateKey);
           var address = key.pub.getAddress().toString();
-          createCookie("private_key", privateKey, 999999);
+          var addresses = JSON.parse(readCookie("addresses"));
+          var privateKeys = JSON.parse(readCookie("private_keys"));
+          if (addresses == null) {
+            addresses = [];
+          }
+          if (addresses.indexOf(address) < 0) {
+            addresses.push(address);
+          }
+          if (privateKeys == null) {
+            privateKeys = [];
+          }
+          if (privateKeys.indexOf(privateKey) < 0) {
+            privateKeys.push(privateKey);
+          }
+          eraseCookie("address");
+          eraseCookie("addresses");
+          eraseCookie("private_key");
+          eraseCookie("private_keys");
           createCookie("address", address, 999999);
+          createCookie("addresses", JSON.stringify(addresses), 999999);
+          createCookie("private_key", privateKey, 999999);
+          createCookie("private_keys", JSON.stringify(privateKeys), 999999);
       } catch (e) {
       }
   } else {
       //eraseCookie("private_key");
       //eraseCookie("address");
   }
-  if (readCookie("address")) {
-      try {
-          var address = readCookie("address");
-          //$("#addresses").empty();
-          $("#addresses").append('<li><a href="?address='+address+'"><strong>'+address+'</strong> <span class="badge"><span id="cha_balance"></span> CHA</span></a></li>');
-          $("#address").html(address.substring(0,6)+'... <b class="caret"></b>');
-      } catch (e) {
+  getCasinoInfo();
+  updateAddressDropDown();
+}
+//update the page using the address passed in
+function updateAddress(newAddress) {
+  var currentAddress = readCookie("address");
+  console.log("new address:" + newAddress);
+  console.log("current address:" + currentAddress);
+  if (currentAddress == null || currentAddress == newAddress) {
+    return;
+  }
+  var addresses = JSON.parse(readCookie("addresses"));
+  var addressIndex = addresses.indexOf(newAddress);
+  if (addressIndex >= 0) {
+    var privateKeys = JSON.parse(readCookie("private_keys"));
+    var newPrivateKey = privateKeys[addressIndex];
+    //TODO: double check with Bitcoin.ECKey? to make sure the private key matches the address
+    eraseCookie("address");
+    eraseCookie("private_key");
+    createCookie("address", newAddress, 999999);
+    createCookie("private_key", newPrivateKey, 999999);
+  }
+}
+
+//update the page using the address from URL
+function updateAddressFromUrl() {
+  var newAddress = getParameterByName("address");
+  if (newAddress != null) {
+    updateAddress(newAddress);
+  }
+}
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+function updateAddressDropDown() {
+  var addressSelected = readCookie("address");
+  if (addressSelected) {
+    $("#address").html(addressSelected.substring(0,6)+'... <b class="caret"></b>');
+  }
+
+  var addresses = readCookie("addresses");
+  if (addresses) {
+    var listItems = $("#addresses").children();
+    for (var i in listItems) {
+      if (i > 0) {
+        listItems[i].remove();
       }
+    }
+
+    addresses = JSON.parse(addresses);
+    for (var i in addresses) {
+      var address = addresses[i];
+      if (address == addressSelected) {
+        $("#addresses").append('<li id="address_'+i+'"><a href="?address='+address+'"><strong>'+ address+'</strong> <span class="badge"><span id="cha_balance_'+i+'"></span> CHA</span></a></li>');
+      } else {
+        $("#addresses").append('<li id="address_'+i+'"><a href="?address='+address+'">'+ address+' <span class="badge"><span id="cha_balance_'+i+'"></span> CHA</span></a></li>');
+      }
+    }
   }
 }
 function getUnspents(address) {
@@ -185,30 +258,28 @@ function readCookie(name) {
 function eraseCookie(name) {
     createCookie(name,"",-1);
 }
-function getUserAddress() {
-  if (readCookie("address")) {
-      try {
-        return readCookie("address");
-      } catch (e) {
-        return null;
-      }
-  } else {
-     return null;
-  }
-}
 function getCasinoInfo() {
   $.ajax({
     type: "GET",
     url: "http://0.0.0.0:8080/get_casino_info",
-    data: {address: getUserAddress()},
+    data: {addresses: readCookie("addresses"), address: readCookie("address")},
     crossDomain: true,
     success: function(response) {
       var responseObj = JSON.parse(response);
-      console.log(responseObj.address);
+      console.log("address from ajax response: " + responseObj.address);
+      console.log("address infos from ajax response: " + responseObj.addressInfos);
       $("#recent_bets_content").html(getBetTableHtml(responseObj.bets));
       if (responseObj.address) {
         $("#my_bets_content").html(getBetTableHtml(responseObj.my_bets));
         $("#cha_balance").html(responseObj.balanceCHA.toLocaleString());
+      }
+      if (responseObj.addressInfos) {
+        for (var i in responseObj.addressInfos) {
+          var addressInfo = responseObj.addressInfos[i];
+          console.log(addressInfo["address"]);
+          console.log(addressInfo["balanceCHA"]);
+          $("#cha_balance_"+i).html(addressInfo["balanceCHA"]);
+        }
       }
       $("#cha_price_dollar").html("1 CHA = $" + (responseObj.price_BTC *responseObj.price_CHA).toFixed(2));
       $("#cha_supply").html(responseObj.supply.toLocaleString());
