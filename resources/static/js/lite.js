@@ -19,7 +19,6 @@ $(window).on('load', function () {
     $('.selectpicker').selectpicker({
         'selectedText': 'cat'
     });
-    importPrivateKey();
 });
 
 $(document).ready(function() {
@@ -73,22 +72,96 @@ function importPrivateKey() {
       try {
           var key = new Bitcoin.ECKey.fromWIF(privateKey);
           var address = key.pub.getAddress().toString();
-          createCookie("private_key", privateKey, 999999);
+          var addresses = JSON.parse(readCookie("addresses"));
+          var privateKeys = JSON.parse(readCookie("private_keys"));
+          if (addresses == null) {
+            addresses = [];
+          }
+          if (addresses.indexOf(address) < 0) {
+            addresses.push(address);
+          }
+          if (privateKeys == null) {
+            privateKeys = [];
+          }
+          if (privateKeys.indexOf(privateKey) < 0) {
+            privateKeys.push(privateKey);
+          }
+          eraseCookie("address");
+          eraseCookie("addresses");
+          eraseCookie("private_key");
+          eraseCookie("private_keys");
           createCookie("address", address, 999999);
+          createCookie("addresses", JSON.stringify(addresses), 999999);
+          createCookie("private_key", privateKey, 999999);
+          createCookie("private_keys", JSON.stringify(privateKeys), 999999);
       } catch (e) {
       }
   } else {
       //eraseCookie("private_key");
       //eraseCookie("address");
   }
-  if (readCookie("address")) {
-      try {
-          var address = readCookie("address");
-          //$("#addresses").empty();
-          $("#addresses").append('<li><a href="?address='+address+'"><strong>'+address+'</strong> <span class="badge"> CHA</span></a></li>');
-          $("#address").html(address.substring(0,6)+'... <b class="caret"></b>');
-      } catch (e) {
+  getCasinoInfo();
+}
+//update the page using the address passed in
+function updateAddress(newAddress) {
+  var currentAddress = readCookie("address");
+  console.log("new address:" + newAddress);
+  console.log("current address:" + currentAddress);
+  if (currentAddress == null || currentAddress == newAddress) {
+    return;
+  }
+  var addresses = JSON.parse(readCookie("addresses"));
+  var addressIndex = addresses.indexOf(newAddress);
+  if (addressIndex >= 0) {
+    var privateKeys = JSON.parse(readCookie("private_keys"));
+    var newPrivateKey = privateKeys[addressIndex];
+    //TODO: double check with Bitcoin.ECKey? to make sure the private key matches the address
+    eraseCookie("address");
+    eraseCookie("private_key");
+    createCookie("address", newAddress, 999999);
+    createCookie("private_key", newPrivateKey, 999999);
+  }
+}
+
+//update the page using the address from URL
+function updateAddressFromUrl() {
+  var newAddress = getParameterByName("address");
+  if (newAddress != null) {
+    updateAddress(newAddress);
+  }
+}
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+function updateAddressDropDown(addressInfos) {
+  var addressSelected = readCookie("address");
+  if (addressSelected) {
+    $("#address").html(addressSelected.substring(0,6)+'... <b class="caret"></b>');
+  }
+
+  var listItems = $("#addresses").children();
+  if (listItems) {
+    for (var i in listItems) {
+      if (i > 0) {
+        listItems[i].remove();
       }
+    }
+  }
+
+  if (addressInfos) {
+    for (var i in addressInfos) {
+      var addressInfo = addressInfos[i];
+      var address = addressInfo["address"];
+      var balanceCHA = addressInfo["balanceCHA"];
+      if (address == addressSelected) {
+        $("#addresses").append('<li id="address_'+i+'"><a href="?address='+address+'"><strong>'+ address+'</strong> <span class="badge"><span id="cha_balance_'+i+'">' + balanceCHA + '</span> CHA</span></a></li>');
+      } else {
+        $("#addresses").append('<li id="address_'+i+'"><a href="?address='+address+'">'+ address+' <span class="badge"><span id="cha_balance_'+i+'">' + balanceCHA + '</span> CHA</span></a></li>');
+      }
+    }
   }
 }
 function pushTx(txHex) {
@@ -403,79 +476,12 @@ function getCasinoInfo() {
   $.ajax({
     type: "GET",
     url: "http://0.0.0.0:8080/get_casino_info",
+    data: {addresses: readCookie("addresses"), address: readCookie("address")},
     crossDomain: true,
     success: function(response) {
-      var responseObj = jQuery.parseJSON(response);
-      var betInfo;
-      var html = "";
-      html += "<table class='table table-striped'>"
-      html += "<thead>";
-      html +=	"<tr>";
-      html +=	"<th>Source address</th>";
-      html +=	"<th>Time</th>";
-      html +=	"<th>Bet size</th>";
-      html +=	"<th>Chance to win / payout multiplier</th>";
-      html +=	"<th>Result</th>";
-      html +=	"<th>Profit</th>";
-      html +=	"</tr>";
-      html +=	"</thead>";
-      html += "<tbody>";
-
-       for (betInfo in responseObj.bets) {
-        html += "<tr>";
-        html += "<td>"+betInfo["source"];//.substring(0,6)+"...</td>";
-        html += "<td>"+betInfo["block_time"]+"</td>";
-        html += "<td>"+betInfo["bet"]+" CHA</td>";
-        //html += "<td>"+parseFloat(betInfo["chance"].toPrecision(3))+"%"+" / "+parseFloat(betInfo["payout"].toPrecision(3))+"X</td>";
-        html += "<td>"+parseFloat(betInfo["chance"])+"%"+" / "+parseFloat(betInfo["payout"])+"X</td>";
-
-        if (betInfo["cards"]) {
-          html += "<td>";
-          var cardArray = betInfo["cards"].split(" ");
-          for (var cardIndex = 0; cardIndex < cardArray.length; cardIndex++) {
-              if (cardIndex == 0) {
-                  html += "<div style='float: left; padding-top: 1.25em; padding-right: 2.5em;'>Player</div>";
-              }
-              if (cardIndex == 7) {
-                  html += "<div style='float: left; padding-top: 1.25em; padding-right: 1em;'>Opponent</div>";
-              }
-              if (cardArray[cardIndex] == "??") {
-                  html += "<div class='card back'>*</div>";
-              } else {
-                  html += "<div class='card rank-"+getCardRank(cardArray[cardIndex])+" "+getCardSuit(cardArray[cardIndex])+"'>";
-                  html += "<span class='rank'>"+getCardRank(cardArray[cardIndex])+"</span>";
-                  html +=	"<span class='suit'>&"+getCardSuit(cardArray[cardIndex])+";</span>";
-                  html += "</div>";
-              }
-              if (cardIndex==1 || cardIndex==6) {
-                  html += "<div style='clear: both;'></div>";
-              }
-          }
-          if (betInfo["cards_result"]) {
-              html += "<p>"+betInfo['cards_result']+"</p>";
-          }
-          html += "</td>";
-        } else {
-          html += "<td><img src='http://chancecoin.com/images/dice.png' style='height: 25px; display: inline;' />";
-          if (betInfo["resolved"]) {
-            html += betInfo["roll"];
-          } else {
-            html += "?";
-          }
-          html += "</td>";
-        }
-        html += "<td>";
-        if (betInfo["resolved"] && betInfo["resolved"]=="true") {
-          html += betInfo["profit"]+" CHA";
-        } else {
-          html += "<img src='http://chancecoin.com/images/ajax-loader.gif' /></td>";
-        }
-        html += "</tr>";
-      }
-      html += "</tbody>";
-      html += "</table>";
-
-      $("#bets_content").html(html);
+      var responseObj = JSON.parse(response);
+      console.log("address from ajax response: " + responseObj.address);
+      updateAddressDropDown(responseObj.addressInfos);
 
       $("#cha_price_dollar").html("1 CHA = $" + (responseObj.price_BTC *responseObj.price_CHA).toFixed(2));
       $("#cha_supply").html(responseObj.supply.toLocaleString());
@@ -493,6 +499,105 @@ function getCasinoInfo() {
       $("#cha_blocks").html(currentChaBlocks.toLocaleString());
       $("#btc_blocks").html(responseObj.blocksBTC.toLocaleString());
       $("#version").html(responseObj.version);
+
+      $("#recent_bets_content").html(getBetTableHtml(responseObj.bets));
+      if (responseObj.address) {
+        $("#my_bets_content").html(getBetTableHtml(responseObj.my_bets));
+      }
     }
   });
+}
+
+function getBetTableHtml(betObjects) {
+  var html = "";
+  html += "<table class='table table-striped'>"
+  html += "<thead>";
+  html +=	"<tr>";
+  html +=	"<th>Source address</th>";
+  html +=	"<th>Time</th>";
+  html +=	"<th>Bet size</th>";
+  html +=	"<th>Chance to win / payout multiplier</th>";
+  html +=	"<th>Result</th>";
+  html +=	"<th>Profit</th>";
+  html +=	"</tr>";
+  html +=	"</thead>";
+  html += "<tbody>";
+  for (var i = 0; i < betObjects.length; i++) {
+    var betInfo = betObjects[i];
+    html += "<tr>";
+    html += "<td>"+betInfo["source"].substring(0,6)+"...</td>";
+    html += "<td>"+betInfo["block_time"]+"</td>";
+    html += "<td>"+betInfo["bet"]+" CHA</td>";
+    html += "<td>"+parseFloat(betInfo["chance"].toPrecision(3))+"%"+" / "+parseFloat(betInfo["payout"].toPrecision(3))+"X</td>";
+    //html += "<td>"+parseFloat(betInfo["chance"])+"%"+" / "+parseFloat(betInfo["payout"])+"X</td>";
+
+    if (betInfo["cards"]) {
+      html += "<td>";
+      var cardArray = betInfo["cards"].split(" ");
+      for (var cardIndex = 0; cardIndex < cardArray.length; cardIndex++) {
+          if (cardIndex == 0) {
+              html += "<div style='float: left; padding-top: 1.25em; padding-right: 2.5em;'>Player</div>";
+          }
+          if (cardIndex == 7) {
+              html += "<div style='float: left; padding-top: 1.25em; padding-right: 1em;'>Opponent</div>";
+          }
+          if (cardArray[cardIndex] == "??") {
+              html += "<div class='card back'>*</div>";
+          } else {
+              html += "<div class='card rank-"+getCardRank(cardArray[cardIndex])+" "+getCardSuit(cardArray[cardIndex])+"'>";
+              html += "<span class='rank'>"+getCardRank(cardArray[cardIndex])+"</span>";
+              html +=	"<span class='suit'>&"+getCardSuit(cardArray[cardIndex])+";</span>";
+              html += "</div>";
+          }
+          if (cardIndex==1 || cardIndex==6) {
+              html += "<div style='clear: both;'></div>";
+          }
+      }
+      if (betInfo["cards_result"]) {
+          html += "<p>"+betInfo['cards_result']+"</p>";
+      }
+      html += "</td>";
+    } else {
+      html += "<td><img src='http://chancecoin.com/images/dice.png' style='height: 25px; display: inline;' />";
+      if (betInfo["resolved"]) {
+        html += parseFloat(betInfo["roll"].toPrecision(5));
+      } else {
+        html += "?";
+      }
+      html += "</td>";
+    }
+    html += "<td>";
+    if (betInfo["resolved"] && betInfo["resolved"]=="true") {
+      html += betInfo["profit"]+" CHA";
+    } else {
+      html += "<img src='http://chancecoin.com/images/ajax-loader.gif' /></td>";
+    }
+    html += "</tr>";
+  }
+  html += "</tbody>";
+  html += "</table>";
+  return html;
+}
+function chaSupplyForBetting() {
+  $.ajax({
+    type: "GET",
+    url: "http://0.0.0.0:8080/cha_supply_for_betting",
+    crossDomain: true,
+    success: function(response) {
+      var responseObj = JSON.parse(response);
+      console.log(responseObj);
+    }
+  })
+}
+function getBalance(address, asset) {
+  $.ajax({
+    type: "GET",
+    url: "http://0.0.0.0:8080/get_balance_by_asset",
+    data: {"address": address, "asset": asset},
+    crossDomain: true,
+    success: function(response) {
+      var responseObj = JSON.parse(response);
+      console.log(responseObj);
+    }
+  })
 }
