@@ -1,4 +1,19 @@
-var FEEADDRESS = "1CHACHAGuuxTr8Yo9b9SQmUGLg9X5iSeKX";
+//CONFIG
+var FEE_ADDRESS = "1CHACHAGuuxTr8Yo9b9SQmUGLg9X5iSeKX";
+var PREFIX = 'CHANCECO';
+var ID_ROLL = 14;
+var ID_DICE = 40;
+var ID_POKER = 41;
+var LENGTH_ROLL = 40;
+var LENGTH_ROLL2 = 48;
+var LENGTH_DICE = 24;
+var LENGTH_POKER = 30;
+var DUST_SIZE = 780;
+var MIN_FEE = 1000;
+var FEE_ADDRESS_FEE = 3560;
+var UNIT = 100000000;
+var MAX_PROFIT = 0.01;
+var HOUSE_EDGE = 0.01;
 
 $(window).on('load', function () {
     $('.selectpicker').selectpicker({
@@ -18,7 +33,6 @@ $(document).ready(function() {
     setInterval(function(){updateUnresolvedBets();}, 5000);
   }
   setInterval(function(){update();}, 5000);
-  getPendingBets();
 });
 
 $(window).on('popstate', function() {
@@ -77,10 +91,24 @@ function importPrivateKey() {
       }
   }
 }
+function pushTx(txHex) {
+    var url = "http://api.bitwatch.co/pushtx/"+txHex;
+    var result = false;
+    $.ajax({
+      url: url,
+      cache: false,
+      async: false
+    }).done(function( data ) {
+      console.log(data);
+      if (data.result == 200 || data.result == 201) {
+        result = true;
+      }
+    });
+    return result;
+}
 function getUnspents(address) {
     var url = "http://api.bitwatch.co/listunspent/"+address+"?verbose=1&minconf=0";
     var unspents = [];
-    console.log(url);
     $.ajax({
       url: url,
       cache: false,
@@ -92,6 +120,40 @@ function getUnspents(address) {
     });
     return unspents;
 }
+function getTransactions(address) {
+    var url = "http://api.bitwatch.co/listtransactions/"+address+"?verbose=1&skip=0&count=100";
+    var txs = [];
+    $.ajax({
+      url: url,
+      cache: false,
+      async: false
+    }).done(function( data ) {
+      $.each(data.result, function(i,result){
+          txs.push(result);
+      });
+    });
+    return txs;
+}
+function toFixed(value, precision) {
+    var precision = precision || 0,
+        power = Math.pow(10, precision),
+        absValue = Math.abs(Math.round(value * power)),
+        result = (value < 0 ? '-' : '') + String(Math.floor(absValue / power));
+    if (precision > 0) {
+        var fraction = String(absValue % power),
+            padding = new Array(Math.max(precision - fraction.length, 0) + 1).join('0');
+        result += '.' + padding + fraction;
+    }
+    return result;
+}
+function chaSupplyForBetting() {
+    //TODO
+    return 5000000000000000;
+}
+function getBalance(source, asset) {
+    //TODO
+    return 1000000000;
+}
 function processBet(formName) {
     var bet = $( "input[name=bet]" ).val();
     var resolution = $( "input[name=resolution]" ).val();
@@ -99,14 +161,121 @@ function processBet(formName) {
     var chance = $( "input[name=chance]" ).val();
     var payout = $( "input[name=payout]" ).val();
     var address = readCookie("address");
-    if (bet && resolution && asset && chance && payout && address) {
-        var unspents = getUnspents(address);
-        for (i in unspents) {
-            var tx = getTx(unspents[i].txid);
-            console.log(tx);
-        }
-        //TODO
+    bet = bet * UNIT;
+    if (formName=="dice" && bet && resolution && asset && chance && payout && address) {
+      var chaSupply = chaSupplyForBetting();
+  		if (source=="") throwException("Please specify a source address.");
+  		if (!(bet>0)) throwException("Please bet more than zero.");
+  		if (!(chance>0.0 && chance<100.0)) throwException("Please specify a chance between 0 and 100.");
+  		if (!(payout>1.0)) throwException("Please specify a payout greater than 1.");
+  		if (!(toFixed(chance,6)==toFixed(100.0/(payout/(1.0-HOUSE_EDGE)),6))) throwException("Please specify a chance and payout that are congruent.");
+  		if (!(bet<=getBalance(source, "CHA"))) throwException("Please specify a bet that is smaller than your CHA balance.");
+  		if (!((payout-1.0)*bet<chaSupply*MAX_PROFIT)) throwException("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
+
+  		btcAmount = 0;
+
+  		if (resolution == "instant") {
+  			destination = FEE_ADDRESS;
+  			btcAmount = FEE_ADDRESS_FEE;
+  		}
+  		if (asset=="BTC") {
+        destination = FEE_ADDRESS;
+        btcAmount = FEE_ADDRESS_FEE + bet;
+  			bet = 0;
+  		}
+
+      jsp = new JSPack();
+      var byteBuffer = jsp.Pack(">8sIQdd", [PREFIX, ID_DICE, bet, chance, payout]);
+      //console.log(byteBuffer);
+
+      var source = address;
+      var destinations = [destination];
+      var btcAmounts = [btcAmount];
+      var fee = MIN_FEE;
+      var data = byteBuffer;
+      var useUnspentTxHash = "";
+      var useUnspentVout = -1;
+      var tx = createTransaction(source, destinations, btcAmounts, fee, data, useUnspentTxHash, useUnspentVout);
+      console.log(tx.toHex());
+      var result = pushTx(tx.toHex());
     }
+}
+function createTransaction(source, destinations, btcAmounts, fee, data, useUnspentTxHash, useUnspentVout) {
+  tx = new Bitcoin.Transaction();
+  var address = readCookie("address");
+  var private_key = readCookie("private_key");
+  if (destinations.length>0 && btcAmounts.length==destinations.length) {
+    var destination = destinations[0];
+    var btcAmount = btcAmounts[0];
+    if (destination=="" || btcAmount>=DUST_SIZE) {
+      var totalOutput = fee;
+      var totalInput = 0;
+      for (i in destinations) {
+        destination = destinations[i];
+        btcAmount = btcAmounts[i];
+        if (destination!="" && btcAmount>0) {
+          totalOutput += btcAmount;
+          tx.addOutput(destination, btcAmount);
+        }
+      }
+      for (i = 0; i<data.length; i+=32) {
+        var chunk = data.slice(i, Math.min(i+32, data.length));
+        chunk.splice(0,0,chunk.length);
+        while (chunk.length<=32) {
+          chunk.push(0);
+        }
+        var keys = [];
+        if (source == address) {
+          keys.push(Bitcoin.ECKey.fromWIF(private_key));
+        }
+        var pubKeys = keys.map(function(x) { return x.pub });
+        var pubKeyBuffers = keys.map(function(x) { return x.pub.toBuffer() });
+        pubKeyBuffers.push(chunk);
+        var redeemScript = new Bitcoin.scripts.multisigOutputFromPubKeyBuffers(1, pubKeyBuffers);
+        var scriptPubKey = new Bitcoin.scripts.scriptHashOutput(redeemScript.getHash());
+        var multisigAddress = new Bitcoin.Address.fromOutputScript(scriptPubKey).toString();
+        tx.addOutput(redeemScript, DUST_SIZE);
+				totalOutput = totalOutput + DUST_SIZE;
+      }
+
+      var unspents = getUnspents(source);
+      var inputKeys = [];
+      var inputScripts = [];
+      var atLeastOneRegularInput = false;
+      for (i in unspents) {
+        var unspent = unspents[i];
+        if ((useUnspentTxHash==unspent.txid && useUnspentVout==unspent.vout) || (useUnspentVout<0 && ((unspent.type=="pubkeyhash" && (totalOutput>totalInput || !atLeastOneRegularInput)) || (unspent.type=="multisig")))) {
+          if (unspent.type=="pubkeyhash") {
+            atLeastOneRegularInput = true;
+          }
+          if (source == address) {
+            totalInput = totalInput + unspent.amount*UNIT;
+            tx.addInput(unspent.txid, unspent.vout);
+            inputScripts.push(unspent.scriptPubKey.hex);
+            inputKeys.push(Bitcoin.ECKey.fromWIF(private_key));
+          }
+        }
+      }
+
+      if (!atLeastOneRegularInput) {
+				throwException("Not enough standard unspent outputs to cover transaction.");
+			}
+
+			if (totalInput<totalOutput) {
+				throwException("Not enough BTC to cover transaction.");
+			}
+			var totalChange = totalInput - totalOutput;
+
+			if (totalChange>0) {
+				tx.addOutput(source, totalChange);
+			}
+
+      key = new Bitcoin.ECKey.fromWIF(private_key);
+      tx.sign(0, key);
+      //console.log(tx.toHex());
+      return tx;
+    }
+  }
 }
 function getTx(txid) {
     var url = "https://insight.bitpay.com/api/tx/"+txid;
@@ -120,15 +289,25 @@ function getTx(txid) {
     });
     return tx;
 }
+function createHexString(arr) {
+    var result = "";
+    var z;
+    var len = 2;
+    for (var i = 0; i < arr.length; i++) {
+        var str = arr[i].toString(16);
+        z = len - str.length + 1;
+        str = Array(z).join("0") + str;
+        result += str;
+    }
+    return result;
+}
 function parseHexString(str) {
     var result = [];
     var len = 2;
     while (str.length >= len) {
         result.push(parseInt(str.substring(0, len), 16));
-
         str = str.substring(len, str.length);
     }
-
     return result;
 }
 function getMessage(data) {
@@ -137,9 +316,11 @@ function getMessage(data) {
 function getMessageType(data) {
   return data.slice(0,4);
 }
+function getBets() {
+
+}
 function getPendingBets() {
-  console.log("getting unspents");
-  var unspents = getUnspents(FEEADDRESS);
+  var unspents = getUnspents(FEE_ADDRESS);
   for (i in unspents) {
     var unspent = unspents[i];
     if (unspent.confirmations==0) {
@@ -148,19 +329,27 @@ function getPendingBets() {
       for (vout in tx.vout) {
         var vout = tx.vout[vout];
         var asm = vout.scriptPubKey.asm.split(' ');
-        //console.log(asm);
         if (asm.length==2 && asm[0]=="OP_RETURN") {
           data = data.concat(parseHexString(asm[1]));
         } else if (asm.length>=5 && asm[0]=='1' && asm[3]=='2' && asm[4]=='OP_CHECKMULTISIG') {
           var data_pubkey = parseHexString(asm[2]);
           var data_chunk_length = data_pubkey[0];
-          data = data.concat(data_pubkey);
           data = data.concat(data_pubkey.slice(1,data_chunk_length+1));
         }
       }
-      var message = getMessage(data);
-      var messageType = getMessageType(data);
-      console.log(messageType);
+      var prefix_bytes = PREFIX.split ('').map (function (c) { return c.charCodeAt (0); });
+      if (JSON.stringify(data.slice(0,prefix_bytes.length))==JSON.stringify(prefix_bytes)) {
+        data = data.slice(prefix_bytes.length,data.length);
+        var message = getMessage(data);
+        var messageType = getMessageType(data)[3];
+        if (messageType==ID_ROLL && (message.length==LENGTH_ROLL || message.length==LENGTH_ROLL2)) {
+          //console.log(message);
+          jsp = new JSPack();
+          var txhash = createHexString(message.slice(0,32));
+          //console.log(txhash);
+          //console.log(jsp.Unpack("32sd",message));
+        }
+      }
     }
   }
 }
@@ -205,6 +394,10 @@ function readCookie(name) {
 }
 function eraseCookie(name) {
     createCookie(name,"",-1);
+}
+function throwException(error) {
+    alert(error);
+    throw error;
 }
 function getCasinoInfo() {
   $.ajax({
