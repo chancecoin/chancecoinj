@@ -4,7 +4,6 @@ $(window).on('load', function () {
     $('.selectpicker').selectpicker({
         'selectedText': 'cat'
     });
-    importPrivateKey();
 });
 
 $(document).ready(function() {
@@ -88,7 +87,6 @@ function importPrivateKey() {
       //eraseCookie("address");
   }
   getCasinoInfo();
-  updateAddressDropDown();
 }
 //update the page using the address passed in
 function updateAddress(newAddress) {
@@ -124,28 +122,30 @@ function getParameterByName(name) {
         results = regex.exec(location.search);
     return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
-function updateAddressDropDown() {
+function updateAddressDropDown(addressInfos) {
   var addressSelected = readCookie("address");
   if (addressSelected) {
     $("#address").html(addressSelected.substring(0,6)+'... <b class="caret"></b>');
   }
 
-  var addresses = readCookie("addresses");
-  if (addresses) {
-    var listItems = $("#addresses").children();
+  var listItems = $("#addresses").children();
+  if (listItems) {
     for (var i in listItems) {
       if (i > 0) {
         listItems[i].remove();
       }
     }
+  }
 
-    addresses = JSON.parse(addresses);
-    for (var i in addresses) {
-      var address = addresses[i];
+  if (addressInfos) {
+    for (var i in addressInfos) {
+      var addressInfo = addressInfos[i];
+      var address = addressInfo["address"];
+      var balanceCHA = addressInfo["balanceCHA"];
       if (address == addressSelected) {
-        $("#addresses").append('<li id="address_'+i+'"><a href="?address='+address+'"><strong>'+ address+'</strong> <span class="badge"><span id="cha_balance_'+i+'"></span> CHA</span></a></li>');
+        $("#addresses").append('<li id="address_'+i+'"><a href="?address='+address+'"><strong>'+ address+'</strong> <span class="badge"><span id="cha_balance_'+i+'">' + balanceCHA + '</span> CHA</span></a></li>');
       } else {
-        $("#addresses").append('<li id="address_'+i+'"><a href="?address='+address+'">'+ address+' <span class="badge"><span id="cha_balance_'+i+'"></span> CHA</span></a></li>');
+        $("#addresses").append('<li id="address_'+i+'"><a href="?address='+address+'">'+ address+' <span class="badge"><span id="cha_balance_'+i+'">' + balanceCHA + '</span> CHA</span></a></li>');
       }
     }
   }
@@ -267,20 +267,8 @@ function getCasinoInfo() {
     success: function(response) {
       var responseObj = JSON.parse(response);
       console.log("address from ajax response: " + responseObj.address);
-      console.log("address infos from ajax response: " + responseObj.addressInfos);
-      $("#recent_bets_content").html(getBetTableHtml(responseObj.bets));
-      if (responseObj.address) {
-        $("#my_bets_content").html(getBetTableHtml(responseObj.my_bets));
-        $("#cha_balance").html(responseObj.balanceCHA.toLocaleString());
-      }
-      if (responseObj.addressInfos) {
-        for (var i in responseObj.addressInfos) {
-          var addressInfo = responseObj.addressInfos[i];
-          console.log(addressInfo["address"]);
-          console.log(addressInfo["balanceCHA"]);
-          $("#cha_balance_"+i).html(addressInfo["balanceCHA"]);
-        }
-      }
+      updateAddressDropDown(responseObj.addressInfos);
+
       $("#cha_price_dollar").html("1 CHA = $" + (responseObj.price_BTC *responseObj.price_CHA).toFixed(2));
       $("#cha_supply").html(responseObj.supply.toLocaleString());
       $("#cha_price").html(responseObj.price_CHA.toFixed(4) + " BTC");
@@ -297,6 +285,11 @@ function getCasinoInfo() {
       $("#cha_blocks").html(currentChaBlocks.toLocaleString());
       $("#btc_blocks").html(responseObj.blocksBTC.toLocaleString());
       $("#version").html(responseObj.version);
+
+      $("#recent_bets_content").html(getBetTableHtml(responseObj.bets));
+      if (responseObj.address) {
+        $("#my_bets_content").html(getBetTableHtml(responseObj.my_bets));
+      }
     }
   });
 }
@@ -353,7 +346,7 @@ function getBetTableHtml(betObjects) {
     } else {
       html += "<td><img src='http://chancecoin.com/images/dice.png' style='height: 25px; display: inline;' />";
       if (betInfo["resolved"]) {
-        html += betInfo["roll"];
+        html += parseFloat(betInfo["roll"].toPrecision(5));
       } else {
         html += "?";
       }
@@ -370,4 +363,27 @@ function getBetTableHtml(betObjects) {
   html += "</tbody>";
   html += "</table>";
   return html;
+}
+function chaSupplyForBetting() {
+  $.ajax({
+    type: "GET",
+    url: "http://0.0.0.0:8080/cha_supply_for_betting",
+    crossDomain: true,
+    success: function(response) {
+      var responseObj = JSON.parse(response);
+      console.log(responseObj);
+    }
+  })
+}
+function getBalance(address, asset) {
+  $.ajax({
+    type: "GET",
+    url: "http://0.0.0.0:8080/get_balance_by_asset",
+    data: {"address": address, "asset": asset},
+    crossDomain: true,
+    success: function(response) {
+      var responseObj = JSON.parse(response);
+      console.log(responseObj);
+    }
+  })
 }

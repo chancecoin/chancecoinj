@@ -229,7 +229,28 @@ public class Server implements Runnable {
 		get(new Route("/supply") {
 			@Override
 			public Object handle(Request request, Response response) {
+				response.header("Access-Control-Allow-Origin", "*");
 				return String.format("%.8f", Util.chaSupply().doubleValue() / Config.unit);
+			}
+		});
+		get(new Route("/cha_supply_for_betting") {
+			@Override
+			public Object handle(Request request, Response response) {
+				response.header("Access-Control-Allow-Origin", "*");
+				return String.format("%.8f", Util.chaSupplyForBetting().doubleValue() / Config.unit);
+			}
+		});
+		get(new Route("/get_balance_by_asset") {
+			@Override
+			public Object handle(Request request, Response response) {
+				response.header("Access-Control-Allow-Origin", "*");
+				request.session(true);
+				if (request.queryParams().contains("address") && request.queryParams("address") != null &&
+						request.queryParams().contains("asset") && request.queryParams("asset") != null) {
+					return String.format("%.8f", Util.getBalance(request.queryParams("address"), request.queryParams("asset")).doubleValue() / Config.unit);	
+				} else {
+					return null;
+				}
 			}
 		});
 		get(new Route("/chat_status_update") {
