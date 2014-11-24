@@ -20,8 +20,9 @@
 	<script type="text/javascript" src="http://chancecoin.com/js/highcharts.js"></script>
 	<script type="text/javascript" src="http://chancecoin.com/js/exporting.js"></script>
 	<script type="text/javascript" src="http://chancecoin.com/js/bootstrap-select.min.js"></script>
-  <script type="text/javascript" src="http://chancecoin.com/js/bitcoinjs.min.js"></script>
-	<script type="text/javascript" src="http://chancecoin.com/js/ByteBufferAB.min.js"></script>
+  <script type="text/javascript" src="resources/static/js/bitcoinjs.js"></script>
+	<script type="text/javascript" src="resources/static/js/bigi.js"></script>
+	<script type="text/javascript" src="resources/static/js/jspack.js"></script>
 	<script type="text/javascript" src="resources/static/js/lite.js"></script>
 </head>
 <body onload="updateAddressFromUrl(); getCasinoInfo();">
@@ -114,7 +115,7 @@
 
 				<div id="my-tab-content1" class="tab-content">
 						<div class="tab-pane active" id="dice">
-								<form id="dice1" action="/casino" class="form-inline" method="post">
+								<form id="dice" action="" class="form-inline" method="post">
 
 										<input type="hidden" name="form" value="bet_dice">
 
@@ -162,7 +163,7 @@
 										<div class="form-group">
 											<div class="input-group">
 												<span class="input-group-btn">
-													<button class="btn btn-default" onclick="processBet('dice1'); return false;" >Roll dice</button>
+													<button class="btn btn-default" onclick="processBet('dice'); return false;" >Roll dice</button>
 												</span>
 											</div>
 										</div>
@@ -170,7 +171,7 @@
 								</form>
 						</div>
 						<div class="tab-pane" id="poker">
-								<form id="poker1" action="/casino" class="form-inline" method="post">
+								<form id="poker" action="" class="form-inline" method="post">
 
 										<input type="hidden" name="form" value="bet_poker">
 
@@ -206,7 +207,7 @@
 										<div class="form-group">
 											<div class="input-group">
 												<span class="input-group-btn">
-													<button class="btn btn-default" onclick="processBet('poker1'); return false;" >Bet</button>
+													<button class="btn btn-default" onclick="processBet('poker'); return false;" >Bet</button>
 												</span>
 											</div>
 										</div>
