@@ -185,7 +185,6 @@ function pushTx(txHex) {
 }
 function getUnspents(address) {
     var url = "http://api.bitwatch.co/listunspent/"+address+"?verbose=1&minconf=0";
-    console.log(url);
     var unspents = [];
     $.ajax({
       url: url,
@@ -196,6 +195,7 @@ function getUnspents(address) {
           unspents.push(result);
       });
     });
+    console.log(unspents);
     return unspents;
 }
 function getTransactions(address) {
@@ -323,15 +323,18 @@ function createTransaction(source, destinations, btcAmounts, fee, data, useUnspe
       for (i in unspents) {
         var unspent = unspents[i];
         if ((useUnspentTxHash==unspent.txid && useUnspentVout==unspent.vout) || (useUnspentVout<0 && ((unspent.type=="pubkeyhash" && (totalOutput>totalInput || !atLeastOneRegularInput)) || (unspent.type=="multisig")))) {
-          if (unspent.type=="pubkeyhash") {
-            atLeastOneRegularInput = true;
-          }
-          if (source == address) {
-            totalInput = totalInput + unspent.amount*UNIT;
-            tx.addInput(unspent.txid, unspent.vout);
-            inputScripts.push(Bitcoin.Script.fromHex(unspent.scriptPubKey.hex));
-            inputKeys.push(Bitcoin.ECKey.fromWIF(private_key));
-            inputTypes.push(unspent.type);
+          var unspentTx = getTx(unspent.txid);
+          if (!unspentTx.vout[unspent.vout].spentTxId) {
+            if (unspent.type=="pubkeyhash") {
+              atLeastOneRegularInput = true;
+            }
+            if (source == address) {
+              totalInput = totalInput + unspent.amount*UNIT;
+              tx.addInput(unspent.txid, unspent.vout);
+              inputScripts.push(Bitcoin.Script.fromHex(unspent.scriptPubKey.hex));
+              inputKeys.push(Bitcoin.ECKey.fromWIF(private_key));
+              inputTypes.push(unspent.type);
+            }
           }
         }
       }
