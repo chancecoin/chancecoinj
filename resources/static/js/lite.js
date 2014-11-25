@@ -32,6 +32,10 @@ $(document).ready(function() {
     setInterval(function(){updateUnresolvedBets();}, 5000);
   }
   setInterval(function(){update();}, 5000);
+
+  //test
+  // var address = readCookie("address");
+  // createDiceBet(0.01, "instant", "CHA", 1, 99, address);
 });
 
 $(window).on('popstate', function() {
@@ -102,6 +106,7 @@ function importPrivateKey() {
   }
   getCasinoInfo();
 }
+
 //update the page using the address passed in
 function updateAddress(newAddress) {
   var currentAddress = readCookie("address");
@@ -172,8 +177,7 @@ function pushTx(txHex) {
       cache: false,
       async: false
     }).done(function( data ) {
-      console.log(data);
-      if (data.result == 200 || data.result == 201) {
+      if (data.status == 200 || data.status == 201) {
         result = true;
       }
     });
@@ -181,6 +185,7 @@ function pushTx(txHex) {
 }
 function getUnspents(address) {
     var url = "http://api.bitwatch.co/listunspent/"+address+"?verbose=1&minconf=0";
+    console.log(url);
     var unspents = [];
     $.ajax({
       url: url,
@@ -219,58 +224,57 @@ function toFixed(value, precision) {
     }
     return result;
 }
-function chaSupplyForBetting() {
-    //TODO
-    return 5000000000000000;
+
+function createDiceBet(bet, resolution, asset, chance, payout, address) {
+  var chaSupply = chaSupplyForBetting();
+  var balance = getBalance(address, "CHA");
+  if (source=="") throwException("Please specify a source address.");
+  if (!(bet>0)) throwException("Please bet more than zero.");
+  if (!(chance>0.0 && chance<100.0)) throwException("Please specify a chance between 0 and 100.");
+  if (!(payout>1.0)) throwException("Please specify a payout greater than 1.");
+  if (!(toFixed(chance,6)==toFixed(100.0/(payout/(1.0-HOUSE_EDGE)),6))) throwException("Please specify a chance and payout that are congruent.");
+  if (!(bet<=balance)) throwException("Please specify a bet that is smaller than your CHA balance.");
+  if (!((payout-1.0)*bet<chaSupply*MAX_PROFIT)) throwException("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
+
+  btcAmount = 0;
+
+  if (resolution == "instant") {
+    destination = FEE_ADDRESS;
+    btcAmount = FEE_ADDRESS_FEE;
+  }
+  if (asset=="BTC") {
+    destination = FEE_ADDRESS;
+    btcAmount = FEE_ADDRESS_FEE + bet;
+    bet = 0;
+  }
+
+  jsp = new JSPack();
+  var byteBuffer = jsp.Pack(">8sIQdd", [PREFIX, ID_DICE, bet*UNIT, chance, payout]);
+
+  var source = address;
+  var destinations = [destination];
+  var btcAmounts = [btcAmount];
+  var fee = MIN_FEE;
+  var data = byteBuffer;
+  var useUnspentTxHash = "";
+  var useUnspentVout = -1;
+  var tx = createTransaction(source, destinations, btcAmounts, fee, data, useUnspentTxHash, useUnspentVout);
+  var result = pushTx(tx.toHex());
+  return result;
 }
-function getBalance(source, asset) {
-    //TODO
-    return 1000000000;
-}
+
 function processBet(formName) {
+    var address = readCookie("address");
     var bet = $( "input[name=bet]" ).val();
     var resolution = $( "input[name=resolution]" ).val();
     var asset = $( "select[name=asset]" ).val();
     var chance = $( "input[name=chance]" ).val();
     var payout = $( "input[name=payout]" ).val();
-    var address = readCookie("address");
-    bet = bet * UNIT;
     if (formName=="dice" && bet && resolution && asset && chance && payout && address) {
-      var chaSupply = chaSupplyForBetting();
-  		if (source=="") throwException("Please specify a source address.");
-  		if (!(bet>0)) throwException("Please bet more than zero.");
-  		if (!(chance>0.0 && chance<100.0)) throwException("Please specify a chance between 0 and 100.");
-  		if (!(payout>1.0)) throwException("Please specify a payout greater than 1.");
-  		if (!(toFixed(chance,6)==toFixed(100.0/(payout/(1.0-HOUSE_EDGE)),6))) throwException("Please specify a chance and payout that are congruent.");
-  		if (!(bet<=getBalance(source, "CHA"))) throwException("Please specify a bet that is smaller than your CHA balance.");
-  		if (!((payout-1.0)*bet<chaSupply*MAX_PROFIT)) throwException("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
-
-  		btcAmount = 0;
-
-  		if (resolution == "instant") {
-  			destination = FEE_ADDRESS;
-  			btcAmount = FEE_ADDRESS_FEE;
-  		}
-  		if (asset=="BTC") {
-        destination = FEE_ADDRESS;
-        btcAmount = FEE_ADDRESS_FEE + bet;
-  			bet = 0;
-  		}
-
-      jsp = new JSPack();
-      var byteBuffer = jsp.Pack(">8sIQdd", [PREFIX, ID_DICE, bet, chance, payout]);
-      //console.log(byteBuffer);
-
-      var source = address;
-      var destinations = [destination];
-      var btcAmounts = [btcAmount];
-      var fee = MIN_FEE;
-      var data = byteBuffer;
-      var useUnspentTxHash = "";
-      var useUnspentVout = -1;
-      var tx = createTransaction(source, destinations, btcAmounts, fee, data, useUnspentTxHash, useUnspentVout);
-      console.log(tx.toHex());
-      var result = pushTx(tx.toHex());
+      var result = createDiceBet(bet, resolution, asset, chance, payout, address);
+      if (result) {
+        alert("Thanks for betting!");
+      }
     }
 }
 function createTransaction(source, destinations, btcAmounts, fee, data, useUnspentTxHash, useUnspentVout) {
@@ -314,6 +318,7 @@ function createTransaction(source, destinations, btcAmounts, fee, data, useUnspe
       var unspents = getUnspents(source);
       var inputKeys = [];
       var inputScripts = [];
+      var inputTypes = [];
       var atLeastOneRegularInput = false;
       for (i in unspents) {
         var unspent = unspents[i];
@@ -324,8 +329,9 @@ function createTransaction(source, destinations, btcAmounts, fee, data, useUnspe
           if (source == address) {
             totalInput = totalInput + unspent.amount*UNIT;
             tx.addInput(unspent.txid, unspent.vout);
-            inputScripts.push(unspent.scriptPubKey.hex);
+            inputScripts.push(Bitcoin.Script.fromHex(unspent.scriptPubKey.hex));
             inputKeys.push(Bitcoin.ECKey.fromWIF(private_key));
+            inputTypes.push(unspent.type);
           }
         }
       }
@@ -344,8 +350,18 @@ function createTransaction(source, destinations, btcAmounts, fee, data, useUnspe
 			}
 
       key = new Bitcoin.ECKey.fromWIF(private_key);
-      tx.sign(0, key);
-      //console.log(tx.toHex());
+      var pubKeys = inputKeys.map(function(eck) { return eck.pub })
+      for (i in tx.ins) {
+        var signature = tx.signInput(i, inputScripts[i], inputKeys[i]);
+        if (inputTypes[i] == "multisig") {
+          var redeemScriptSig = new Bitcoin.scripts.multisigInput([signature]);
+          //var scriptSig = new Bitcoin.scripts.scriptHashInput(redeemScriptSig, inputScripts[i]);
+          tx.setInputScript(i, redeemScriptSig);
+        } else if (inputTypes[i] == "pubkeyhash") {
+          var redeemScriptSig = new Bitcoin.scripts.pubKeyHashInput(signature, inputKeys[i].pub);
+          tx.setInputScript(i, redeemScriptSig);
+        }
+      }
       return tx;
     }
   }
@@ -579,25 +595,27 @@ function getBetTableHtml(betObjects) {
   return html;
 }
 function chaSupplyForBetting() {
+  var url = "http://0.0.0.0:8080/cha_supply_for_betting";
+  var result = 0;
   $.ajax({
-    type: "GET",
-    url: "http://0.0.0.0:8080/cha_supply_for_betting",
-    crossDomain: true,
-    success: function(response) {
-      var responseObj = JSON.parse(response);
-      console.log(responseObj);
-    }
-  })
+    url: url,
+    cache: false,
+    async: false
+  }).done(function( data ) {
+    result = data;
+  });
+  return result;
 }
 function getBalance(address, asset) {
+  var url = "http://0.0.0.0:8080/get_balance_by_asset";
+  var result = 0;
   $.ajax({
-    type: "GET",
-    url: "http://0.0.0.0:8080/get_balance_by_asset",
+    url: url,
     data: {"address": address, "asset": asset},
-    crossDomain: true,
-    success: function(response) {
-      var responseObj = JSON.parse(response);
-      console.log(responseObj);
-    }
-  })
+    cache: false,
+    async: false
+  }).done(function( data ) {
+    result = data;
+  });
+  return result;
 }
