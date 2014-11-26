@@ -34,8 +34,6 @@ $(document).ready(function() {
   setInterval(function(){update();}, 5000);
 
   //test
-  // var address = readCookie("address");
-  // createDiceBet(0.01, "instant", "CHA", 1, 99, address);
 });
 
 $(window).on('popstate', function() {
@@ -199,14 +197,14 @@ function getUnspents(address) {
     return unspents;
 }
 function getTransactions(address) {
-    var url = "http://api.bitwatch.co/listtransactions/"+address+"?verbose=1&skip=0&count=100";
+    var url = "https://insight.bitpay.com/api/addrs/"+address+"/txs?from=0&to=20";
     var txs = [];
     $.ajax({
       url: url,
       cache: false,
       async: false
     }).done(function( data ) {
-      $.each(data.result, function(i,result){
+      $.each(data.items, function(i,result){
           txs.push(result);
       });
     });
@@ -408,15 +406,13 @@ function getMessage(data) {
 function getMessageType(data) {
   return data.slice(0,4);
 }
-function getBets() {
-
-}
-function getPendingBets() {
-  var unspents = getUnspents(FEE_ADDRESS);
-  for (i in unspents) {
-    var unspent = unspents[i];
-    if (unspent.confirmations==0) {
-      var tx = getTx(unspent.txid);
+function getChancecoinTxs(address) {
+  var txs = getTransactions(address);
+  var chancecoinTxs = [];
+  for (i in txs) {
+    var tx = txs[i];
+    if (tx.confirmations>0) {
+      tx = getTx(tx.txid);
       var data = [];
       for (vout in tx.vout) {
         var vout = tx.vout[vout];
@@ -434,18 +430,85 @@ function getPendingBets() {
         data = data.slice(prefix_bytes.length,data.length);
         var message = getMessage(data);
         var messageType = getMessageType(data)[3];
-        if (messageType==ID_ROLL && (message.length==LENGTH_ROLL || message.length==LENGTH_ROLL2)) {
-          //console.log(message);
-          jsp = new JSPack();
-          var txhash = createHexString(message.slice(0,32));
-          //console.log(txhash);
-          //console.log(jsp.Unpack("32sd",message));
-        }
+        chancecoinTxs.push({"message": message, "messageType": messageType, "tx": tx});
       }
     }
   }
+  return chancecoinTxs;
+}
+function getBets(address) {
+  if (address == "") {
+    address = FEE_ADDRESS;
+  }
+  var betObjects = [];
+  var chancecoinTxs = getChancecoinTxs(address);
+  for (i in chancecoinTxs) {
+    var chancecoinTx = chancecoinTxs[i];
+    var tx = chancecoinTx["tx"];
+    var messageType = chancecoinTx["messageType"];
+    var message = chancecoinTx["message"];
+    jsp = new JSPack();
+    var source = null;
+    for (i in tx.vin) {
+      if (tx.vin[i].addr && source==null) {
+        source = tx.vin[i].addr;
+      }
+    }
+    var d = new XDate(tx.blocktime*1000);
+    var blockTime = d.toString("yyyy-MM-dd HH:mm:ss");
+    if (messageType==ID_ROLL && (message.length==LENGTH_ROLL || message.length==LENGTH_ROLL2)) {
+      var txhash = createHexString(message.slice(0,32));
+      var roll = jsp.Unpack("32sd",message);
+    } else if (messageType==ID_DICE && message.length==LENGTH_DICE) {
+      var a = jsp.Unpack(">Qdd", message);
+      var bet = a[0]/UNIT;
+      var chance = a[1];
+      var payout = a[2];
+      betObjects.push({"source": source, "block_time": blockTime, "bet": bet, "chance": chance, "payout": payout, "resolved": false, "profit": 0});
+    } else if (messageType==ID_POKER && message.length==LENGTH_POKER) {
+      var a = jsp.Unpack(">Q9h4x", message);
+      var bet = a[0]/UNIT;
+      var cards = a.slice(1,10).map(function(x) { return getCard(x); }).join(" ");
+      betObjects.push({"source": source, "block_time": blockTime, "bet": bet, "chance": chance, "payout": payout, "resolved": false, "profit": 0, "cards": cards, "cards_result": false});
+    }
+  }
+  return betObjects;
 }
 
+function resolveBet() {
+
+}
+
+function getCard(card) {
+  var rank;
+  var suit;
+  switch (Math.floor(card / 13)) {
+    case 0: suit="C"; break;
+    case 1: suit="D"; break;
+    case 2: suit="H"; break;
+    case 3: suit="S"; break;
+  }
+  switch (card % 13) {
+    case 0: rank="2"; break;
+    case 1: rank="3"; break;
+    case 2: rank="4"; break;
+    case 3: rank="5"; break;
+    case 4: rank="6"; break;
+    case 5: rank="7"; break;
+    case 6: rank="8"; break;
+    case 7: rank="9"; break;
+    case 8: rank="T"; break;
+    case 9: rank="J"; break;
+    case 10: rank="Q"; break;
+    case 11: rank="K"; break;
+    case 12: rank="A"; break;
+  }
+  if (rank && suit) {
+    return rank+suit;
+  } else {
+    return "??";
+  }
+}
 function getCardRank(card) {
   if (card.charAt(0) == "T") {
     return 10;
@@ -492,10 +555,11 @@ function throwException(error) {
     throw error;
 }
 function getCasinoInfo() {
+  var address = readCookie("address");
   $.ajax({
     type: "GET",
     url: "http://0.0.0.0:8080/get_casino_info",
-    data: {addresses: readCookie("addresses"), address: readCookie("address")},
+    data: {addresses: readCookie("addresses"), address: address},
     crossDomain: true,
     success: function(response) {
       var responseObj = JSON.parse(response);
@@ -519,9 +583,9 @@ function getCasinoInfo() {
       $("#btc_blocks").html(responseObj.blocksBTC.toLocaleString());
       $("#version").html(responseObj.version);
 
-      $("#recent_bets_content").html(getBetTableHtml(responseObj.bets));
+      $("#recent_bets_content").html(getBetTableHtml(getBets("")));
       if (responseObj.address) {
-        $("#my_bets_content").html(getBetTableHtml(responseObj.my_bets));
+        $("#my_bets_content").html(getBetTableHtml(getBets(address)));
       }
     }
   });
