@@ -459,20 +459,21 @@ function decodeChancecoinTx(chancecoinTx) {
   if (messageType==ID_ROLL && (message.length==LENGTH_ROLL || message.length==LENGTH_ROLL2)) {
     var txhash = createHexString(message.slice(0,32));
     var roll = jsp.Unpack("32sd",message);
+    roll = roll[1];
     chancecoinTxDecoded = {"type": "roll", "details": {"txid": txhash, "roll": roll}};
   } else if (messageType==ID_DICE && message.length==LENGTH_DICE) {
     var a = jsp.Unpack(">Qdd", message);
     var bet = a[0]/UNIT;
     var chance = a[1];
     var payout = a[2];
-    chancecoinTxDecoded = {"type": "bet_dice", "details": {"source": source, "block_time": blockTime, "bet": bet, "chance": chance, "payout": payout, "resolved": false, "profit": 0}};
+    chancecoinTxDecoded = {"type": "bet_dice", "details": {"source": source, "block_time": blockTime, "bet": bet, "chance": chance, "payout": payout, "resolved": false, "roll": null, "profit": 0}};
   } else if (messageType==ID_POKER && message.length==LENGTH_POKER) {
     var a = jsp.Unpack(">Q9h4x", message);
     var bet = a[0]/UNIT;
     var chance = 2;
     var payout = 100/chance*(1-HOUSE_EDGE);
     var cards = a.slice(1,10).map(function(x) { return getCard(x); }).join(" ");
-    chancecoinTxDecoded = {"type": "bet_poker", "details": {"source": source, "block_time": blockTime, "bet": bet, "chance": chance, "payout": payout, "resolved": false, "profit": 0, "cards": cards, "cards_result": false}};
+    chancecoinTxDecoded = {"type": "bet_poker", "details": {"source": source, "block_time": blockTime, "bet": bet, "chance": chance, "payout": payout, "resolved": false, "roll": null, "profit": 0, "cards": cards, "cards_result": false}};
   }
   return chancecoinTxDecoded;
 }
@@ -487,7 +488,7 @@ function getBets(address) {
     var chancecoinTxDecoded = decodeChancecoinTx(chancecoinTx);
     if (chancecoinTxDecoded["type"] == "bet_dice" || chancecoinTxDecoded["type"] == "bet_poker") {
       var betObject = chancecoinTxDecoded["details"];
-      //betObject = resolveBet(betObject, chancecoinTx);
+      betObject = resolveBet(betObject, chancecoinTx);
       betObjects.push(betObject);
     }
   }
@@ -495,19 +496,34 @@ function getBets(address) {
 }
 
 function resolveBet(betObject, chancecoinTx) {
-  var spentTxId = null;
+  //TODO: memoize already-downloaded transactions
   for (i in chancecoinTx["tx"].vout) {
     var vout = chancecoinTx["tx"].vout[i];
-    if (vout["spentTxId"]) {
-      spentTxId = vout["spentTxId"];
-    }
-  }
-  if (spentTxId) {
-    var chancecoinTx = getChancecoinTx(spentTxId);
-    var decodedChancecoinTx = decodeChancecoinTx(chancecoinTx);
-    if (decodedChancecoinTx && decodedChancecoinTx["type"] == "roll") {
-      var rollObject = decodedChancecoinTx["details"];
-      console.log(rollObject);
+    if (!betObject["resolved"] && vout["spentTxId"]) {
+      var spentTxId = vout["spentTxId"];
+      if (spentTxId) {
+        var decodedChancecoinTx = decodeChancecoinTx(getChancecoinTx(spentTxId));
+        if (decodedChancecoinTx && decodedChancecoinTx["type"] == "roll") {
+          var rollObject = decodedChancecoinTx["details"];
+          betObject["resolved"] = "true";
+          var roll = rollObject["roll"]*100;
+          var bet = betObject["bet"];
+          if (betObject["cards"]) {
+            //poker bet
+          } else {
+            //dice bet
+            betObject["roll"] = roll;
+            var chance = betObject["chance"];
+            var payout = betObject["payout"];
+            var chaSupply = chaSupplyForBetting();
+            if (roll < chance) {
+              betObject["profit"] = bet*(payout-1)*chaSupply/(chaSupply-bet*payout);
+            } else {
+              betObject["profit"] = -bet;
+            }
+          }
+        }
+      }
     }
   }
   return betObject;
@@ -644,7 +660,7 @@ function getBetTableHtml(betObjects) {
     html += "<tr>";
     html += "<td>"+betInfo["source"].substring(0,6)+"...</td>";
     html += "<td>"+betInfo["block_time"]+"</td>";
-    html += "<td>"+betInfo["bet"]+" CHA</td>";
+    html += "<td>"+betInfo["bet"].toPrecision(3)+" CHA</td>";
     html += "<td>"+parseFloat(betInfo["chance"].toPrecision(3))+"%"+" / "+parseFloat(betInfo["payout"].toPrecision(3))+"X</td>";
     //html += "<td>"+parseFloat(betInfo["chance"])+"%"+" / "+parseFloat(betInfo["payout"])+"X</td>";
 
@@ -685,7 +701,7 @@ function getBetTableHtml(betObjects) {
     }
     html += "<td>";
     if (betInfo["resolved"] && betInfo["resolved"]=="true") {
-      html += betInfo["profit"]+" CHA";
+      html += betInfo["profit"].toPrecision(3)+" CHA";
     } else {
       html += "<img src='http://chancecoin.com/images/ajax-loader.gif' /></td>";
     }
