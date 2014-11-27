@@ -14,6 +14,7 @@ var FEE_ADDRESS_FEE = 3560;
 var UNIT = 100000000;
 var MAX_PROFIT = 0.01;
 var HOUSE_EDGE = 0.01;
+var CACHE_getTx = {};
 
 $(window).on('load', function () {
     $('.selectpicker').selectpicker({
@@ -369,15 +370,19 @@ function createTransaction(source, destinations, btcAmounts, fee, data, useUnspe
 }
 function getTx(txid) {
     var url = "https://insight.bitpay.com/api/tx/"+txid;
-    var tx = {};
-    $.ajax({
-      url: url,
-      cache: false,
-      async: false
-    }).done(function( data ) {
-      tx = data;
-    });
-    return tx;
+    if (CACHE_getTx[txid]) {
+      return CACHE_getTx[txid];
+    } else {
+      var tx = {};
+      $.ajax({
+        url: url,
+        cache: true,
+        async: false
+      }).done(function( data ) {
+        tx = data;
+      });
+      return tx;
+    }
 }
 function createHexString(arr) {
     var result = "";
@@ -496,33 +501,65 @@ function getBets(address) {
 }
 
 function resolveBet(betObject, chancecoinTx) {
-  //TODO: memoize already-downloaded transactions
+  var earlierBetIsUnresolved = false; //TODO
+  if (earlierBetIsUnresolved) {
+    //if an earlier bet by the same address is still unresolved, don't resolve this one yet
+    return betObject;
+  }
+
+  var couldWin = 0; //TODO: the total amount of CHA that could be won in this block
+
+  var roll = null;
+  var rollA = null;
+  var rollB = null;
+  var rollC = 0;
+
+  if (couldWin > 20000) {
+    //TODO: must use lottery numbers to resolve bet
+    return betObject;
+  } else {
+    rollA = 0.0;
+  }
+
+  var blockHash = chancecoinTx["tx"].blockhash;
+  var txHash = chancecoinTx["tx"].txid;
+  rollC = (new BigInteger(blockHash,16)).mod(new BigInteger('1000000000')).intValue()/1000000000;
+  if (rollA != null) {
+    rollB = (new BigInteger(txHash.substring(10,txHash.length),16)).mod(new BigInteger('1000000000')).intValue()/1000000000;
+    roll = ((rollA + rollB + rollC) % 1) * 100;
+  }
+
+  var foundRoll = false;
   for (i in chancecoinTx["tx"].vout) {
     var vout = chancecoinTx["tx"].vout[i];
-    if (!betObject["resolved"] && vout["spentTxId"]) {
+    if (!foundRoll && vout["spentTxId"]) {
       var spentTxId = vout["spentTxId"];
       if (spentTxId) {
         var decodedChancecoinTx = decodeChancecoinTx(getChancecoinTx(spentTxId));
         if (decodedChancecoinTx && decodedChancecoinTx["type"] == "roll") {
           var rollObject = decodedChancecoinTx["details"];
-          betObject["resolved"] = "true";
-          var roll = rollObject["roll"]*100;
-          var bet = betObject["bet"];
-          if (betObject["cards"]) {
-            //poker bet
-          } else {
-            //dice bet
-            betObject["roll"] = roll;
-            var chance = betObject["chance"];
-            var payout = betObject["payout"];
-            var chaSupply = chaSupplyForBetting();
-            if (roll < chance) {
-              betObject["profit"] = bet*(payout-1)*chaSupply/(chaSupply-bet*payout);
-            } else {
-              betObject["profit"] = -bet;
-            }
-          }
+          foundRoll = true;
+          roll = rollObject["roll"]*100;
         }
+      }
+    }
+  }
+
+  if (roll != null) {
+    betObject["resolved"] = "true";
+    var bet = betObject["bet"];
+    if (betObject["cards"]) {
+      //poker bet
+    } else {
+      //dice bet
+      betObject["roll"] = roll;
+      var chance = betObject["chance"];
+      var payout = betObject["payout"];
+      var chaSupply = chaSupplyForBetting();
+      if (roll < chance) {
+        betObject["profit"] = bet*(payout-1)*chaSupply/(chaSupply-bet*payout);
+      } else {
+        betObject["profit"] = -bet;
       }
     }
   }
