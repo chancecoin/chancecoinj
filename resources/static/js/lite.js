@@ -406,35 +406,75 @@ function getMessage(data) {
 function getMessageType(data) {
   return data.slice(0,4);
 }
+function getChancecoinTx(txid) {
+  tx = getTx(txid);
+  var chancecoinTx = null;
+  var data = [];
+  for (vout in tx.vout) {
+    var vout = tx.vout[vout];
+    var asm = vout.scriptPubKey.asm.split(' ');
+    if (asm.length==2 && asm[0]=="OP_RETURN") {
+      data = data.concat(parseHexString(asm[1]));
+    } else if (asm.length>=5 && asm[0]=='1' && asm[3]=='2' && asm[4]=='OP_CHECKMULTISIG') {
+      var data_pubkey = parseHexString(asm[2]);
+      var data_chunk_length = data_pubkey[0];
+      data = data.concat(data_pubkey.slice(1,data_chunk_length+1));
+    }
+  }
+  var prefix_bytes = PREFIX.split ('').map (function (c) { return c.charCodeAt (0); });
+  if (JSON.stringify(data.slice(0,prefix_bytes.length))==JSON.stringify(prefix_bytes)) {
+    data = data.slice(prefix_bytes.length,data.length);
+    var message = getMessage(data);
+    var messageType = getMessageType(data)[3];
+    chancecoinTx = {"message": message, "messageType": messageType, "tx": tx};
+  }
+  return chancecoinTx;
+}
 function getChancecoinTxs(address) {
   var txs = getTransactions(address);
   var chancecoinTxs = [];
   for (i in txs) {
     var tx = txs[i];
-    if (tx.confirmations>0) {
-      tx = getTx(tx.txid);
-      var data = [];
-      for (vout in tx.vout) {
-        var vout = tx.vout[vout];
-        var asm = vout.scriptPubKey.asm.split(' ');
-        if (asm.length==2 && asm[0]=="OP_RETURN") {
-          data = data.concat(parseHexString(asm[1]));
-        } else if (asm.length>=5 && asm[0]=='1' && asm[3]=='2' && asm[4]=='OP_CHECKMULTISIG') {
-          var data_pubkey = parseHexString(asm[2]);
-          var data_chunk_length = data_pubkey[0];
-          data = data.concat(data_pubkey.slice(1,data_chunk_length+1));
-        }
-      }
-      var prefix_bytes = PREFIX.split ('').map (function (c) { return c.charCodeAt (0); });
-      if (JSON.stringify(data.slice(0,prefix_bytes.length))==JSON.stringify(prefix_bytes)) {
-        data = data.slice(prefix_bytes.length,data.length);
-        var message = getMessage(data);
-        var messageType = getMessageType(data)[3];
-        chancecoinTxs.push({"message": message, "messageType": messageType, "tx": tx});
-      }
+    chancecoinTx = getChancecoinTx(tx.txid);
+    if (chancecoinTx) {
+      chancecoinTxs.push(chancecoinTx);
     }
   }
   return chancecoinTxs;
+}
+function decodeChancecoinTx(chancecoinTx) {
+  var chancecoinTxDecoded = null;
+  var tx = chancecoinTx["tx"];
+  var messageType = chancecoinTx["messageType"];
+  var message = chancecoinTx["message"];
+  jsp = new JSPack();
+  var source = null;
+  for (i in tx.vin) {
+    if (tx.vin[i].addr && source==null) {
+      source = tx.vin[i].addr;
+    }
+  }
+  var d = new XDate(tx.blocktime*1000);
+  var blockTime = d.toString("yyyy-MM-dd HH:mm:ss");
+  if (messageType==ID_ROLL && (message.length==LENGTH_ROLL || message.length==LENGTH_ROLL2)) {
+    var txhash = createHexString(message.slice(0,32));
+    var roll = jsp.Unpack("32sd",message);
+    chancecoinTxDecoded = {"type": "roll", "details": {"txid": txhash, "roll": roll}};
+  } else if (messageType==ID_DICE && message.length==LENGTH_DICE) {
+    var a = jsp.Unpack(">Qdd", message);
+    var bet = a[0]/UNIT;
+    var chance = a[1];
+    var payout = a[2];
+    chancecoinTxDecoded = {"type": "bet_dice", "details": {"source": source, "block_time": blockTime, "bet": bet, "chance": chance, "payout": payout, "resolved": false, "profit": 0}};
+  } else if (messageType==ID_POKER && message.length==LENGTH_POKER) {
+    var a = jsp.Unpack(">Q9h4x", message);
+    var bet = a[0]/UNIT;
+    var chance = 2;
+    var payout = 100/chance*(1-HOUSE_EDGE);
+    var cards = a.slice(1,10).map(function(x) { return getCard(x); }).join(" ");
+    chancecoinTxDecoded = {"type": "bet_poker", "details": {"source": source, "block_time": blockTime, "bet": bet, "chance": chance, "payout": payout, "resolved": false, "profit": 0, "cards": cards, "cards_result": false}};
+  }
+  return chancecoinTxDecoded;
 }
 function getBets(address) {
   if (address == "") {
@@ -444,39 +484,33 @@ function getBets(address) {
   var chancecoinTxs = getChancecoinTxs(address);
   for (i in chancecoinTxs) {
     var chancecoinTx = chancecoinTxs[i];
-    var tx = chancecoinTx["tx"];
-    var messageType = chancecoinTx["messageType"];
-    var message = chancecoinTx["message"];
-    jsp = new JSPack();
-    var source = null;
-    for (i in tx.vin) {
-      if (tx.vin[i].addr && source==null) {
-        source = tx.vin[i].addr;
-      }
-    }
-    var d = new XDate(tx.blocktime*1000);
-    var blockTime = d.toString("yyyy-MM-dd HH:mm:ss");
-    if (messageType==ID_ROLL && (message.length==LENGTH_ROLL || message.length==LENGTH_ROLL2)) {
-      var txhash = createHexString(message.slice(0,32));
-      var roll = jsp.Unpack("32sd",message);
-    } else if (messageType==ID_DICE && message.length==LENGTH_DICE) {
-      var a = jsp.Unpack(">Qdd", message);
-      var bet = a[0]/UNIT;
-      var chance = a[1];
-      var payout = a[2];
-      betObjects.push({"source": source, "block_time": blockTime, "bet": bet, "chance": chance, "payout": payout, "resolved": false, "profit": 0});
-    } else if (messageType==ID_POKER && message.length==LENGTH_POKER) {
-      var a = jsp.Unpack(">Q9h4x", message);
-      var bet = a[0]/UNIT;
-      var cards = a.slice(1,10).map(function(x) { return getCard(x); }).join(" ");
-      betObjects.push({"source": source, "block_time": blockTime, "bet": bet, "chance": chance, "payout": payout, "resolved": false, "profit": 0, "cards": cards, "cards_result": false});
+    var chancecoinTxDecoded = decodeChancecoinTx(chancecoinTx);
+    if (chancecoinTxDecoded["type"] == "bet_dice" || chancecoinTxDecoded["type"] == "bet_poker") {
+      var betObject = chancecoinTxDecoded["details"];
+      //betObject = resolveBet(betObject, chancecoinTx);
+      betObjects.push(betObject);
     }
   }
   return betObjects;
 }
 
-function resolveBet() {
-
+function resolveBet(betObject, chancecoinTx) {
+  var spentTxId = null;
+  for (i in chancecoinTx["tx"].vout) {
+    var vout = chancecoinTx["tx"].vout[i];
+    if (vout["spentTxId"]) {
+      spentTxId = vout["spentTxId"];
+    }
+  }
+  if (spentTxId) {
+    var chancecoinTx = getChancecoinTx(spentTxId);
+    var decodedChancecoinTx = decodeChancecoinTx(chancecoinTx);
+    if (decodedChancecoinTx && decodedChancecoinTx["type"] == "roll") {
+      var rollObject = decodedChancecoinTx["details"];
+      console.log(rollObject);
+    }
+  }
+  return betObject;
 }
 
 function getCard(card) {
