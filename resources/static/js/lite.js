@@ -460,6 +460,9 @@ function decodeChancecoinTx(chancecoinTx) {
     }
   }
   var d = new XDate(tx.blocktime*1000);
+  if (!tx.blocktime) {
+    d = new XDate();
+  }
   var blockTime = d.toString("yyyy-MM-dd HH:mm:ss");
   if (messageType==ID_ROLL && (message.length==LENGTH_ROLL || message.length==LENGTH_ROLL2)) {
     var txhash = createHexString(message.slice(0,32));
@@ -550,6 +553,7 @@ function resolveBet(betObject, chancecoinTx) {
     var bet = betObject["bet"];
     if (betObject["cards"]) {
       //poker bet
+
     } else {
       //dice bet
       betObject["roll"] = roll;
