@@ -503,6 +503,47 @@ function getBets(address) {
   return betObjects;
 }
 
+function factorial (n){
+  if (n==0 || n==1){
+    return 1;
+  }
+  return factorial(n-1)*n;
+}
+
+function getDeck() {
+  var deck = [];
+  for (var i = 0; i<52; i++) {
+    deck.push(i);
+  }
+  return deck;
+}
+
+function shuffleAndDeal(roll, removedCards, nDeal) {
+  var deck = getDeck();
+  var shuffled = [];
+  for (i in removedCards) {
+    var position = $.inArray(removedCards[i], deck);
+    if (position>-1) {
+      deck.splice(position,1);
+    }
+  }
+  var nCards = deck.length;
+  var nToDeal = nDeal;
+  var nLeftToDeal = nDeal;
+  var nMax = factorial(nCards) / factorial(nCards - nToDeal);
+  var n = Math.floor(nMax * roll);
+
+  while (nLeftToDeal > 0) {
+    var divider = factorial(nCards-1-(nToDeal-nLeftToDeal))/factorial(nCards-nToDeal);
+    var digit = Math.floor(n / divider);
+    var card = deck.splice(digit,1);
+    shuffled.push(card[0]);
+    n = n % divider;
+    nLeftToDeal = nLeftToDeal - 1;
+  }
+	return shuffled;
+}
+
 function resolveBet(betObject, chancecoinTx) {
   var earlierBetIsUnresolved = false; //TODO
   if (earlierBetIsUnresolved) {
@@ -553,7 +594,17 @@ function resolveBet(betObject, chancecoinTx) {
     var bet = betObject["bet"];
     if (betObject["cards"]) {
       //poker bet
-
+      var cards = betObject["cards"].split(" ");
+      var removedCards = [];
+      var dealtSoFar = [];
+      for (i in cards) {
+        var card = cards[i];
+        if (card == "??") {
+          removedCards.push(card);
+        }
+        dealtSoFar.push(card);
+      }
+      console.log(dealtSoFar);
     } else {
       //dice bet
       betObject["roll"] = roll;

@@ -415,6 +415,7 @@ public class Server implements Runnable {
 					blocks.deleteDatabases();
 					blocks.initialized = false;
 					blocks.init();
+					System.exit(0);
 				}
 
 				attributes.put("price_BTC", blocks.priceBTC);
