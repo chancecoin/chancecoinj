@@ -15,6 +15,7 @@ var UNIT = 100000000;
 var MAX_PROFIT = 0.01;
 var HOUSE_EDGE = 0.01;
 var CACHE_getTx = {};
+var HOME = "http://0.0.0.0:8080";
 
 $(window).on('load', function () {
     $('.selectpicker').selectpicker({
@@ -804,7 +805,7 @@ function getCasinoInfo() {
   var address = readCookie("address");
   $.ajax({
     type: "GET",
-    url: "http://0.0.0.0:8080/get_casino_info",
+    url: HOME+"/get_casino_info",
     data: {addresses: readCookie("addresses"), address: address},
     crossDomain: true,
     success: function(response) {
@@ -911,7 +912,7 @@ function getBetTableHtml(betObjects) {
   return html;
 }
 function chaSupplyForBetting() {
-  var url = "http://0.0.0.0:8080/cha_supply_for_betting";
+  var url = HOME+"/cha_supply_for_betting";
   var result = 0;
   $.ajax({
     url: url,
@@ -923,7 +924,7 @@ function chaSupplyForBetting() {
   return result;
 }
 function getBalance(address, asset) {
-  var url = "http://0.0.0.0:8080/get_balance_by_asset";
+  var url = HOME+"/get_balance_by_asset";
   var result = 0;
   $.ajax({
     url: url,
