@@ -35,6 +35,7 @@ $(document).ready(function() {
   setInterval(function(){update();}, 5000);
 
   //test
+  console.log(chanceOfWinning("3H 3D 6C 8C TH ?? ?? 8S KS"));
 });
 
 $(window).on('popstate', function() {
@@ -194,7 +195,6 @@ function getUnspents(address) {
           unspents.push(result);
       });
     });
-    console.log(unspents);
     return unspents;
 }
 function getTransactions(address) {
@@ -512,8 +512,10 @@ function factorial (n){
 
 function getDeck() {
   var deck = [];
-  for (var i = 0; i<52; i++) {
-    deck.push(i);
+  for (var c = 0; c<=12; c++) {
+    for (var s = 0; s<=3; s++) {
+      deck.push(getCard(s*13+c));
+    }
   }
   return deck;
 }
@@ -527,6 +529,7 @@ function shuffleAndDeal(roll, removedCards, nDeal) {
       deck.splice(position,1);
     }
   }
+
   var nCards = deck.length;
   var nToDeal = nDeal;
   var nLeftToDeal = nDeal;
@@ -542,6 +545,72 @@ function shuffleAndDeal(roll, removedCards, nDeal) {
     nLeftToDeal = nLeftToDeal - 1;
   }
 	return shuffled;
+}
+
+function didWin(cards) {
+  if (!(cards instanceof Array)) {
+    cards = cards.split(" ");
+  }
+  var playerA = cards.slice(0,2).join(" ");
+  var board = cards.slice(2,7).join(" ");
+  var playerB = cards.slice(7,9).join(" ");
+  var results = getPokerResults(playerA, playerB, board);
+  if (results.winner == "playerA") {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function getWinningHand(cards) {
+  if (!(cards instanceof Array)) {
+    cards = cards.split(" ");
+  }
+  var playerA = cards.slice(0,2).join(" ");
+  var board = cards.slice(2,7).join(" ");
+  var playerB = cards.slice(7,9).join(" ");
+  var results = getPokerResults(playerA, playerB, board);
+  return results.winningHand;
+}
+
+function chanceOfWinning(cards) {
+  if (!(cards instanceof Array)) {
+    cards = cards.split(" ");
+  }
+  var deck = getDeck();
+  var k = 0;
+  for (i in cards) {
+    var card = cards[i];
+    var position = $.inArray(card, deck);
+    if (card == "??") {
+      k = k + 1;
+    }
+    if (position>-1) {
+      deck.splice(position,1);
+    }
+  }
+  var combinations = getCombinations(k, deck.length);
+  var denominator = 0;
+  var numerator = 0;
+  for (i in combinations) {
+    denominator ++;
+    var combination = combinations[i];
+    var cardsFilledIn = cards.slice();
+    for (j in cardsFilledIn) {
+      var card = cardsFilledIn[j];
+      if (card == "??") {
+        var popped = combination.pop();
+        cardsFilledIn[j] = deck[popped];
+      }
+    }
+    //console.log(cardsFilledIn);
+    //console.log(getWinningHand(cardsFilledIn));
+    if (didWin(cardsFilledIn)) {
+      //console.log(didWin(cardsFilledIn));
+      numerator ++;
+    }
+  }
+  return numerator / denominator;
 }
 
 function resolveBet(betObject, chancecoinTx) {
@@ -599,12 +668,19 @@ function resolveBet(betObject, chancecoinTx) {
       var dealtSoFar = [];
       for (i in cards) {
         var card = cards[i];
-        if (card == "??") {
+        if (card != "??") {
           removedCards.push(card);
         }
         dealtSoFar.push(card);
       }
-      console.log(dealtSoFar);
+      var deal = shuffleAndDeal(roll / 100, removedCards, dealtSoFar.length-removedCards.length);
+      for (i = 0; i<dealtSoFar.length; i++) {
+        if (dealtSoFar[i] == "??") {
+          dealtSoFar[i] = deal.splice(0,1)[0];
+        }
+      }
+      betObject["cards"] = dealtSoFar.join(" ");
+      var didWin = didWin(betObject["cards"]);
     } else {
       //dice bet
       betObject["roll"] = roll;

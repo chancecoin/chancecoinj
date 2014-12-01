@@ -85,13 +85,14 @@ function getPokerResults(playerAStr, playerBStr, tableStr) {
   var playerB = getBestHand(playerBStr + tableStr);
   var winner =  (playerA.score > playerB.score) ? playerA : playerB;
   var loser =  (playerA.score > playerB.score) ? playerB : playerA;
-  return {winner:(winner==playerA ? "playerA" : "playerB"), winningHand:winner.hand, losingHand:loser.hand};
+  return {winner:(winner==playerA ? "playerA" : "playerB"), winningHand:winner.hand, losingHand:loser.hand, a:playerA, b:playerB};
 }
-var player1 = "5C5D";
-var player2 = "6C6D";
-var player3 = "8D 8H";
-var player4 = "6C7D";
-var table = "2D 4C8C9S TS";
+
+var player1 = "3H 3D";
+var player2 = "8S KS";
+var player3 = "JD JH";
+var player4 = "QC QD";
+var table = "6C 8C TH 3C 4D";
 console.log(getPokerResults(player1, player2, table));
 console.log(getPokerResults(player1, player3, table));
 console.log(getPokerResults(player1, player4, table));
