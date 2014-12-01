@@ -23,6 +23,12 @@ $(window).on('load', function () {
     });
 });
 
+$(function(){
+    $("[data-hide]").on("click", function(){
+        $($(this).attr("data-hide")).hide();
+    });
+});
+
 $(document).ready(function() {
   if(location.hash) {
     $('a[href=' + location.hash + ']').tab('show');
@@ -30,91 +36,88 @@ $(document).ready(function() {
   $(document.body).on("click", "a[data-toggle]", function(event) {
     location.hash = this.getAttribute("href");
   });
-  if($("#num_unresolved_bets").html() > 0) {
-    setInterval(function(){updateUnresolvedBets();}, 5000);
-  }
   setInterval(function(){update();}, 5000);
+  initialize();
 
   //test
 });
-
-$(window).on('popstate', function() {
-  var anchor = location.hash || $("a[data-toggle=tab]").first().attr("href");
-  $('a[href=' + anchor + ']').tab('show');
-});
-
-function updateChatStatus() {
-  $.ajax({
-    url: "/chat_status_update?chat_open="+$('#chat_open').html(),
-    type: 'GET',
-    success: function(data) {
-    }
-  });
-}
-
-function updateUnresolvedBets() {
-  $.ajax({
-    type: "POST",
-    url: "/update_unresolved_bets",
-    success: function(response) {
-      if (response < $("#num_unresolved_bets").html()) {
-        window.location.reload(true);
-      } else {
-        $("#num_unresolved_bets").html(response);
-      }
-    }
-  });
-}
 
 function update() {
   //getPendingBets();
 }
 
-function importPrivateKey() {
-  console.log("before changing class" + $("ul#addresses").attr('class'));
+function initialize() {
+  if (!readCookie("address")) {
+    $("#importPrivateKey").modal('show');
+  }
+  getNewPokerCards();
+}
+
+function getNewPokerCards() {
+  var cards = [];
+  while (cards.length<7) {
+    var rand = Math.floor(Math.random()*52);
+    var card = getCard(rand);
+    if ($.inArray(card, cards)<0) {
+      cards.push(card);
+    }
+  }
+  cards.splice(5,0,"??","??");
+  var chance = chanceOfWinning(cards)*100;
+  var html = getPokerCardsHtml(cards,chance);
+  $("#poker_cards").html(html);
+}
+
+function generatePrivateKey() {
+  var key = new Bitcoin.ECKey.makeRandom();
+  var address = key.pub.getAddress().toString();
+  var privateKey = key.toWIF();
+  showMessage("<p>Your new address and private key are:</p><p>Address: "+address+"</p><p>Private key: "+privateKey+"</p><p>Please write down the private key and store it somewhere safe.</p>");
+  importPrivateKey(privateKey);
+}
+
+function importPrivateKey(privateKeyWIF) {
   $("ul#addresses").addClass("loading");
-  console.log("after changing class" + $("ul#addresses").attr('class'));
-  var privateKey = $( "input[name=privatekey]" ).val();
-  if (privateKey) {
-      try {
-          var key = new Bitcoin.ECKey.fromWIF(privateKey);
-          var address = key.pub.getAddress().toString();
-          var addresses = JSON.parse(readCookie("addresses"));
-          var privateKeys = JSON.parse(readCookie("private_keys"));
-          if (addresses == null) {
-            addresses = [];
-          }
-          if (addresses.indexOf(address) < 0) {
-            addresses.push(address);
-          }
-          if (privateKeys == null) {
-            privateKeys = [];
-          }
-          if (privateKeys.indexOf(privateKey) < 0) {
-            privateKeys.push(privateKey);
-          }
-          eraseCookie("address");
-          eraseCookie("addresses");
-          eraseCookie("private_key");
-          eraseCookie("private_keys");
-          createCookie("address", address, 999999);
-          createCookie("addresses", JSON.stringify(addresses), 999999);
-          createCookie("private_key", privateKey, 999999);
-          createCookie("private_keys", JSON.stringify(privateKeys), 999999);
-      } catch (e) {
-      }
+  var privateKey;
+  if (privateKeyWIF) {
+    privateKey = privateKeyWIF;
   } else {
-      //eraseCookie("private_key");
-      //eraseCookie("address");
+    privateKey = $( "input[name=privatekey]" ).val();
+  }
+  try {
+      var key = new Bitcoin.ECKey.fromWIF(privateKey);
+      var address = key.pub.getAddress().toString();
+      var addresses = JSON.parse(readCookie("addresses"));
+      var privateKeys = JSON.parse(readCookie("private_keys"));
+      if (addresses == null) {
+        addresses = [];
+      }
+      if (addresses.indexOf(address) < 0) {
+        addresses.push(address);
+      }
+      if (privateKeys == null) {
+        privateKeys = [];
+      }
+      if (privateKeys.indexOf(privateKey) < 0) {
+        privateKeys.push(privateKey);
+      }
+      eraseCookie("address");
+      eraseCookie("addresses");
+      eraseCookie("private_key");
+      eraseCookie("private_keys");
+      createCookie("address", address, 999999);
+      createCookie("addresses", JSON.stringify(addresses), 999999);
+      createCookie("private_key", privateKey, 999999);
+      createCookie("private_keys", JSON.stringify(privateKeys), 999999);
+  } catch (e) {
   }
   getCasinoInfo();
+  $("#importPrivateKey").modal('hide');
 }
 
 //update the page using the address passed in
 function updateAddress(newAddress) {
   var currentAddress = readCookie("address");
-  console.log("new address:" + newAddress);
-  console.log("current address:" + currentAddress);
   if (currentAddress == null || currentAddress == newAddress) {
     return;
   }
@@ -123,7 +126,6 @@ function updateAddress(newAddress) {
   if (addressIndex >= 0) {
     var privateKeys = JSON.parse(readCookie("private_keys"));
     var newPrivateKey = privateKeys[addressIndex];
-    //TODO: double check with Bitcoin.ECKey? to make sure the private key matches the address
     eraseCookie("address");
     eraseCookie("private_key");
     createCookie("address", newAddress, 999999);
@@ -227,17 +229,36 @@ function toFixed(value, precision) {
     return result;
 }
 
-function createDiceBet(bet, resolution, asset, chance, payout, address) {
+function createDiceBet(bet, resolution, asset, address, chance, payout) {
   var chaSupply = chaSupplyForBetting();
   var balance = getBalance(address, "CHA");
-  if (source=="") throwException("Please specify a source address.");
-  if (!(bet>0)) throwException("Please bet more than zero.");
-  if (!(chance>0.0 && chance<100.0)) throwException("Please specify a chance between 0 and 100.");
-  if (!(payout>1.0)) throwException("Please specify a payout greater than 1.");
-  if (!(toFixed(chance,6)==toFixed(100.0/(payout/(1.0-HOUSE_EDGE)),6))) throwException("Please specify a chance and payout that are congruent.");
-  if (!(bet<=balance)) throwException("Please specify a bet that is smaller than your CHA balance.");
-  if (!((payout-1.0)*bet<chaSupply*MAX_PROFIT)) throwException("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
-
+  if (source=="") {
+    throwException("Please specify a source address.");
+    return;
+  }
+  if (!(bet>0)) {
+    throwException("Please bet more than zero.");
+    return;
+  }
+  if (!(chance>0.0 && chance<100.0)) {
+    throwException("Please specify a chance between 0 and 100.");
+    return;
+  }
+  if (!(payout>1.0)) {
+    throwException("Please specify a payout greater than 1.");
+    return;
+  }
+  if (!(toFixed(chance,6)==toFixed(100.0/(payout/(1.0-HOUSE_EDGE)),6))) {
+    throwException("Please specify a chance and payout that are congruent.");
+    return;
+  }
+  if (!(bet<=balance)) {
+    throwException("Please specify a bet that is smaller than your CHA balance."); return;
+  }
+  if (!((payout-1.0)*bet<chaSupply*MAX_PROFIT)) {
+    throwException("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
+    return;
+  }
   btcAmount = 0;
 
   if (resolution == "instant") {
@@ -265,19 +286,104 @@ function createDiceBet(bet, resolution, asset, chance, payout, address) {
   return result;
 }
 
+function createPokerBet(bet, resolution, asset, address, cards) {
+  var chaSupply = chaSupplyForBetting();
+  var balance = getBalance(address, "CHA");
+
+  if ($.unique(cards.slice()).length!=8) {
+    throwException("Please select unique cards.");
+    return;
+  }
+
+  var card_numbers = cards.map(function(card) {return cardToNumber(card);});
+  var chance = chanceOfWinning(cards)*100;
+  var payout = 100/chance*(1-HOUSE_EDGE);
+
+  if (source=="") {
+    throwException("Please specify a source address.");
+    return;
+  }
+  if (!(bet>0)) {
+    throwException("Please bet more than zero.");
+    return;
+  }
+  if (!(chance>0.0 && chance<100.0)) {
+    throwException("Please specify a chance between 0 and 100.");
+    return;
+  }
+  if (!(payout>1.0)) {
+    throwException("Please specify a payout greater than 1.");
+    return;
+  }
+  if (!(toFixed(chance,6)==toFixed(100.0/(payout/(1.0-HOUSE_EDGE)),6))) {
+    throwException("Please specify a chance and payout that are congruent.");
+    return;
+  }
+  if (!(bet<=balance)) {
+    throwException("Please specify a bet that is smaller than your CHA balance."); return;
+  }
+  if (!((payout-1.0)*bet<chaSupply*MAX_PROFIT)) {
+    throwException("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
+    return;
+  }
+  btcAmount = 0;
+
+  if (resolution == "instant") {
+    destination = FEE_ADDRESS;
+    btcAmount = FEE_ADDRESS_FEE;
+  }
+  if (asset=="BTC") {
+    destination = FEE_ADDRESS;
+    btcAmount = FEE_ADDRESS_FEE + bet;
+    bet = 0;
+  }
+
+  jsp = new JSPack();
+  var byteBuffer = jsp.Pack(">8sIQ9h4x", [PREFIX, ID_POKER, bet*UNIT].concat(card_numbers).concat([0,0,0,0]));
+
+  var source = address;
+  var destinations = [destination];
+  var btcAmounts = [btcAmount];
+  var fee = MIN_FEE;
+  var data = byteBuffer;
+  var useUnspentTxHash = "";
+  var useUnspentVout = -1;
+  var tx = createTransaction(source, destinations, btcAmounts, fee, data, useUnspentTxHash, useUnspentVout);
+  var result = pushTx(tx.toHex());
+  return result;
+}
+
 function processBet(formName) {
     var address = readCookie("address");
-    var bet = $( "input[name=bet]" ).val();
-    var resolution = $( "input[name=resolution]" ).val();
-    var asset = $( "select[name=asset]" ).val();
-    var chance = $( "input[name=chance]" ).val();
-    var payout = $( "input[name=payout]" ).val();
-    if (formName=="dice" && bet && resolution && asset && chance && payout && address) {
-      beforeBet(formName);
-      var result = createDiceBet(bet, resolution, asset, chance, payout, address);
+    var bet = $( "#"+formName+" input[name=bet]" ).val();
+    var resolution = $( "#"+formName+" input[name=resolution]" ).val();
+    var asset = $( "#"+formName+" select[name=asset]" ).val();
+    var chance = $( "#"+formName+" input[name=chance]" ).val();
+    var payout = $( "#"+formName+" input[name=payout]" ).val();
+    var card1 = $( "#"+formName+" input[name=card1]" ).val();
+    var card2 = $( "#"+formName+" input[name=card2]" ).val();
+    var card3 = $( "#"+formName+" input[name=card3]" ).val();
+    var card4 = $( "#"+formName+" input[name=card4]" ).val();
+    var card5 = $( "#"+formName+" input[name=card5]" ).val();
+    var card6 = $( "#"+formName+" input[name=card6]" ).val();
+    var card7 = $( "#"+formName+" input[name=card7]" ).val();
+    var card8 = $( "#"+formName+" input[name=card8]" ).val();
+    var card9 = $( "#"+formName+" input[name=card9]" ).val();
+    if (formName=="dice" && bet && resolution && asset && address && chance && payout) {
+      disableForm(formName);
+      var result = createDiceBet(bet, resolution, asset, address, chance, payout);
       if (result) {
-        afterBet(formName);
+        showMessage("Thank you for betting!");
       }
+      enableForm(formName);
+    }
+    if (formName=="poker" && bet && resolution && asset && address && card1 && card2 && card3 && card4 && card5 && card6 && card7 && card8 && card9) {
+      disableForm(formName);
+      var result = createPokerBet(bet, resolution, asset, address, [card1, card2, card3, card4, card5, card6, card7, card8, card9]);
+      if (result) {
+        showMessage("Thank you for betting!");
+      }
+      enableForm(formName);
     }
 }
 function createTransaction(source, destinations, btcAmounts, fee, data, useUnspentTxHash, useUnspentVout) {
@@ -343,11 +449,13 @@ function createTransaction(source, destinations, btcAmounts, fee, data, useUnspe
       }
 
       if (!atLeastOneRegularInput) {
-				throwException("Not enough standard unspent outputs to cover transaction.");
+				throwException("You do not have enough standard unspent outputs to cover the transaction.");
+        return;
 			}
 
 			if (totalInput<totalOutput) {
-				throwException("Not enough BTC to cover transaction.");
+				throwException("You do not have enough BTC to cover the transaction.");
+        return;
 			}
 			var totalChange = totalInput - totalOutput;
 
@@ -704,6 +812,37 @@ function resolveBet(betObject, chancecoinTx) {
   return betObject;
 }
 
+function cardToNumber(card) {
+  var rank = null;
+  var suit = null;
+  switch (card.charAt(1)) {
+    case "C": suit=0; break;
+    case "D": suit=1; break;
+    case "H": suit=2; break;
+    case "S": suit=3; break;
+  }
+  switch (card.charAt(0)) {
+    case "2": rank=0; break;
+    case "3": rank=1; break;
+    case "4": rank=2; break;
+    case "5": rank=3; break;
+    case "6": rank=4; break;
+    case "7": rank=5; break;
+    case "8": rank=6; break;
+    case "9": rank=7; break;
+    case "T": rank=8; break;
+    case "J": rank=9; break;
+    case "Q": rank=10; break;
+    case "K": rank=11; break;
+    case "A": rank=12; break;
+  }
+  if (rank != null && suit != null) {
+    return rank+suit*13;
+  } else {
+    return -1;
+  }
+}
+
 function getCard(card) {
   var rank;
   var suit;
@@ -776,31 +915,37 @@ function eraseCookie(name) {
     createCookie(name,"",-1);
 }
 function throwException(error) {
-    alert(error);
-    throw error;
+    showMessage(error, "error");
+    //throw error;
 }
 
-function beforeBet(formName) {
-  var message = "Processing your bet, please wait...";
+function showMessage(message, type) {
+  $("#ajax_info").hide();
+  $("#ajax_error").hide();
+  if (!type || (type && type == "info")) {
+    $("#ajax_info_content").html(message);
+    $("#ajax_info").show();
+  }
+  if (type && type == "error") {
+    $("#ajax_error_content").html(message);
+    $("#ajax_error").show();
+  }
+  $("#ajax_message").show();
+}
+
+function hideMessage() {
+  $("#ajax_message").hide();
+  $("#ajax_info").hide();
+  $("#ajax_error").hide();
+}
+
+function enableForm(formName) {
   $(formName+" input").prop("disabled", true);
   $(formName+" button").prop("disabled", true);
-  $("#ajax_result_message").css("display","none");
-  $("#ajax_result_message").html("");
-  $("#ajax_wait_message").html(message);
-  $("#ajax_wait_message").css("display","block");
-  $("#ajax_message").css("display","block");
 }
-function afterBet(formName) {
-  var message = "Thank you for betting!";
-  $("#ajax_wait_message").css("display","none");
-  $("#ajax_wait_message").html("");
-  $("#ajax_result_message").html(message);
-  $("#ajax_result_message").css("display","block");
-  $("#ajax_message").delay(3000);
-  $("#ajax_message").fadeOut(500);
+function disableForm(formName) {
   $(formName+" input").prop("disabled", false);
   $(formName+" button").prop("disabled", false);
-  $(formName+" input").val("");
 }
 
 function getCasinoInfo() {
@@ -812,7 +957,6 @@ function getCasinoInfo() {
     crossDomain: true,
     success: function(response) {
       var responseObj = JSON.parse(response);
-      console.log("address from ajax response: " + responseObj.address);
       updateAddressDropDown(responseObj.addressInfos);
 
       $("#cha_price_dollar").html("1 CHA = $" + (responseObj.price_BTC *responseObj.price_CHA).toFixed(2));
@@ -845,72 +989,70 @@ function getCasinoInfo() {
 
 function getBetTableHtml(betObjects) {
   var html = "";
-  html += "<table class='table table-striped'>"
-  html += "<thead>";
-  html +=	"<tr>";
-  html +=	"<th>Source address</th>";
-  html +=	"<th>Time</th>";
-  html +=	"<th>Bet size</th>";
-  html +=	"<th>Chance to win / payout multiplier</th>";
-  html +=	"<th>Result</th>";
-  html +=	"<th>Profit</th>";
-  html +=	"</tr>";
-  html +=	"</thead>";
-  html += "<tbody>";
+  html += '<table class="table table-striped">';
+  html += '<thead>';
+  html += '<tr>';
+  html += '<th>Source address</th>';
+  html += '<th>Time</th>';
+  html += '<th>Bet size</th>';
+  html += '<th>Chance to win / payout multiplier</th>';
+  html += '<th>Result</th>';
+  html += '<th>Profit</th>';
+  html += '</tr>';
+  html += '</thead>';
+  html += '<tbody>';
   for (var i = 0; i < betObjects.length; i++) {
     var betInfo = betObjects[i];
-    html += "<tr>";
-    html += "<td>"+betInfo["source"].substring(0,6)+"...</td>";
-    html += "<td>"+betInfo["block_time"]+"</td>";
-    html += "<td>"+betInfo["bet"].toPrecision(3)+" CHA</td>";
-    html += "<td>"+parseFloat(betInfo["chance"].toPrecision(3))+"%"+" / "+parseFloat(betInfo["payout"].toPrecision(3))+"X</td>";
-    //html += "<td>"+parseFloat(betInfo["chance"])+"%"+" / "+parseFloat(betInfo["payout"])+"X</td>";
-
+    html += '<tr>';
+    html += '<td>'+betInfo["source"].substring(0,6)+'...</td>';
+    html += '<td>'+betInfo["block_time"]+'</td>';
+    html += '<td>'+betInfo["bet"].toPrecision(3)+' CHA</td>';
+    html += '<td>'+parseFloat(betInfo["chance"].toPrecision(3))+'%'+' / '+parseFloat(betInfo["payout"].toPrecision(3))+'X</td>';
     if (betInfo["cards"]) {
-      html += "<td>";
+      html += '<td>';
       var cardArray = betInfo["cards"].split(" ");
       for (var cardIndex = 0; cardIndex < cardArray.length; cardIndex++) {
           if (cardIndex == 0) {
-              html += "<div style='float: left; padding-top: 1.25em; padding-right: 2.5em;'>Player</div>";
+              html += '<div style="float: left; padding-top: 1.25em; padding-right: 2.5em;">Player</div>';
           }
           if (cardIndex == 7) {
-              html += "<div style='float: left; padding-top: 1.25em; padding-right: 1em;'>Opponent</div>";
+              html += '<div style="float: left; padding-top: 1.25em; padding-right: 1em;">Opponent</div>';
           }
           if (cardArray[cardIndex] == "??") {
-              html += "<div class='card back'>*</div>";
+              html += '<div class="card back">*</div>';
           } else {
-              html += "<div class='card rank-"+getCardRank(cardArray[cardIndex])+" "+getCardSuit(cardArray[cardIndex])+"'>";
-              html += "<span class='rank'>"+getCardRank(cardArray[cardIndex])+"</span>";
-              html +=	"<span class='suit'>&"+getCardSuit(cardArray[cardIndex])+";</span>";
-              html += "</div>";
+              html += '<div class="card rank-'+getCardRank(cardArray[cardIndex])+' '+getCardSuit(cardArray[cardIndex])+'"">';
+              html += '<span class="rank">'+getCardRank(cardArray[cardIndex])+'</span>';
+              html += '<span class="suit">&'+getCardSuit(cardArray[cardIndex])+';</span>';
+              html += '</div>';
           }
           if (cardIndex==1 || cardIndex==6) {
-              html += "<div style='clear: both;'></div>";
+              html += '<div style="clear: both;"></div>';
           }
       }
       if (betInfo["cards_result"]) {
-          html += "<p>"+betInfo['cards_result']+"</p>";
+          html += '<p>'+betInfo['cards_result']+'</p>';
       }
-      html += "</td>";
+      html += '</td>';
     } else {
-      html += "<td><img src='http://chancecoin.com/images/dice.png' style='height: 25px; display: inline;' />";
+      html += '<td><img src="'+HOME+'/images/dice.png" style="height: 25px; display: inline;" />';
       if (betInfo["resolved"]) {
         html += parseFloat(betInfo["roll"].toPrecision(5));
       } else {
-        html += "?";
+        html += '?';
       }
-      html += "</td>";
+      html += '</td>';
     }
-    html += "<td>";
+    html += '<td>';
     if (betInfo["resolved"] && betInfo["resolved"]=="true") {
       html += betInfo["profit"].toPrecision(3)+" CHA";
     } else {
-      html += "<img src='http://chancecoin.com/images/ajax-loader.gif' /></td>";
+      html += '<img src="'+HOME+'/images/ajax-loader.gif" /></td>';
     }
-    html += "</tr>";
+    html += '</tr>';
   }
-  html += "</tbody>";
-  html += "</table>";
+  html += '</tbody>';
+  html += '</table>';
   return html;
 }
 function chaSupplyForBetting() {
@@ -937,4 +1079,100 @@ function getBalance(address, asset) {
     result = data;
   });
   return result;
+}
+
+function getPokerCardsHtml(cards, chance) {
+  var html = '';
+  html += '<div class="form-group">';
+  html += '  <div class="input-group">';
+  html += '    <span class="help-block">You</span>';
+  html += '      <input type="hidden" name="card1" value="'+cards[0]+'" />';
+  html += '      <div class="card rank-'+getCardRank(cards[0])+' '+getCardSuit(cards[0])+'">';
+  html += '          <span class="rank">'+getCardRank(cards[0])+'</span>';
+  html += '          <span class="suit">&'+getCardSuit(cards[0])+';</span>';
+  html += '      </div>';
+  html += '  </div>';
+  html += '</div>';
+  html += '<div class="form-group">';
+  html += '  <div class="input-group">';
+  html += '    <span class="help-block">&nbsp;</span>';
+  html += '      <input type="hidden" name="card2" value="'+cards[1]+'" />';
+  html += '      <div class="card rank-'+getCardRank(cards[1])+' '+getCardSuit(cards[1])+'">';
+  html += '          <span class="rank">'+getCardRank(cards[1])+'</span>';
+  html += '          <span class="suit">&'+getCardSuit(cards[1])+';</span>';
+  html += '      </div>';
+  html += '  </div>';
+  html += '</div>';
+  html += '<div class="form-group" style="clear: both; width: 4em;">';
+  html += '</div>';
+  html += '<div class="form-group">';
+  html += '  <div class="input-group">';
+  html += '    <span class="help-block">Board</span>';
+  html += '      <input type="hidden" name="card3" value="'+cards[2]+'" />';
+  html += '      <div class="card rank-'+getCardRank(cards[2])+' '+getCardSuit(cards[2])+'">';
+  html += '          <span class="rank">'+getCardRank(cards[2])+'</span>';
+  html += '          <span class="suit">&'+getCardSuit(cards[2])+';</span>';
+  html += '      </div>';
+  html += '  </div>';
+  html += '</div>';
+  html += '<div class="form-group">';
+  html += '  <div class="input-group">';
+  html += '    <span class="help-block">&nbsp;</span>';
+  html += '      <input type="hidden" name="card4" value="'+cards[3]+'" />';
+  html += '      <div class="card rank-'+getCardRank(cards[3])+' '+getCardSuit(cards[3])+'">';
+  html += '          <span class="rank">'+getCardRank(cards[3])+'</span>';
+  html += '          <span class="suit">&'+getCardSuit(cards[3])+';</span>';
+  html += '      </div>';
+  html += '  </div>';
+  html += '</div>';
+  html += '<div class="form-group">';
+  html += '  <div class="input-group">';
+  html += '    <span class="help-block">&nbsp;</span>';
+  html += '      <input type="hidden" name="card5" value="'+cards[4]+'" />';
+  html += '      <div class="card rank-'+getCardRank(cards[4])+' '+getCardSuit(cards[4])+'">';
+  html += '          <span class="rank">'+getCardRank(cards[4])+'</span>';
+  html += '          <span class="suit">&'+getCardSuit(cards[4])+';</span>';
+  html += '      </div>';
+  html += '  </div>';
+  html += '</div>';
+  html += '<div class="form-group">';
+  html += '  <div class="input-group">';
+  html += '    <span class="help-block">&nbsp;</span>';
+  html += '      <input type="hidden" name="card6" value="??" />';
+  html += '      <div class="card back">*</div>';
+  html += '  </div>';
+  html += '</div>';
+  html += '<div class="form-group">';
+  html += '  <div class="input-group">';
+  html += '    <span class="help-block">&nbsp;</span>';
+  html += '      <input type="hidden" name="card7" value="??" />';
+  html += '      <div class="card back">*</div>';
+  html += '  </div>';
+  html += '</div>';
+  html += '<div class="form-group" style="clear: both; width: 4em;">';
+  html += '</div>';
+  html += '<div class="form-group">';
+  html += '  <div class="input-group">';
+  html += '    <span class="help-block">Opponent</span>';
+  html += '      <input type="hidden" name="card8" value="'+cards[7]+'" />';
+  html += '      <div class="card rank-'+getCardRank(cards[7])+' '+getCardSuit(cards[7])+'">';
+  html += '          <span class="rank">'+getCardRank(cards[7])+'</span>';
+  html += '          <span class="suit">&'+getCardSuit(cards[7])+';</span>';
+  html += '      </div>';
+  html += '  </div>';
+  html += '</div>';
+  html += '<div class="form-group">';
+  html += '  <div class="input-group">';
+  html += '    <span class="help-block">&nbsp;</span>';
+  html += '      <input type="hidden" name="card9" value="'+cards[8]+'" />';
+  html += '      <div class="card rank-'+getCardRank(cards[8])+' '+getCardSuit(cards[8])+'">';
+  html += '          <span class="rank">'+getCardRank(cards[8])+'</span>';
+  html += '          <span class="suit">&'+getCardSuit(cards[8])+';</span>';
+  html += '      </div>';
+  html += '  </div>';
+  html += '</div>';
+  html += '<div class="form-group" style="clear: both; width: 4em;">';
+  html += '</div>';
+  html += '<p>Chance of winning: '+chance.toPrecision(5)+'%</p>';
+  return html;
 }

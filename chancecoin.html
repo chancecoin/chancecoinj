@@ -29,7 +29,38 @@
 	<script type="text/javascript" src="resources/static/js/lite.js"></script>
 </head>
 <body onload="updateAddressFromUrl(); getCasinoInfo();">
-	<div id="loadingDiv"></div>
+	<div class="modal fade" id="importPrivateKey" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+	        <h4 class="modal-title" id="myModalLabel">Import private key</h4>
+	      </div>
+				<form id="import_private_key_form" method="post" class="form-inline">
+	      		<div class="modal-body">
+							<input type="hidden" name="form" value="import" />
+							<p>In order to use Chancecoin, you must have a Chancecoin address. Chancecoin addresses are interchangeable with Bitcoin addresses. If you already have one, you can import it now by entering your private key in WIF format. If you don't have one, you can generate a new one.</p>
+							<div class="form-group">
+									<div class="input-group">
+										<span class="input-group-addon">PK</span>
+										<input type="text" placeholder="private key" name="privatekey" />
+									</div>
+							</div>
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-default" onclick="generatePrivateKey(); return false;">Generate private key</button>
+		        <button type="button" class="btn btn-primary" onclick="importPrivateKey(); return false;">Import private key</button>
+		      </div>
+				</form>
+	    </div>
+	  </div>
+	</div>
+	<div id="loadingDiv" class="panel panel-primary">
+	  <div class="panel-heading">Loading</div>
+	  <div class="panel-body">
+	    <p>Please wait while Chancecoin loads. <img src="resources/static/images/ajax-loader.gif" /></p>
+	  </div>
+	</div>
 	<div id="bodyDiv" style="display:none">
 	<div class="playingCards fourColours rotateHand simpleCards">
 	<nav class="navbar navbar-default" role="navigation">
@@ -60,33 +91,11 @@
 						</ul>
 					</li>
 	        <li class="dropdown">
-	          <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="address">Import private key <b class="caret"></b></a>
+	          <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="address">Addresses <b class="caret"></b></a>
 	          <ul class="dropdown-menu" id="addresses">
                 <li>
-                    <div style="padding: 1em;">
-                        <form id="import_private_key_form" method="post" class="form-inline">
-                            <input type="hidden" name="form" value="import">
-
-                            <div class="form-group">
-                                <div class="input-group">
-                                  <span class="input-group-addon">PK</span>
-                                  <input type="text" placeholder="private key" name="privatekey" data-toggle="tooltip" data-placement="bottom" title="Your private key should be in WIF format. For more information about where to find this, see the Participate page.">
-                                </div>
-                                <script>
-                                $('input[type=text][name=privatekey]').tooltip({
-                                placement: "bottom",
-                                trigger: "hover"
-                                });
-                                </script>
-                            </div>
-                            <div class="form-group">
-                                <div class="input-group">
-                                  <span class="input-group-btn">
-                                    <button class="btn btn-default" onclick="importPrivateKey(); return false;">Import private key</button>
-                                  </span>
-                                </div>
-                            </div>
-                        </form>
+                    <div style="padding-left: 1em; padding-right: 1em;">
+												<button type="button" class="btn btn-default" data-toggle="modal" data-target="#importPrivateKey">Import private key</button>
                     </div>
                 </li>
 	          </ul>
@@ -106,11 +115,15 @@
 
 	<div class="container-fluid content">
 		<div id="ajax_message" class="row section messages" style="display:none">
-			<div id="ajax_wait_message" class="alert alert-info" style="display:none"></div>
-			<div id="ajax_result_message" class="alert alert-info" style="display:none"></div>
+			<div id="ajax_info" class="alert alert-info alert-dismissible" style="display:none">
+				<button type="button" class="close" data-hide="#ajax_message"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+				<div id="ajax_info_content"></div>
+			</div>
+			<div id="ajax_error" class="alert alert-danger alert-dismissible" style="display:none">
+				<button type="button" class="close" data-hide="#ajax_message"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+				<div id="ajax_error_content"></div>
+			</div>
 		</div>
-
-		<div id="num_unresolved_bets" style="display:none">0</div>
 
 		<div class="row section">
 				<ul id="tabs" class="nav nav-tabs" data-tabs="tabs" style="margin-top: 2em;">
@@ -122,7 +135,7 @@
 						<div class="tab-pane active" id="dice">
 								<form id="dice" action="" class="form-inline" method="post">
 
-										<input type="hidden" name="form" value="bet_dice">
+										<input type="hidden" name="form" value="bet_dice" />
 
 										<div class="form-group">
 											<img src="http://chancecoin.com/images/dice.png" class="casino-icon" />
@@ -134,7 +147,7 @@
 												<input type="text" placeholder="bet size" name="bet">
 											</div>
 										</div>
-										<input type="hidden" name="resolution" value="instant">
+										<input type="hidden" name="resolution" value="instant" />
 										<!--
 										<div class="form-group">
 											<div class="input-group">
@@ -156,13 +169,13 @@
 										<div class="form-group">
 											<div class="input-group">
 												<span class="input-group-addon">%</span>
-												<input type="text" placeholder="chance to win" name="chance" onchange="document.getElementsByName('payout')[0].value=100/parseFloat(document.getElementsByName('chance')[0].value)*(0.99);">
+												<input type="text" placeholder="chance to win" name="chance" onchange="document.getElementsByName('payout')[0].value=100/parseFloat(document.getElementsByName('chance')[0].value)*(0.99);" />
 											</div>
 										</div>
 										<div class="form-group">
 											<div class="input-group">
 												<span class="input-group-addon">X</span>
-												<input type="text" placeholder="payout" name="payout" onchange="document.getElementsByName('chance')[0].value=100/(parseFloat(document.getElementsByName('payout')[0].value)/(0.99));">
+												<input type="text" placeholder="payout" name="payout" onchange="document.getElementsByName('chance')[0].value=100/(parseFloat(document.getElementsByName('payout')[0].value)/(0.99));" />
 											</div>
 										</div>
 										<div class="form-group">
@@ -178,7 +191,7 @@
 						<div class="tab-pane" id="poker">
 								<form id="poker" action="" class="form-inline" method="post">
 
-										<input type="hidden" name="form" value="bet_poker">
+										<input type="hidden" name="form" value="bet_poker" />
 
 										<div class="form-group">
 											<img src="http://chancecoin.com/images/poker.png" class="casino-icon" />
@@ -187,10 +200,10 @@
 										<div class="form-group">
 											<div class="input-group">
 												<span class="input-group-addon">#</span>
-												<input type="text" placeholder="bet size" name="bet">
+												<input type="text" placeholder="bet size" name="bet" />
 											</div>
 										</div>
-										<input type="hidden" name="resolution" value="instant">
+										<input type="hidden" name="resolution" value="instant" />
 										<!--
 										<div class="form-group">
 											<div class="input-group">
@@ -220,7 +233,7 @@
 										<div class="form-group">
 											<div class="input-group">
 												<span class="input-group-btn">
-													<button class="btn btn-default" onclick="window.location.reload(true); return false;">Fold</button>
+													<button class="btn btn-default" onclick="getNewPokerCards(); return false;">Fold</button>
 												</span>
 											</div>
 										</div>
@@ -228,97 +241,9 @@
 										<div class="form-group" style="clear: both; display: block;">
 										</div>
 
-										<div class="form-group">
-											<div class="input-group">
-												<span class="help-block">You</span>
-													<input type="hidden" name="card1" value="JS">
-													<div class="card rank-J spades">
-															<span class="rank">J</span>
-															<span class="suit">&spades;</span>
-													</div>
-											</div>
+										<div id="poker_cards">
+
 										</div>
-										<div class="form-group">
-											<div class="input-group">
-												<span class="help-block">&nbsp;</span>
-													<input type="hidden" name="card2" value="3D">
-													<div class="card rank-3 diams">
-															<span class="rank">3</span>
-															<span class="suit">&diams;</span>
-													</div>
-											</div>
-										</div>
-										<div class="form-group" style="clear: both; width: 4em;">
-										</div>
-										<div class="form-group">
-											<div class="input-group">
-												<span class="help-block">Board</span>
-													<input type="hidden" name="card3" value="6C">
-													<div class="card rank-6 clubs">
-															<span class="rank">6</span>
-															<span class="suit">&clubs;</span>
-													</div>
-											</div>
-										</div>
-										<div class="form-group">
-											<div class="input-group">
-												<span class="help-block">&nbsp;</span>
-													<input type="hidden" name="card4" value="JH">
-													<div class="card rank-J hearts">
-															<span class="rank">J</span>
-															<span class="suit">&hearts;</span>
-													</div>
-											</div>
-										</div>
-										<div class="form-group">
-											<div class="input-group">
-												<span class="help-block">&nbsp;</span>
-													<input type="hidden" name="card5" value="7H">
-													<div class="card rank-7 hearts">
-															<span class="rank">7</span>
-															<span class="suit">&hearts;</span>
-													</div>
-											</div>
-										</div>
-										<div class="form-group">
-											<div class="input-group">
-												<span class="help-block">&nbsp;</span>
-													<input type="hidden" name="card6" value="??">
-													<div class="card back">*</div>
-											</div>
-										</div>
-										<div class="form-group">
-											<div class="input-group">
-												<span class="help-block">&nbsp;</span>
-													<input type="hidden" name="card7" value="??">
-													<div class="card back">*</div>
-											</div>
-										</div>
-										<div class="form-group" style="clear: both; width: 4em;">
-										</div>
-										<div class="form-group">
-											<div class="input-group">
-												<span class="help-block">Opponent</span>
-													<input type="hidden" name="card8" value="7C">
-													<div class="card rank-7 clubs">
-															<span class="rank">7</span>
-															<span class="suit">&clubs;</span>
-													</div>
-											</div>
-										</div>
-										<div class="form-group">
-											<div class="input-group">
-												<span class="help-block">&nbsp;</span>
-													<input type="hidden" name="card9" value="9S">
-													<div class="card rank-9 spades">
-															<span class="rank">9</span>
-															<span class="suit">&spades;</span>
-													</div>
-											</div>
-										</div>
-										<div class="form-group" style="clear: both; width: 4em;">
-										</div>
-										<p>Chance of winning: 78.384%</p>
 								</form>
 						</div>
 				</div>

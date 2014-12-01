@@ -190,48 +190,12 @@ table {
 	margin-bottom: 1em;
 }
 
-#hide_chat {
-	width: 17px;
-	height: 17px;
-	top: 5px;
-	left: -2px;
-	position: absolute;
-	z-index: 100000000;
-	cursor: pointer;
-	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";       /* IE 8 */
-	filter: alpha(opacity=0);  /* IE 5-7 */
-	-moz-opacity: 0;          /* Netscape */
-	-khtml-opacity: 0;        /* Safari 1.x */
-	opacity: 0;               /* Good browsers */
-}
-
-#show_chat {
-	padding: 3px 12px;
-    background: rgb(54, 25, 25); /* Fall-back for browsers that don't support rgba */
-    background: rgba(54, 25, 25, .15);
-	border: 1px #BBBBBB solid;
-}
-
-#addresses {
-	min-width: 458px;
-	min-height: 100px;
-}
-
 #loadingDiv {
-	background:url('../images/ajax-loader.gif') no-repeat center center;
-	height: 100px;
-	width: 100px;
+	height: 25%;
+	width: 60%;
 	position: fixed;
 	z-index: 1000;
-	left: 50%;
-	top: 50%;
-	margin: -25px 0 0 -25px;
-}
-
-.loading {
-	background:#FFFFFF url('../images/ajax-loader.gif') no-repeat center center;
-	width: 458px;
-	height: 100px;
-	z-index: 1000;
-	margin: -25px 0 0 -25px;
+	left: 20%;
+	top: 37%;
+	margin: 0px;
 }

@@ -94,12 +94,12 @@ function getPokerResults(playerAStr, playerBStr, tableStr) {
     winner = playerB;
     loser = playerA;
   }
-  return {winner:(winner==playerA ? "playerA" : "playerB"), winningHand:winner.hand, losingHand:loser.hand};
+  return {winner:(winner==playerA ? "playerA" : "playerB"), winningHand:winner.hand, losingHand:loser.hand, a:playerA, b:playerB};
 }
 
 // var player1 = "3H 3D";
 // var player2 = "8S KS";
-// var player3 = "JD JH";
+// var player3 = "QH QS";
 // var player4 = "QC QD";
 // var table = "6C 8C TH 3C 4D";
 // console.log(getPokerResults(player1, player2, table));
