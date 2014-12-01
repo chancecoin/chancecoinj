@@ -685,7 +685,7 @@ function resolveBet(betObject, chancecoinTx) {
         }
       }
       betObject["cards"] = dealtSoFar.join(" ");
-      var didWin = didWin(betObject["cards"]);
+      //var didWin = didWin(betObject["cards"]);
     } else {
       //dice bet
       betObject["roll"] = roll;
@@ -834,8 +834,8 @@ function getCasinoInfo() {
       if (responseObj.address) {
         $("#my_bets_content").html(getBetTableHtml(getBets(address)));
       }
-      $("#loadingDiv").css("display","none");
-      $("#bodyDiv").css("display","block");
+      $("#loadingDiv").hide();
+      $("#bodyDiv").show();
       $("ul#addresses").attr("class","dropdown-menu");
     }
   });
