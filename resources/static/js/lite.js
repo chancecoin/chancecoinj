@@ -71,6 +71,9 @@ function update() {
 }
 
 function importPrivateKey() {
+  console.log("before changing class" + $("ul#addresses").attr('class'));
+  $("ul#addresses").addClass("loading");
+  console.log("after changing class" + $("ul#addresses").attr('class'));
   var privateKey = $( "input[name=privatekey]" ).val();
   if (privateKey) {
       try {
@@ -270,9 +273,10 @@ function processBet(formName) {
     var chance = $( "input[name=chance]" ).val();
     var payout = $( "input[name=payout]" ).val();
     if (formName=="dice" && bet && resolution && asset && chance && payout && address) {
+      beforeBet(formName);
       var result = createDiceBet(bet, resolution, asset, chance, payout, address);
       if (result) {
-        alert("Thanks for betting!");
+        afterBet(formName);
       }
     }
 }
@@ -494,7 +498,7 @@ function getBets(address) {
   for (i in chancecoinTxs) {
     var chancecoinTx = chancecoinTxs[i];
     var chancecoinTxDecoded = decodeChancecoinTx(chancecoinTx);
-    if (chancecoinTxDecoded["type"] == "bet_dice" || chancecoinTxDecoded["type"] == "bet_poker") {
+    if (chancecoinTxDecoded != null && (chancecoinTxDecoded["type"] == "bet_dice" || chancecoinTxDecoded["type"] == "bet_poker")) {
       var betObject = chancecoinTxDecoded["details"];
       betObject = resolveBet(betObject, chancecoinTx);
       betObjects.push(betObject);
@@ -772,6 +776,30 @@ function throwException(error) {
     alert(error);
     throw error;
 }
+
+function beforeBet(formName) {
+  var message = "Processing your bet, please wait...";
+  $(formName+" input").prop("disabled", true);
+  $(formName+" button").prop("disabled", true);
+  $("#ajax_result_message").css("display","none");
+  $("#ajax_result_message").html("");
+  $("#ajax_wait_message").html(message);
+  $("#ajax_wait_message").css("display","block");
+  $("#ajax_message").css("display","block");
+}
+function afterBet(formName) {
+  var message = "Thank you for betting!";
+  $("#ajax_wait_message").css("display","none");
+  $("#ajax_wait_message").html("");
+  $("#ajax_result_message").html(message);
+  $("#ajax_result_message").css("display","block");
+  $("#ajax_message").delay(3000);
+  $("#ajax_message").fadeOut(500);
+  $(formName+" input").prop("disabled", false);
+  $(formName+" button").prop("disabled", false);
+  $(formName+" input").val("");
+}
+
 function getCasinoInfo() {
   var address = readCookie("address");
   $.ajax({
@@ -805,6 +833,9 @@ function getCasinoInfo() {
       if (responseObj.address) {
         $("#my_bets_content").html(getBetTableHtml(getBets(address)));
       }
+      $("#loadingDiv").css("display","none");
+      $("#bodyDiv").css("display","block");
+      $("ul#addresses").attr("class","dropdown-menu");
     }
   });
 }
