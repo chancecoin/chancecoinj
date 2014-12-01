@@ -36,7 +36,6 @@ $(document).ready(function() {
   setInterval(function(){update();}, 5000);
 
   //test
-  console.log(chanceOfWinning("3H 3D 6C 8C TH ?? ?? 8S KS"));
 });
 
 $(window).on('popstate', function() {
@@ -483,9 +482,9 @@ function decodeChancecoinTx(chancecoinTx) {
   } else if (messageType==ID_POKER && message.length==LENGTH_POKER) {
     var a = jsp.Unpack(">Q9h4x", message);
     var bet = a[0]/UNIT;
-    var chance = 2;
-    var payout = 100/chance*(1-HOUSE_EDGE);
     var cards = a.slice(1,10).map(function(x) { return getCard(x); }).join(" ");
+    var chance = chanceOfWinning(cards)*100;
+    var payout = 100/chance*(1-HOUSE_EDGE);
     chancecoinTxDecoded = {"type": "bet_poker", "details": {"source": source, "block_time": blockTime, "bet": bet, "chance": chance, "payout": payout, "resolved": false, "roll": null, "profit": 0, "cards": cards, "cards_result": false}};
   }
   return chancecoinTxDecoded;
@@ -567,7 +566,7 @@ function didWin(cards) {
   }
 }
 
-function getWinningHand(cards) {
+function didWinResult(cards) {
   if (!(cards instanceof Array)) {
     cards = cards.split(" ");
   }
@@ -575,7 +574,7 @@ function getWinningHand(cards) {
   var board = cards.slice(2,7).join(" ");
   var playerB = cards.slice(7,9).join(" ");
   var results = getPokerResults(playerA, playerB, board);
-  return results.winningHand;
+  return results;
 }
 
 function chanceOfWinning(cards) {
@@ -608,10 +607,7 @@ function chanceOfWinning(cards) {
         cardsFilledIn[j] = deck[popped];
       }
     }
-    //console.log(cardsFilledIn);
-    //console.log(getWinningHand(cardsFilledIn));
     if (didWin(cardsFilledIn)) {
-      //console.log(didWin(cardsFilledIn));
       numerator ++;
     }
   }
@@ -666,6 +662,9 @@ function resolveBet(betObject, chancecoinTx) {
   if (roll != null) {
     betObject["resolved"] = "true";
     var bet = betObject["bet"];
+    var chaSupply = chaSupplyForBetting();
+    var chance = betObject["chance"];
+    var payout = betObject["payout"];
     if (betObject["cards"]) {
       //poker bet
       var cards = betObject["cards"].split(" ");
@@ -685,13 +684,16 @@ function resolveBet(betObject, chancecoinTx) {
         }
       }
       betObject["cards"] = dealtSoFar.join(" ");
-      //var didWin = didWin(betObject["cards"]);
+      var results = didWinResult(dealtSoFar);
+      betObject["cards_result"] = results.winningHand+" vs "+results.losingHand;
+      if (results.winner == "playerA") {
+        betObject["profit"] = bet*(payout-1)*chaSupply/(chaSupply-bet*payout);
+      } else {
+        betObject["profit"] = -bet;
+      }
     } else {
       //dice bet
       betObject["roll"] = roll;
-      var chance = betObject["chance"];
-      var payout = betObject["payout"];
-      var chaSupply = chaSupplyForBetting();
       if (roll < chance) {
         betObject["profit"] = bet*(payout-1)*chaSupply/(chaSupply-bet*payout);
       } else {
