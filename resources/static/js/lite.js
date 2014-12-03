@@ -765,6 +765,9 @@ function chanceOfWinning(cards) {
 }
 
 function resolveBet(chancecoinTxDecoded) {
+  //TODO: make this update the balances
+  //TODO: make balances update when send txs happen
+  //TODO: make sure we don't miss incoming txs (don't just get most recent 20, search for all)
   var betObject = chancecoinTxDecoded["details"];
   var earlierBetIsUnresolved = false; //TODO
   if (earlierBetIsUnresolved) {
@@ -1070,7 +1073,13 @@ function getCasinoInfo() {
   var chaSupply = getCHASupply();
   var chaPrice = getCHAPrice();
   var btcPrice = getBTCPrice();
-  //updateAddressDropDown(responseObj.addressInfos); //readCookie("addresses")
+
+  var addressInfos = [];
+  var addresses = JSON.parse(readCookie("addresses"));
+  for (i in addresses) {
+    addressInfos.push({address: addresses[i], balanceCHA: getBalance(addresses[i], "CHA")});
+  }
+  updateAddressDropDown(addressInfos);
 
   $("#cha_price_dollar").html("1 CHA = $" + (btcPrice * chaPrice).toFixed(2));
   $("#cha_supply").html(chaSupply.toLocaleString());
@@ -1190,7 +1199,9 @@ function getBalance(address, asset) {
   getBalances();
   var balance = 0;
   if (asset == "CHA") {
-    balance = BALANCES.balances[address];
+    if (BALANCES.balances[address]) {
+      balance = BALANCES.balances[address];
+    }
   } else if (asset == "BTC") {
     var url = "http://api.bitwatch.co/getbalance/"+address+"?minconf=1&maxreqsigs=1";
     var result = 0;
