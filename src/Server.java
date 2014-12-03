@@ -86,6 +86,32 @@ public class Server implements Runnable {
 		} catch (Exception e) {
 		}
 		
+		get(new Route("/get_balances") {
+			@Override
+			public Object handle(Request request, Response response) {
+				response.header("Access-Control-Allow-Origin", "*");
+				JSONObject attributes = new JSONObject();
+				Database db = Database.getInstance();
+				ResultSet rs = db.executeQuery("select address,amount as balance from balances where asset='CHA' group by address order by amount desc;");
+				List<JSONObject> balances = new ArrayList<JSONObject>();
+				try {
+					while (rs.next()) {
+						JSONObject map = new JSONObject();
+						map.put(rs.getString("address"), BigInteger.valueOf(rs.getLong("balance")).doubleValue()/Config.unit.doubleValue());
+						balances.add(map);
+					}
+				} catch (Exception e) {
+				}
+				try {
+					attributes.put("balances", balances);
+					attributes.put("height", Util.getLastBlock());
+				} catch (Exception e) {
+				}
+
+				return attributes.toString();
+			}
+		});		
+		
 		get(new Route("/get_casino_info") {
 			@Override
 			public Object handle(Request request, Response response) {

@@ -17,11 +17,11 @@ var HOUSE_EDGE = 0.01;
 var CACHE_getTx = {};
 var CACHE_getChancecoinTx = {};
 var CACHE_decodeChancecoinTx = {};
-var HOME = "http://0.0.0.0:8080";
-var UPDATING = false;
-var CACHE_balances = {};
 var CACHE_getBTCPrice = null;
 var CACHE_getCHAPrice = null;
+var HOME = "http://0.0.0.0:8080";
+var UPDATING = false;
+var BALANCES = null;
 
 $(window).on('load', function () {
     $('.selectpicker').selectpicker({
@@ -1068,35 +1068,26 @@ function getCasinoInfo() {
   var chaSupply = getCHASupply();
   var chaPrice = getCHAPrice();
   var btcPrice = getBTCPrice();
-  $.ajax({
-    type: "GET",
-    url: HOME+"/get_casino_info",
-    data: {addresses: readCookie("addresses"), address: address},
-    crossDomain: true,
-    success: function(response) {
-      var responseObj = JSON.parse(response);
-      updateAddressDropDown(responseObj.addressInfos);
+  //updateAddressDropDown(responseObj.addressInfos); //readCookie("addresses")
 
-      $("#cha_price_dollar").html("1 CHA = $" + (btcPrice * chaPrice).toFixed(2));
-      $("#cha_supply").html(chaSupply.toFixed(2));
-      $("#cha_price").html(chaPrice.toFixed(5) + " BTC");
-      $("#btc_price").html("$"+btcPrice.toFixed(2));
-      $("#market_cap").html("$"+(chaSupply * btcPrice * chaPrice).toLocaleString());
+  $("#cha_price_dollar").html("1 CHA = $" + (btcPrice * chaPrice).toFixed(2));
+  $("#cha_supply").html(chaSupply.toLocaleString());
+  $("#cha_price").html(chaPrice.toFixed(5) + " BTC");
+  $("#btc_price").html("$"+btcPrice.toFixed(2));
+  $("#market_cap").html("$"+(chaSupply * btcPrice * chaPrice).toLocaleString());
 
-      $("#cha_over_btc_blocks").html(blockHeight.toLocaleString() + " / " + blockHeight.toLocaleString());
-      $("#cha_blocks").html(blockHeight.toLocaleString());
-      $("#btc_blocks").html(blockHeight.toLocaleString());
-      $("#version").html(version);
+  $("#cha_over_btc_blocks").html(blockHeight.toLocaleString() + " / " + blockHeight.toLocaleString());
+  $("#cha_blocks").html(blockHeight.toLocaleString());
+  $("#btc_blocks").html(blockHeight.toLocaleString());
+  $("#version").html(version);
 
-      $("#recent_bets_content").html(getBetTableHtml(getBets("")));
-      if (responseObj.address) {
-        $("#my_bets_content").html(getBetTableHtml(getBets(address)));
-      }
-      $("#loadingDiv").hide();
-      $("#bodyDiv").show();
-      $("ul#addresses").attr("class","dropdown-menu");
-    }
-  });
+  $("#recent_bets_content").html(getBetTableHtml(getBets("")));
+  if (address) {
+    $("#my_bets_content").html(getBetTableHtml(getBets(address)));
+  }
+  $("#loadingDiv").hide();
+  $("#bodyDiv").show();
+  $("ul#addresses").attr("class","dropdown-menu");
 }
 
 function getBetTableHtml(betObjects) {
@@ -1168,29 +1159,48 @@ function getBetTableHtml(betObjects) {
   return html;
 }
 function CHASupplyForBetting() {
-  var url = HOME+"/cha_supply_for_betting";
-  var result = 0;
-  $.ajax({
-    url: url,
-    cache: false,
-    async: false
-  }).done(function( data ) {
-    result = data;
-  });
-  return result*1;
+  getBalances();
+  var supply = 0;
+  for (address in BALANCES.balances) {
+    var balance = BALANCES.balances[address];
+    supply = supply + balance;
+  }
+  return supply;
+}
+function getBalances() {
+  var url = HOME+"/get_balances";
+  if (BALANCES) {
+    return BALANCES;
+  } else {
+    var balances = {};
+    $.ajax({
+      url: url,
+      cache: false,
+      async: false
+    }).done(function( data ) {
+      balances = JSON.parse(data);
+    });
+    BALANCES = balances;
+    return balances;
+  }
 }
 function getBalance(address, asset) {
-  var url = HOME+"/get_balance_by_asset";
-  var result = 0;
-  $.ajax({
-    url: url,
-    data: {"address": address, "asset": asset},
-    cache: false,
-    async: false
-  }).done(function( data ) {
-    result = data;
-  });
-  return result;
+  getBalances();
+  var balance = 0;
+  if (asset == "CHA") {
+    balance = BALANCES.balances[address];
+  } else if (asset == "BTC") {
+    var url = "http://api.bitwatch.co/getbalance/"+address+"?minconf=1&maxreqsigs=1";
+    var result = 0;
+    $.ajax({
+      url: url,
+      cache: false,
+      async: false
+    }).done(function( data ) {
+      balance = data.result;
+    });
+  }
+  return balance;
 }
 
 function getPokerCardsHtml(cards, chance) {
