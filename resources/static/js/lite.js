@@ -20,6 +20,7 @@ var CACHE_decodeChancecoinTx = {};
 var CACHE_getBTCPrice = null;
 var CACHE_getCHAPrice = null;
 var HOME = "http://0.0.0.0:8080";
+var GITHUB = "https://raw.githubusercontent.com/chancecoin/chancecoinj/master";
 var UPDATING = false;
 var BALANCES = null;
 
@@ -1168,7 +1169,7 @@ function CHASupplyForBetting() {
   return supply;
 }
 function getBalances() {
-  var url = HOME+"/get_balances";
+  var url = GITHUB+"/get_balances.txt";
   if (BALANCES) {
     return BALANCES;
   } else {
