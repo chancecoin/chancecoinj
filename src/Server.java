@@ -93,12 +93,11 @@ public class Server implements Runnable {
 				JSONObject attributes = new JSONObject();
 				Database db = Database.getInstance();
 				ResultSet rs = db.executeQuery("select address,amount as balance from balances where asset='CHA' group by address order by amount desc;");
-				List<JSONObject> balances = new ArrayList<JSONObject>();
+				JSONObject balances = new JSONObject();
 				try {
 					while (rs.next()) {
 						JSONObject map = new JSONObject();
-						map.put(rs.getString("address"), BigInteger.valueOf(rs.getLong("balance")).doubleValue()/Config.unit.doubleValue());
-						balances.add(map);
+						balances.put(rs.getString("address"), BigInteger.valueOf(rs.getLong("balance")).doubleValue()/Config.unit.doubleValue());
 					}
 				} catch (Exception e) {
 				}
