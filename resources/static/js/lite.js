@@ -19,6 +19,9 @@ var CACHE_getChancecoinTx = {};
 var CACHE_decodeChancecoinTx = {};
 var HOME = "http://0.0.0.0:8080";
 var UPDATING = false;
+var CACHE_balances = {};
+var CACHE_getBTCPrice = null;
+var CACHE_getCHAPrice = null;
 
 $(window).on('load', function () {
     $('.selectpicker').selectpicker({
@@ -118,7 +121,7 @@ function importPrivateKey(privateKeyWIF) {
       createCookie("private_keys", JSON.stringify(privateKeys), 999999);
   } catch (e) {
   }
-  getCasinoInfo();
+  update();
   $("#importPrivateKey").modal('hide');
 }
 
@@ -237,7 +240,7 @@ function toFixed(value, precision) {
 }
 
 function createDiceBet(bet, resolution, asset, address, chance, payout) {
-  var chaSupply = chaSupplyForBetting();
+  var chaSupply = CHASupplyForBetting();
   var balance = getBalance(address, "CHA");
   if (source=="") {
     throwException("Please specify a source address.");
@@ -297,7 +300,7 @@ function createDiceBet(bet, resolution, asset, address, chance, payout) {
 }
 
 function createPokerBet(bet, resolution, asset, address, cards) {
-  var chaSupply = chaSupplyForBetting();
+  var chaSupply = CHASupplyForBetting();
   var balance = getBalance(address, "CHA");
 
   if ($.unique(cards.slice()).length!=8) {
@@ -809,7 +812,7 @@ function resolveBet(chancecoinTxDecoded) {
   if (roll != null) {
     betObject["resolved"] = "true";
     var bet = betObject["bet"];
-    var chaSupply = chaSupplyForBetting();
+    var chaSupply = CHASupplyForBetting();
     var chance = betObject["chance"];
     var payout = betObject["payout"];
     if (betObject["cards"]) {
@@ -988,8 +991,83 @@ function disableForm(formName) {
   $(formName+" button").prop("disabled", false);
 }
 
+function getBTCPrice() {
+  if (CACHE_getBTCPrice) {
+    return CACHE_getBTCPrice;
+  } else {
+    var url = "http://www.corsproxy.com/blockchain.info/q/24hrprice";
+    var price = 0;
+    $.ajax({
+      url: url,
+      cache: true,
+      async: false
+    }).done(function( data ) {
+      price = data*1;
+    });
+    CACHE_getBTCPrice = price;
+    return price;
+  }
+}
+
+function getCHAPrice() {
+  if (CACHE_getCHAPrice) {
+    return CACHE_getCHAPrice;
+  } else {
+    var url = "http://www.corsproxy.com/coinmarketcap.northpole.ro/api/v5/CHA.json";
+    var price = 0;
+    $.ajax({
+      url: url,
+      cache: false,
+      async: false
+    }).done(function( data ) {
+      price = data.price.btc*1;
+    });
+    CACHE_getCHAPrice = price;
+    return price;
+  }
+}
+
+function getCHASupply() {
+  return CHASupplyForBetting();
+}
+
+function getBTCBlockHash() {
+  var url = "https://insight.bitpay.com/api/status?q=getLastBlockHash";
+  var blockHash = 0;
+  $.ajax({
+    url: url,
+    cache: false,
+    async: false
+  }).done(function( data ) {
+    blockHash = data.lastblockhash;
+  });
+  return blockHash;
+}
+
+function getBTCBlockHeight() {
+  var url = "https://insight.bitpay.com/api/block/"+getBTCBlockHash();
+  var blockHeight = 0;
+  $.ajax({
+    url: url,
+    cache: false,
+    async: false
+  }).done(function( data ) {
+    blockHeight = data.height;
+  });
+  return blockHeight;
+}
+
+function getVersion() {
+  return "Lite 1.0";
+}
+
 function getCasinoInfo() {
   var address = readCookie("address");
+  var blockHeight = getBTCBlockHeight();
+  var version = getVersion();
+  var chaSupply = getCHASupply();
+  var chaPrice = getCHAPrice();
+  var btcPrice = getBTCPrice();
   $.ajax({
     type: "GET",
     url: HOME+"/get_casino_info",
@@ -999,22 +1077,16 @@ function getCasinoInfo() {
       var responseObj = JSON.parse(response);
       updateAddressDropDown(responseObj.addressInfos);
 
-      $("#cha_price_dollar").html("1 CHA = $" + (responseObj.price_BTC *responseObj.price_CHA).toFixed(2));
-      $("#cha_supply").html(responseObj.supply.toLocaleString());
-      $("#cha_price").html(responseObj.price_CHA.toFixed(4) + " BTC");
-      $("#btc_price").html("$"+responseObj.price_BTC.toFixed(2));
-      $("#market_cap").html("$"+(responseObj.supply * responseObj.price_BTC * responseObj.price_CHA).toLocaleString());
+      $("#cha_price_dollar").html("1 CHA = $" + (btcPrice * chaPrice).toFixed(2));
+      $("#cha_supply").html(chaSupply.toFixed(2));
+      $("#cha_price").html(chaPrice.toFixed(5) + " BTC");
+      $("#btc_price").html("$"+btcPrice.toFixed(2));
+      $("#market_cap").html("$"+(chaSupply * btcPrice * chaPrice).toLocaleString());
 
-      var currentChaBlocks;
-      if (responseObj.parsing) {
-        currentChaBlocks = responseObj.parsing;
-      } else {
-        currentChaBlocks = responseObj.blocksCHA;
-      }
-      $("#cha_over_btc_blocks").html(currentChaBlocks.toLocaleString() + " / " + responseObj.blocksBTC.toLocaleString());
-      $("#cha_blocks").html(currentChaBlocks.toLocaleString());
-      $("#btc_blocks").html(responseObj.blocksBTC.toLocaleString());
-      $("#version").html(responseObj.version);
+      $("#cha_over_btc_blocks").html(blockHeight.toLocaleString() + " / " + blockHeight.toLocaleString());
+      $("#cha_blocks").html(blockHeight.toLocaleString());
+      $("#btc_blocks").html(blockHeight.toLocaleString());
+      $("#version").html(version);
 
       $("#recent_bets_content").html(getBetTableHtml(getBets("")));
       if (responseObj.address) {
@@ -1095,7 +1167,7 @@ function getBetTableHtml(betObjects) {
   html += '</table>';
   return html;
 }
-function chaSupplyForBetting() {
+function CHASupplyForBetting() {
   var url = HOME+"/cha_supply_for_betting";
   var result = 0;
   $.ajax({
@@ -1105,7 +1177,7 @@ function chaSupplyForBetting() {
   }).done(function( data ) {
     result = data;
   });
-  return result;
+  return result*1;
 }
 function getBalance(address, asset) {
   var url = HOME+"/get_balance_by_asset";
