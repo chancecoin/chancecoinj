@@ -24,7 +24,7 @@ var CACHE_getChancecoinTx = {};
 var CACHE_decodeChancecoinTx = {};
 var CACHE_getBTCPrice = null;
 var CACHE_getCHAPrice = null;
-var HOME = "https://cdn.rawgit.com/chancecoin/chancecoinj/master";
+var HOME = "https://chancecoin.github.io";
 var UPDATING = false;
 var BALANCES = null;
 // Create Base64 Object
@@ -1151,7 +1151,7 @@ function getBetTableHtml(betObjects) {
       }
       html += '</td>';
     } else {
-      html += '<td><img src="'+HOME+'/resources/static/images/dice.png" style="height: 25px; display: inline;" />';
+      html += '<td><img src="'+HOME+'/images/dice.png" style="height: 25px; display: inline;" />';
       if (betInfo["resolved"]) {
         html += parseFloat(betInfo["roll"].toPrecision(5));
       } else {
@@ -1163,7 +1163,7 @@ function getBetTableHtml(betObjects) {
     if (betInfo["resolved"] && betInfo["resolved"]=="true") {
       html += betInfo["profit"].toPrecision(3)+" CHA";
     } else {
-      html += '<img src="'+HOME+'/resources/static/images/ajax-loader.gif" /></td>';
+      html += '<img src="'+HOME+'/images/ajax-loader.gif" /></td>';
     }
     html += '</tr>';
   }
