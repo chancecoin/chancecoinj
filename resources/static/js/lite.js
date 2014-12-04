@@ -24,7 +24,7 @@ var CACHE_getChancecoinTx = {};
 var CACHE_decodeChancecoinTx = {};
 var CACHE_getBTCPrice = null;
 var CACHE_getCHAPrice = null;
-var HOME = "https://cdn.rawgit.com/chancecoin/chancecoinj/master";
+var HOME = "https://rawgit.com/chancecoin/chancecoinj/master";
 var UPDATING = false;
 var BALANCES = null;
 // Create Base64 Object
