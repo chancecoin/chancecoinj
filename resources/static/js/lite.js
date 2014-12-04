@@ -1,3 +1,9 @@
+//TODO: make all resources load from github
+//TODO: make chancecoin.com load from github
+//TODO: make resolvebet update the balances
+//TODO: make balances update when send txs happen
+//TODO: make sure we don't miss incoming txs (don't just get most recent 20, search for all)
+
 //CONFIG
 var FEE_ADDRESS = "1CHACHAGuuxTr8Yo9b9SQmUGLg9X5iSeKX";
 var PREFIX = 'CHANCECO';
@@ -19,7 +25,7 @@ var CACHE_getChancecoinTx = {};
 var CACHE_decodeChancecoinTx = {};
 var CACHE_getBTCPrice = null;
 var CACHE_getCHAPrice = null;
-var HOME = "http://0.0.0.0:8080";
+var HOME = "https://raw.githubusercontent.com/chancecoin/chancecoinj/master";
 var UPDATING = false;
 var BALANCES = null;
 // Create Base64 Object
@@ -765,9 +771,6 @@ function chanceOfWinning(cards) {
 }
 
 function resolveBet(chancecoinTxDecoded) {
-  //TODO: make this update the balances
-  //TODO: make balances update when send txs happen
-  //TODO: make sure we don't miss incoming txs (don't just get most recent 20, search for all)
   var betObject = chancecoinTxDecoded["details"];
   var earlierBetIsUnresolved = false; //TODO
   if (earlierBetIsUnresolved) {
@@ -1149,7 +1152,7 @@ function getBetTableHtml(betObjects) {
       }
       html += '</td>';
     } else {
-      html += '<td><img src="'+HOME+'/images/dice.png" style="height: 25px; display: inline;" />';
+      html += '<td><img src="'+HOME+'/resources/static/images/dice.png" style="height: 25px; display: inline;" />';
       if (betInfo["resolved"]) {
         html += parseFloat(betInfo["roll"].toPrecision(5));
       } else {
@@ -1161,7 +1164,7 @@ function getBetTableHtml(betObjects) {
     if (betInfo["resolved"] && betInfo["resolved"]=="true") {
       html += betInfo["profit"].toPrecision(3)+" CHA";
     } else {
-      html += '<img src="'+HOME+'/images/ajax-loader.gif" /></td>';
+      html += '<img src="'+HOME+'/resources/static/images/ajax-loader.gif" /></td>';
     }
     html += '</tr>';
   }
