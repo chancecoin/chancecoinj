@@ -1,4 +1,3 @@
-//TODO: make all resources load from github
 //TODO: make chancecoin.com load from github
 //TODO: make resolvebet update the balances
 //TODO: make balances update when send txs happen
@@ -25,7 +24,7 @@ var CACHE_getChancecoinTx = {};
 var CACHE_decodeChancecoinTx = {};
 var CACHE_getBTCPrice = null;
 var CACHE_getCHAPrice = null;
-var HOME = "https://raw.githubusercontent.com/chancecoin/chancecoinj/master";
+var HOME = "https://cdn.rawgit.com/chancecoin/chancecoinj/master";
 var UPDATING = false;
 var BALANCES = null;
 // Create Base64 Object
