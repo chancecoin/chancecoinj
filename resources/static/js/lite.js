@@ -1083,6 +1083,15 @@ function getBlocks() {
   return blocks;
 }
 
+function getCHABlockHeight() {
+  getBalances();
+  var blockHeight = 0;
+  if (BALANCES && BALANCES.height) {
+    blockHeight = BALANCES.height;
+  }
+  return blockHeight;
+}
+
 function getBTCBlockHeight() {
   var url = "https://insight.bitpay.com/api/block/"+getBTCBlockHash();
   var blockHeight = 0;
@@ -1099,7 +1108,8 @@ function getVersion() {
 
 function getCasinoInfo() {
   var address = readCookie("address");
-  var blockHeight = getBTCBlockHeight();
+  var blockHeightBTC = getBTCBlockHeight();
+  var blockHeightCHA = getCHABlockHeight();
   var version = getVersion();
   var chaSupply = getCHASupply();
   var chaPrice = getCHAPrice();
@@ -1118,9 +1128,9 @@ function getCasinoInfo() {
   $("#btc_price").html("$"+btcPrice.toFixed(2));
   $("#market_cap").html("$"+(chaSupply * btcPrice * chaPrice).toLocaleString());
 
-  $("#cha_over_btc_blocks").html(blockHeight.toLocaleString() + " / " + blockHeight.toLocaleString());
-  $("#cha_blocks").html(blockHeight.toLocaleString());
-  $("#btc_blocks").html(blockHeight.toLocaleString());
+  $("#cha_over_btc_blocks").html(blockHeightCHA.toLocaleString() + " / " + blockHeightBTC.toLocaleString());
+  $("#cha_blocks").html(blockHeightCHA.toLocaleString());
+  $("#btc_blocks").html(blockHeightBTC.toLocaleString());
   $("#version").html(version);
 
   $("#recent_bets_content").html(getBetTableHtml(getBets("")));
