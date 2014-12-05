@@ -1,7 +1,7 @@
-//TODO: make chancecoin.com load from github
 //TODO: make resolvebet update the balances
 //TODO: make balances update when send txs happen
 //TODO: make sure we don't miss incoming txs (don't just get most recent 20, search for all)
+//TODO: make chancecoin.com load from github
 
 //CONFIG
 var FEE_ADDRESS = "1CHACHAGuuxTr8Yo9b9SQmUGLg9X5iSeKX";
@@ -27,7 +27,8 @@ var CACHE_getCHAPrice = null;
 var HOME = "https://chancecoin.github.io";
 var UPDATING = false;
 var BALANCES = null;
-// Create Base64 Object
+var LOG = [];
+
 var Base64={_keyStr:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",encode:function(e){var t="";var n,r,i,s,o,u,a;var f=0;e=Base64._utf8_encode(e);while(f<e.length){n=e.charCodeAt(f++);r=e.charCodeAt(f++);i=e.charCodeAt(f++);s=n>>2;o=(n&3)<<4|r>>4;u=(r&15)<<2|i>>6;a=i&63;if(isNaN(r)){u=a=64}else if(isNaN(i)){a=64}t=t+this._keyStr.charAt(s)+this._keyStr.charAt(o)+this._keyStr.charAt(u)+this._keyStr.charAt(a)}return t},decode:function(e){var t="";var n,r,i;var s,o,u,a;var f=0;e=e.replace(/[^A-Za-z0-9\+\/\=]/g,"");while(f<e.length){s=this._keyStr.indexOf(e.charAt(f++));o=this._keyStr.indexOf(e.charAt(f++));u=this._keyStr.indexOf(e.charAt(f++));a=this._keyStr.indexOf(e.charAt(f++));n=s<<2|o>>4;r=(o&15)<<4|u>>2;i=(u&3)<<6|a;t=t+String.fromCharCode(n);if(u!=64){t=t+String.fromCharCode(r)}if(a!=64){t=t+String.fromCharCode(i)}}t=Base64._utf8_decode(t);return t},_utf8_encode:function(e){e=e.replace(/\r\n/g,"\n");var t="";for(var n=0;n<e.length;n++){var r=e.charCodeAt(n);if(r<128){t+=String.fromCharCode(r)}else if(r>127&&r<2048){t+=String.fromCharCode(r>>6|192);t+=String.fromCharCode(r&63|128)}else{t+=String.fromCharCode(r>>12|224);t+=String.fromCharCode(r>>6&63|128);t+=String.fromCharCode(r&63|128)}}return t},_utf8_decode:function(e){var t="";var n=0;var r=c1=c2=0;while(n<e.length){r=e.charCodeAt(n);if(r<128){t+=String.fromCharCode(r);n++}else if(r>191&&r<224){c2=e.charCodeAt(n+1);t+=String.fromCharCode((r&31)<<6|c2&63);n+=2}else{c2=e.charCodeAt(n+1);c3=e.charCodeAt(n+2);t+=String.fromCharCode((r&15)<<12|(c2&63)<<6|c3&63);n+=3}}return t}}
 
 $(window).on('load', function () {
@@ -53,6 +54,7 @@ $(document).ready(function() {
   initialize();
 
   //test
+  getNewTransactions();
 });
 
 function update() {
@@ -194,43 +196,32 @@ function updateAddressDropDown(addressInfos) {
 function pushTx(txHex) {
     var url = "http://api.bitwatch.co/pushtx/"+txHex;
     var result = false;
-    $.ajax({
-      url: url,
-      cache: false,
-      async: false
-    }).done(function( data ) {
-      if (data.status == 200 || data.status == 201) {
-        result = true;
-      }
-    });
+    var data = download(url);
+    if (data && (data.status == 200 || data.status == 201)) {
+      result = true;
+    }
     return result;
 }
 function getUnspents(address) {
     var url = "http://api.bitwatch.co/listunspent/"+address+"?verbose=1&minconf=0";
     var unspents = [];
-    $.ajax({
-      url: url,
-      cache: false,
-      async: false
-    }).done(function( data ) {
+    var data = download(url);
+    if (data) {
       $.each(data.result, function(i,result){
-          unspents.push(result);
+        unspents.push(result);
       });
-    });
+    }
     return unspents;
 }
 function getTransactions(address) {
     var url = "https://insight.bitpay.com/api/addrs/"+address+"/txs?from=0&to=20";
     var txs = [];
-    $.ajax({
-      url: url,
-      cache: false,
-      async: false
-    }).done(function( data ) {
+    var data = download(url);
+    if (data) {
       $.each(data.items, function(i,result){
-          txs.push(result);
+        txs.push(result);
       });
-    });
+    }
     return txs;
 }
 function toFixed(value, precision) {
@@ -250,30 +241,30 @@ function createDiceBet(bet, resolution, asset, address, chance, payout) {
   var chaSupply = CHASupplyForBetting();
   var balance = getBalance(address, "CHA");
   if (source=="") {
-    throwException("Please specify a source address.");
+    showError("Please specify a source address.");
     return;
   }
   if (!(bet>0)) {
-    throwException("Please bet more than zero.");
+    showError("Please bet more than zero.");
     return;
   }
   if (!(chance>0.0 && chance<100.0)) {
-    throwException("Please specify a chance between 0 and 100.");
+    showError("Please specify a chance between 0 and 100.");
     return;
   }
   if (!(payout>1.0)) {
-    throwException("Please specify a payout greater than 1.");
+    showError("Please specify a payout greater than 1.");
     return;
   }
   if (!(toFixed(chance,6)==toFixed(100.0/(payout/(1.0-HOUSE_EDGE)),6))) {
-    throwException("Please specify a chance and payout that are congruent.");
+    showError("Please specify a chance and payout that are congruent.");
     return;
   }
   if (!(bet<=balance)) {
-    throwException("Please specify a bet that is smaller than your CHA balance."); return;
+    showError("Please specify a bet that is smaller than your CHA balance."); return;
   }
   if (!((payout-1.0)*bet<chaSupply*MAX_PROFIT)) {
-    throwException("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
+    showError("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
     return;
   }
   btcAmount = 0;
@@ -311,7 +302,7 @@ function createPokerBet(bet, resolution, asset, address, cards) {
   var balance = getBalance(address, "CHA");
 
   if ($.unique(cards.slice()).length!=8) {
-    throwException("Please select unique cards.");
+    showError("Please select unique cards.");
     return;
   }
 
@@ -320,30 +311,30 @@ function createPokerBet(bet, resolution, asset, address, cards) {
   var payout = 100/chance*(1-HOUSE_EDGE);
 
   if (source=="") {
-    throwException("Please specify a source address.");
+    showError("Please specify a source address.");
     return;
   }
   if (!(bet>0)) {
-    throwException("Please bet more than zero.");
+    showError("Please bet more than zero.");
     return;
   }
   if (!(chance>0.0 && chance<100.0)) {
-    throwException("Please specify a chance between 0 and 100.");
+    showError("Please specify a chance between 0 and 100.");
     return;
   }
   if (!(payout>1.0)) {
-    throwException("Please specify a payout greater than 1.");
+    showError("Please specify a payout greater than 1.");
     return;
   }
   if (!(toFixed(chance,6)==toFixed(100.0/(payout/(1.0-HOUSE_EDGE)),6))) {
-    throwException("Please specify a chance and payout that are congruent.");
+    showError("Please specify a chance and payout that are congruent.");
     return;
   }
   if (!(bet<=balance)) {
-    throwException("Please specify a bet that is smaller than your CHA balance."); return;
+    showError("Please specify a bet that is smaller than your CHA balance."); return;
   }
   if (!((payout-1.0)*bet<chaSupply*MAX_PROFIT)) {
-    throwException("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
+    showError("Please specify a bet with a payout less than the maximum percentage of the house bankroll you can win.");
     return;
   }
   btcAmount = 0;
@@ -474,12 +465,12 @@ function createTransaction(source, destinations, btcAmounts, fee, data, useUnspe
       }
 
       if (!atLeastOneRegularInput) {
-				throwException("You do not have enough standard unspent outputs to cover the transaction.");
+				showError("You do not have enough standard unspent outputs to cover the transaction.");
         return;
 			}
 
 			if (totalInput<totalOutput) {
-				throwException("You do not have enough BTC to cover the transaction.");
+				showError("You do not have enough BTC to cover the transaction.");
         return;
 			}
 			var totalChange = totalInput - totalOutput;
@@ -511,18 +502,15 @@ function getTx(txid, nocache) {
     } else {
       cache = true;
     }
-    var url = "https://insight.bitpay.com/api/tx/"+txid;
     if (cache && CACHE_getTx[txid]) {
       return CACHE_getTx[txid];
     } else {
+      var url = "https://insight.bitpay.com/api/tx/"+txid;
       var tx = {};
-      $.ajax({
-        url: url,
-        cache: cache,
-        async: false
-      }).done(function( data ) {
+      var data = download(url, cache);
+      if (data) {
         tx = data;
-      });
+      }
       CACHE_getTx[txid] = tx;
       return tx;
     }
@@ -642,6 +630,7 @@ function decodeChancecoinTx(chancecoinTx) {
     return chancecoinTxDecoded;
   }
 }
+
 function getBets(address) {
   if (address == "") {
     address = FEE_ADDRESS;
@@ -654,7 +643,6 @@ function getBets(address) {
     if (chancecoinTxDecoded != null && (chancecoinTxDecoded["type"] == "bet_dice" || chancecoinTxDecoded["type"] == "bet_poker")) {
       if (!chancecoinTxDecoded["details"]["resolved"]) {
         chancecoinTxDecoded = resolveBet(chancecoinTxDecoded);
-        CACHE_decodeChancecoinTx[chancecoinTxDecoded["tx"].txid] = chancecoinTxDecoded;
       }
       betObjects.push(chancecoinTxDecoded["details"]);
     }
@@ -859,6 +847,7 @@ function resolveBet(chancecoinTxDecoded) {
     }
   }
   chancecoinTxDecoded["details"] = betObject;
+  CACHE_decodeChancecoinTx[chancecoinTxDecoded["tx"].txid] = chancecoinTxDecoded;
   return chancecoinTxDecoded;
 }
 
@@ -964,7 +953,8 @@ function readCookie(name) {
 function eraseCookie(name) {
     createCookie(name,"",-1);
 }
-function throwException(error) {
+
+function showError(error) {
     showMessage(error, "error");
     //throw error;
 }
@@ -977,6 +967,8 @@ function showMessage(message, type) {
     $("#ajax_info").show();
   }
   if (type && type == "error") {
+    LOG.push(message);
+    $("#log").html(LOG.join("<br /><br />"));
     $("#ajax_error_content").html(message);
     $("#ajax_error").show();
   }
@@ -1004,13 +996,10 @@ function getBTCPrice() {
   } else {
     var url = "http://www.corsproxy.com/blockchain.info/q/24hrprice";
     var price = 0;
-    $.ajax({
-      url: url,
-      cache: true,
-      async: false
-    }).done(function( data ) {
+    var data = download(url, true);
+    if (data) {
       price = data*1;
-    });
+    }
     CACHE_getBTCPrice = price;
     return price;
   }
@@ -1022,13 +1011,10 @@ function getCHAPrice() {
   } else {
     var url = "http://www.corsproxy.com/coinmarketcap.northpole.ro/api/v5/CHA.json";
     var price = 0;
-    $.ajax({
-      url: url,
-      cache: false,
-      async: false
-    }).done(function( data ) {
+    var data = download(url, true);
+    if (data) {
       price = data.price.btc*1;
-    });
+    }
     CACHE_getCHAPrice = price;
     return price;
   }
@@ -1041,26 +1027,69 @@ function getCHASupply() {
 function getBTCBlockHash() {
   var url = "https://insight.bitpay.com/api/status?q=getLastBlockHash";
   var blockHash = 0;
-  $.ajax({
-    url: url,
-    cache: false,
-    async: false
-  }).done(function( data ) {
+  var data = download(url);
+  if (data) {
     blockHash = data.lastblockhash;
-  });
+  }
   return blockHash;
+}
+
+function getBlock(blockHash) {
+  var url = "https://insight.bitpay.com/api/txs?block="+blockHash;
+  var block = null;
+  var data = download(url);
+  if (data) {
+    block = data;
+  }
+  return block;
+}
+
+function getNewTransactions() {
+  var blocks = getBlocks();
+  if (blocks) {
+    for (i in blocks.blocks) {
+      var block = blocks.blocks[i];
+      if (block.height >= BALANCES.height) {
+        block = getBlock(block.hash);
+        for (i in block.txs) {
+          var tx = block.txs[i];
+          CACHE_getTx[tx.txid] = tx;
+          var chancecoinTx = getChancecoinTx(tx.txid);
+          if (chancecoinTx) {
+            var decodedChancecoinTx = decodeChancecoinTx(chancecoinTx);
+            if (chancecoinTxDecoded != null) {
+              if (chancecoinTxDecoded["type"] == "bet_dice" || chancecoinTxDecoded["type"] == "bet_poker") {
+                if (!chancecoinTxDecoded["details"]["resolved"]) {
+                  chancecoinTxDecoded = resolveBet(chancecoinTxDecoded);
+                }
+              }
+            }
+          }
+        }
+        break;
+      }
+    }
+  }
+}
+
+function getBlocks() {
+  getBalances();
+  var url = "http://www.corsproxy.com/blockchain.info/blocks/?format=json";
+  var blocks = null;
+  var data = download(url);
+  if (data) {
+    blocks = data;
+  }
+  return blocks;
 }
 
 function getBTCBlockHeight() {
   var url = "https://insight.bitpay.com/api/block/"+getBTCBlockHash();
   var blockHeight = 0;
-  $.ajax({
-    url: url,
-    cache: false,
-    async: false
-  }).done(function( data ) {
+  var data = download(url);
+  if (data) {
     blockHeight = data.height;
-  });
+  }
   return blockHeight;
 }
 
@@ -1181,18 +1210,15 @@ function CHASupplyForBetting() {
   return supply;
 }
 function getBalances() {
-  var url = "https://api.github.com/repos/chancecoin/chancecoinj/contents/balances.txt";
   if (BALANCES) {
     return BALANCES;
   } else {
-    var balances = {};
-    $.ajax({
-      url: url,
-      cache: false,
-      async: false
-    }).done(function( data ) {
+    var balances = {balances: {}, height: 0};
+    var url = "https://api.github.com/repos/chancecoin/chancecoinj/contents/balances.txt";
+    var data = download(url);
+    if (data) {
       balances = JSON.parse(Base64.decode(data.content));
-    });
+    }
     BALANCES = balances;
     return balances;
   }
@@ -1206,16 +1232,31 @@ function getBalance(address, asset) {
     }
   } else if (asset == "BTC") {
     var url = "http://api.bitwatch.co/getbalance/"+address+"?minconf=1&maxreqsigs=1";
-    var result = 0;
-    $.ajax({
-      url: url,
-      cache: false,
-      async: false
-    }).done(function( data ) {
+    var data = download(url);
+    if (data) {
       balance = data.result;
-    });
+    }
   }
   return balance;
+}
+
+function download(url, cache) {
+  var result = null;
+  if (!cache) {
+    cache = false;
+  }
+  console.log("Downloading "+url);
+  $.ajax({
+    url: url,
+    cache: cache,
+    async: false
+  }).done(function( data ) {
+    result = data;
+  }).fail( function(xhr, textStatus, errorThrown) {
+    showError("Failed to download "+url);
+    console.log(url+" error");
+  });
+  return result;
 }
 
 function getPokerCardsHtml(cards, chance) {

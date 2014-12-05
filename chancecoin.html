@@ -26,9 +26,21 @@
 	<script type="text/javascript" src="https://chancecoin.github.io/js/jspack.js"></script>
 	<script type="text/javascript" src="https://chancecoin.github.io/js/poker.js"></script>
 	<script type="text/javascript" src="https://chancecoin.github.io/js/xdate.js"></script>
-	<script type="text/javascript" src="https://chancecoin.github.io/js/lite.js"></script>
+	<script type="text/javascript" src="resources/static/js/lite.js"></script>
 </head>
-<body onload="updateAddressFromUrl(); getCasinoInfo();">
+<body onload="updateAddressFromUrl(); update();">
+	<div class="modal fade" id="logModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+					<h4 class="modal-title" id="myModalLabel">Log</h4>
+				</div>
+				<div class="modal-body" id="log">
+				</div>
+			</div>
+		</div>
+	</div>
 	<div class="modal fade" id="importPrivateKey" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 	  <div class="modal-dialog">
 	    <div class="modal-content">
@@ -104,6 +116,7 @@
 							<li><a href="#">CHA blocks <span id="cha_blocks" class="badge"></span></a></li>
 							<li><a href="#">BTC blocks <span id="btc_blocks" class="badge"></span></a></li>
 							<li><a href="#">Version <span id="version" class="badge"></span></a></li>
+							<li><a href="#" data-toggle="modal" data-target="#logModal">Log</a></li>
 						</ul>
 					</li>
 	      </ul>
