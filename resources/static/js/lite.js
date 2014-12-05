@@ -1,7 +1,6 @@
-//TODO: make resolvebet update the balances
 //TODO: make balances update when send txs happen
-//TODO: make sure we don't miss incoming txs (don't just get most recent 20, search for all)
 //TODO: make chancecoin.com load from github
+//TODO: make ajax for writing bets table more snappy (add rows instead of rewriting whole thing)
 
 //CONFIG
 var FEE_ADDRESS = "1CHACHAGuuxTr8Yo9b9SQmUGLg9X5iSeKX";
@@ -24,6 +23,7 @@ var CACHE_getChancecoinTx = {};
 var CACHE_decodeChancecoinTx = {};
 var CACHE_getBTCPrice = null;
 var CACHE_getCHAPrice = null;
+var CACHE_getBTCBlockHeight = {};
 var HOME = "https://chancecoin.github.io";
 var UPDATING = false;
 var BALANCES = null;
@@ -52,15 +52,13 @@ $(document).ready(function() {
   });
   setInterval(function(){update();}, 5000);
   initialize();
-
-  //test
-  getNewTransactions();
 });
 
 function update() {
   if (!UPDATING) {
     UPDATING = true;
     getCasinoInfo();
+    getNewTransactions();
     UPDATING = false;
   }
 }
@@ -186,9 +184,9 @@ function updateAddressDropDown(addressInfos) {
       var address = addressInfo["address"];
       var balanceCHA = addressInfo["balanceCHA"];
       if (address == addressSelected) {
-        $("#addresses").append('<li id="address_'+i+'"><a href="?address='+address+'"><strong>'+ address+'</strong> <span class="badge"><span id="cha_balance_'+i+'">' + balanceCHA + '</span> CHA</span></a></li>');
+        $("#addresses").append('<li id="address_'+i+'"><a href="?address='+address+'"><strong>'+ address+'</strong> <span class="badge"><span id="cha_balance_'+i+'">' + balanceCHA.toFixed(5) + '</span> CHA</span></a></li>');
       } else {
-        $("#addresses").append('<li id="address_'+i+'"><a href="?address='+address+'">'+ address+' <span class="badge"><span id="cha_balance_'+i+'">' + balanceCHA + '</span> CHA</span></a></li>');
+        $("#addresses").append('<li id="address_'+i+'"><a href="?address='+address+'">'+ address+' <span class="badge"><span id="cha_balance_'+i+'">' + balanceCHA.toFixed(5) + '</span> CHA</span></a></li>');
       }
     }
   }
@@ -644,7 +642,7 @@ function getBets(address) {
       if (!chancecoinTxDecoded["details"]["resolved"]) {
         chancecoinTxDecoded = resolveBet(chancecoinTxDecoded);
       }
-      betObjects.push(chancecoinTxDecoded["details"]);
+      betObjects.push(chancecoinTxDecoded);
     }
   }
   return betObjects;
@@ -799,6 +797,9 @@ function resolveBet(chancecoinTxDecoded) {
           var rollObject = decodedChancecoinTx["details"];
           foundRoll = true;
           roll = rollObject["roll"]*100;
+          console.log(tx.txid);
+          console.log(spentTxId);
+          console.log(rollObject);
         }
       }
     }
@@ -810,6 +811,7 @@ function resolveBet(chancecoinTxDecoded) {
     var chaSupply = CHASupplyForBetting();
     var chance = betObject["chance"];
     var payout = betObject["payout"];
+    getBalances();
     if (betObject["cards"]) {
       //poker bet
       var cards = betObject["cards"].split(" ");
@@ -836,6 +838,9 @@ function resolveBet(chancecoinTxDecoded) {
       } else {
         betObject["profit"] = -bet;
       }
+      if (!tx.blockhash || getBTCBlockHeight(tx.blockhash)>BALANCES.height) {
+        BALANCES.balances[betObject["source"]] += betObject["profit"];
+      }
     } else {
       //dice bet
       betObject["roll"] = roll;
@@ -843,6 +848,11 @@ function resolveBet(chancecoinTxDecoded) {
         betObject["profit"] = bet*(payout-1)*chaSupply/(chaSupply-bet*payout);
       } else {
         betObject["profit"] = -bet;
+      }
+      if (!tx.blockhash || getBTCBlockHeight(tx.blockhash)>BALANCES.height) {
+        console.log(tx.blockhash+" "+getBTCBlockHeight(tx.blockhash));
+        console.log(BALANCES.height);
+        BALANCES.balances[betObject["source"]] += betObject["profit"];
       }
     }
   }
@@ -955,7 +965,7 @@ function eraseCookie(name) {
 }
 
 function showError(error) {
-    showMessage(error, "error");
+    showMessage(message, "error");
     //throw error;
 }
 
@@ -1037,7 +1047,7 @@ function getBTCBlockHash() {
 function getBlock(blockHash) {
   var url = "https://insight.bitpay.com/api/txs?block="+blockHash;
   var block = null;
-  var data = download(url);
+  var data = download(url, true);
   if (data) {
     block = data;
   }
@@ -1046,10 +1056,14 @@ function getBlock(blockHash) {
 
 function getNewTransactions() {
   var blocks = getBlocks();
+  getBalances();
   if (blocks) {
-    for (i in blocks.blocks) {
-      var block = blocks.blocks[i];
-      if (block.height >= BALANCES.height) {
+    blocks = blocks.blocks;
+    blocks.reverse();
+    for (i in blocks) {
+      var block = blocks[i];
+      if (block.height > BALANCES.height) {
+        var blockHeight = block.height;
         block = getBlock(block.hash);
         for (i in block.txs) {
           var tx = block.txs[i];
@@ -1066,7 +1080,7 @@ function getNewTransactions() {
             }
           }
         }
-        break;
+        BALANCES.height = blockHeight;
       }
     }
   }
@@ -1079,6 +1093,10 @@ function getBlocks() {
   var data = download(url);
   if (data) {
     blocks = data;
+    for (i in blocks.blocks) {
+      var block = blocks.blocks[i];
+      CACHE_getBTCBlockHeight[block.hash] = block.height;
+    }
   }
   return blocks;
 }
@@ -1092,14 +1110,22 @@ function getCHABlockHeight() {
   return blockHeight;
 }
 
-function getBTCBlockHeight() {
-  var url = "https://insight.bitpay.com/api/block/"+getBTCBlockHash();
-  var blockHeight = 0;
-  var data = download(url);
-  if (data) {
-    blockHeight = data.height;
+function getBTCBlockHeight(hash) {
+  if (!hash) {
+    hash = getBTCBlockHash();
   }
-  return blockHeight;
+  if (CACHE_getBTCBlockHeight[hash]) {
+    return CACHE_getBTCBlockHeight[hash];
+  } else {
+    var url = "https://insight.bitpay.com/api/block/"+hash;
+    var blockHeight = 0;
+    var data = download(url);
+    if (data) {
+      blockHeight = data.height;
+    }
+    CACHE_getBTCBlockHeight[hash] = blockHeight;
+    return blockHeight;
+  }
 }
 
 function getVersion() {
@@ -1142,7 +1168,7 @@ function getCasinoInfo() {
   $("ul#addresses").attr("class","dropdown-menu");
 }
 
-function getBetTableHtml(betObjects) {
+function getBetTableHtml(decodedChancecoinTxs) {
   var html = "";
   html += '<table class="table table-striped">';
   html += '<thead>';
@@ -1156,10 +1182,11 @@ function getBetTableHtml(betObjects) {
   html += '</tr>';
   html += '</thead>';
   html += '<tbody>';
-  for (i in betObjects) {
-    var betInfo = betObjects[i];
+  for (i in decodedChancecoinTxs) {
+    var betInfo = decodedChancecoinTxs[i]["details"];
+    var tx = decodedChancecoinTxs[i]["tx"];
     html += '<tr>';
-    html += '<td>'+betInfo["source"].substring(0,6)+'...</td>';
+    html += '<td><a href="http://blockchain.info/tx/'+tx["txid"]+'">'+betInfo["source"].substring(0,6)+'...</a></td>';
     html += '<td>'+betInfo["block_time"]+'</td>';
     html += '<td>'+betInfo["bet"].toPrecision(3)+' CHA</td>';
     html += '<td>'+parseFloat(betInfo["chance"].toPrecision(3))+'%'+' / '+parseFloat(betInfo["payout"].toPrecision(3))+'X</td>';
@@ -1255,7 +1282,7 @@ function download(url, cache) {
   if (!cache) {
     cache = false;
   }
-  console.log("Downloading "+url);
+  //console.log("Downloading "+url);
   $.ajax({
     url: url,
     cache: cache,
@@ -1263,8 +1290,7 @@ function download(url, cache) {
   }).done(function( data ) {
     result = data;
   }).fail( function(xhr, textStatus, errorThrown) {
-    showError("Failed to download "+url);
-    console.log(url+" error");
+    LOG.push("Failed to download "+url);
   });
   return result;
 }
