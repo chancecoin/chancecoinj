@@ -18,103 +18,91 @@ public class Card {
 	}
 	
 	public Card(String card, String suit) {
-		switch (suit) {
-		case "C":  this.suit = 0;
-		break;
-		case "D":  this.suit = 1;
-		break;
-		case "H":  this.suit = 2;
-		break;
-		case "S":  this.suit = 3;
-		break;
-		case "?":  this.suit = -1;
-		break;
-		default:   this.suit = -1;
-		break;
+		if (suit == "C") {
+			this.suit = 0;
+		} else if (suit == "D") {
+			this.suit = 1;
+		} else if (suit == "H") {
+			this.suit = 2;
+		} else if (suit == "S") {
+			this.suit = 3;
+		} else {
+			this.suit = -1;
 		}
-		switch (card) {
-		case "2":  this.card = 0;
-		break;
-		case "3":  this.card = 1;
-		break;
-		case "4":  this.card = 2;
-		break;
-		case "5":  this.card = 3;
-		break;
-		case "6":  this.card = 4;
-		break;
-		case "7":  this.card = 5;
-		break;
-		case "8":  this.card = 6;
-		break;
-		case "9":  this.card = 7;
-		break;
-		case "T":  this.card = 8;
-		break;
-		case "J":  this.card = 9;
-		break;
-		case "Q":  this.card = 10;
-		break;
-		case "K":  this.card = 11;
-		break;
-		case "A":  this.card = 12;
-		break;
-		case "?":  this.card = -1;
-		break;
-		default:   this.suit = -1;
-		break;		
-		}		
+		if (card == "2") {
+			this.card = 0;
+		} else if (card == "3") {
+			this.card = 1;
+		} else if (card == "4") {
+			this.card = 2;
+		} else if (card == "5") {
+			this.card = 3;
+		} else if (card == "6") {
+			this.card = 4;
+		} else if (card == "7") {
+			this.card = 5;
+		} else if (card == "8") {
+			this.card = 6;
+		} else if (card == "9") {
+			this.card = 7;
+		} else if (card == "T") {
+			this.card = 8;
+		} else if (card == "J") {
+			this.card = 9;
+		} else if (card == "Q") {
+			this.card = 10;
+		} else if (card == "K") {
+			this.card = 11;
+		} else if (card == "A") {
+			this.card = 12;
+		} else {
+			this.card = -1;
+		}
 	}
 	
 	public Card(String cardString) {
 		String card = cardString.substring(0, cardString.length()-1);
 		String suit = cardString.substring(cardString.length()-1, cardString.length());
-		switch (suit) {
-		case "C":  this.suit = 0;
-		break;
-		case "D":  this.suit = 1;
-		break;
-		case "H":  this.suit = 2;
-		break;
-		case "S":  this.suit = 3;
-		break;
-		case "?":  this.suit = -1;
-		break;
-		default:   this.suit = -1;
-		break;
+		if (suit == "C") {
+			this.suit = 0;
+		} else if (suit == "D") {
+			this.suit = 1;
+		} else if (suit == "H") {
+			this.suit = 2;
+		} else if (suit == "S") {
+			this.suit = 3;
+		} else {
+			this.suit = -1;
 		}
-		switch (card) {
-		case "2":  this.card = 0;
-		break;
-		case "3":  this.card = 1;
-		break;
-		case "4":  this.card = 2;
-		break;
-		case "5":  this.card = 3;
-		break;
-		case "6":  this.card = 4;
-		break;
-		case "7":  this.card = 5;
-		break;
-		case "8":  this.card = 6;
-		break;
-		case "9":  this.card = 7;
-		break;
-		case "T":  this.card = 8;
-		break;
-		case "J":  this.card = 9;
-		break;
-		case "Q":  this.card = 10;
-		break;
-		case "K":  this.card = 11;
-		break;
-		case "A":  this.card = 12;
-		break;
-		case "?":  this.card = -1;
-		break;
-		default:   this.suit = -1;
-		break;		
-		}	
+		if (card == "2") {
+			this.card = 0;
+		} else if (card == "3") {
+			this.card = 1;
+		} else if (card == "4") {
+			this.card = 2;
+		} else if (card == "5") {
+			this.card = 3;
+		} else if (card == "6") {
+			this.card = 4;
+		} else if (card == "7") {
+			this.card = 5;
+		} else if (card == "8") {
+			this.card = 6;
+		} else if (card == "9") {
+			this.card = 7;
+		} else if (card == "T") {
+			this.card = 8;
+		} else if (card == "J") {
+			this.card = 9;
+		} else if (card == "Q") {
+			this.card = 10;
+		} else if (card == "K") {
+			this.card = 11;
+		} else if (card == "A") {
+			this.card = 12;
+		} else {
+			this.card = -1;
+		}
 	}
 	
 	public String cardString() {
