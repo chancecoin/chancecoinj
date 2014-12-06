@@ -29,6 +29,10 @@
 	<script type="text/javascript" src="resources/static/js/lite.js"></script>
 </head>
 <body onload="updateAddressFromUrl(); update();">
+	<div id="loadingDiv">
+		<p><img src="https://chancecoin.github.io/images/logo.png" style="width: 100px; margin: 0 auto; display: block;" /></p>
+		<p class="centered">Please wait while Chancecoin loads. <img src="https://chancecoin.github.io/images/ajax-loader.gif" /></p>
+	</div>
 	<div class="modal fade" id="logModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 		<div class="modal-dialog">
 			<div class="modal-content">
@@ -67,10 +71,6 @@
 	    </div>
 	  </div>
 	</div>
-	<div id="loadingDiv">
-		<p><img src="https://chancecoin.github.io/images/logo.png" style="width: 100px; margin: 0 auto; display: block;" /></p>
-    <p class="centered">Please wait while Chancecoin loads. <img src="https://chancecoin.github.io/images/ajax-loader.gif" /></p>
-	</div>
 	<div id="bodyDiv" style="display:none">
 	<div class="playingCards fourColours rotateHand simpleCards">
 	<nav class="navbar navbar-default" role="navigation">
@@ -89,6 +89,32 @@
 	    <!-- Collect the nav links, forms, and other content for toggling -->
 	    <div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
 	      <ul class="nav navbar-nav">
+					<li class="dropdown active">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Casino <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="">Play</a></li>
+							<li><a href="#">Stats</a></li>
+						</ul>
+					</li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Exchange <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="https://poloniex.com/exchange/btc_cha">Centralized exchange &mdash; Poloniex</a></li>
+						</ul>
+					</li>
+					<li><a href="#">Chat</a></li>
+					<li><a href="#" data-template="template.html">Participate</a></li>
+					<li><a href="#">Faucet</a></li>
+					<li><a href="#">Technical</a></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Resources <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="https://bitcointalk.org/index.php?topic=528023.0">Bitcointalk</a></li>
+							<li><a href="http://twitter.com/chancecoin">Twitter</a></li>
+							<li><a href="http://reddit.com/r/chancecoin">Subreddit</a></li>
+							<li><a href="https://github.com/chancecoin/chancecoinj">GitHub</a></li>
+						</ul>
+					</li>
 	      </ul>
 	      <ul class="nav navbar-nav navbar-right">
 					<li class="dropdown">
@@ -124,7 +150,7 @@
 	  </div>
 	</nav>
 
-	<div class="container-fluid content">
+	<div class="container-fluid content" id="content">
 		<div id="ajax_message" class="row section messages" style="display:none">
 			<div id="ajax_info" class="alert alert-info alert-dismissible" style="display:none">
 				<button type="button" class="close" data-hide="#ajax_message"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
@@ -342,7 +368,7 @@
 	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
 	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	})(window,document,'script','http://www.google-analytics.com/analytics.js','ga');
 
 	  ga('create', 'UA-49712885-1', 'chancecoin.com');
 	  ga('send', 'pageview');
