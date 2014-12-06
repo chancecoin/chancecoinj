@@ -1007,11 +1007,12 @@ function getBTCPrice() {
   } else {
     var url = "http://www.corsproxy.com/blockchain.info/q/24hrprice";
     var price = 0;
-    var data = download(url, true);
-    if (data) {
-      price = data*1;
-    }
-    CACHE_getBTCPrice = price;
+    download(url, true, function(data) {
+      if (data) {
+        price = data.price.btc*1;
+      }
+      CACHE_getBTCPrice = price;
+    });
     return price;
   }
 }
@@ -1022,11 +1023,12 @@ function getCHAPrice() {
   } else {
     var url = "http://www.corsproxy.com/coinmarketcap.northpole.ro/api/v5/CHA.json";
     var price = 0;
-    var data = download(url, true);
-    if (data) {
-      price = data.price.btc*1;
-    }
-    CACHE_getCHAPrice = price;
+    download(url, true, function(data) {
+      if (data) {
+        price = data.price.btc*1;
+      }
+      CACHE_getCHAPrice = price;
+    });
     return price;
   }
 }
@@ -1063,7 +1065,7 @@ function getNewTransactions() {
     blocks.reverse();
     for (i in blocks) {
       var block = blocks[i];
-      if (block.height > BALANCES.height) {
+      if (block.height > BALANCES.height && BALANCES.height>0) {
         var blockHeight = block.height;
         block = getBlock(block.hash);
         if (block) {
@@ -1093,14 +1095,16 @@ function getBlocks() {
   getBalances();
   var url = "http://www.corsproxy.com/blockchain.info/blocks/?format=json";
   var blocks = null;
-  var data = download(url);
-  if (data) {
-    blocks = data;
-    for (i in blocks.blocks) {
-      var block = blocks.blocks[i];
-      CACHE_getBTCBlockHeight[block.hash] = block.height;
+  download(url, false, function(data) {
+    if (data) {
+      blocks = data;
+      for (i in blocks.blocks) {
+        var block = blocks.blocks[i];
+        CACHE_getBTCBlockHeight[block.hash] = block.height;
+      }
     }
-  }
+  });
+  blocks = CACHE_getBTCBlockHeight.map(function(hash) {return {hash: hash, height: CACHE_getBTCBlockHeight[hash]}});
   return blocks;
 }
 
@@ -1122,11 +1126,12 @@ function getBTCBlockHeight(hash) {
   } else {
     var url = "https://insight.bitpay.com/api/block/"+hash;
     var blockHeight = 0;
-    var data = download(url);
-    if (data) {
-      blockHeight = data.height;
-    }
-    CACHE_getBTCBlockHeight[hash] = blockHeight;
+    download(url, false, function(data) {
+      if (data) {
+        blockHeight = data.height;
+      }
+      CACHE_getBTCBlockHeight[hash] = blockHeight;
+    });
     return blockHeight;
   }
 }
@@ -1255,11 +1260,12 @@ function getBalances() {
   } else {
     var balances = {balances: {}, height: 0};
     var url = "https://api.github.com/repos/chancecoin/chancecoinj/contents/balances.txt";
-    var data = download(url);
-    if (data) {
-      balances = JSON.parse(Base64.decode(data.content));
-    }
-    BALANCES = balances;
+    download(url, false, function(data) {
+      if (data) {
+        balances = JSON.parse(Base64.decode(data.content));
+      }
+      BALANCES = balances;
+    });
     return balances;
   }
 }
@@ -1280,21 +1286,34 @@ function getBalance(address, asset) {
   return balance;
 }
 
-function download(url, cache) {
+function download(url, cache, callback) {
   var result = null;
   if (!cache) {
     cache = false;
   }
+  var async = false;
+  if (!callback) {
+    $.ajax({
+      url: url,
+      cache: cache,
+      async: false
+    }).done(function( data ) {
+      result = data;
+    }).fail( function(xhr, textStatus, errorThrown) {
+      LOG.push("Failed to download "+url);
+    });
+  } else {
+    $.ajax({
+      url: url,
+      cache: cache,
+      async: true
+    }).done(
+      callback
+    ).fail( function(xhr, textStatus, errorThrown) {
+      LOG.push("Failed to download "+url);
+    });
+  }
   //console.log("Downloading "+url);
-  $.ajax({
-    url: url,
-    cache: cache,
-    async: false
-  }).done(function( data ) {
-    result = data;
-  }).fail( function(xhr, textStatus, errorThrown) {
-    LOG.push("Failed to download "+url);
-  });
   return result;
 }
 
