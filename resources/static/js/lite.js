@@ -40,12 +40,20 @@ $(function(){
 
 $(function(){
   $("[data-template]").on("click", function(){
-    var url = "http://www.corsproxy.com/chancecoin.github.io/templates/" + $(this).attr("data-template");
-    var result = download(url);
-    if (!CONTENT) {
-      CONTENT = $("#content").innerHTML;
+    var page = $(this).attr("data-template");
+    if (page == "home") {
+      if (CONTENT) {
+        $("#content").html(CONTENT);
+      }
+      CONTENT = null;
+    } else {
+      var url = "http://www.corsproxy.com/chancecoin.github.io/templates/" + page;
+      var result = download(url);
+      if (!CONTENT) {
+        CONTENT = $("#content").html();
+      }
+      $("#content").html(result);
     }
-    alert(CONTENT);
   });
 });
 
@@ -1017,13 +1025,13 @@ function hideMessage() {
   $("#ajax_error").hide();
 }
 
-function enableForm(formName) {
-  $(formName+" input").prop("disabled", true);
-  $(formName+" button").prop("disabled", true);
-}
 function disableForm(formName) {
-  $(formName+" input").prop("disabled", false);
-  $(formName+" button").prop("disabled", false);
+  $("#"+formName+" input").prop("disabled", true);
+  $("#"+formName+" button").prop("disabled", true);
+}
+function enableForm(formName) {
+  $("#"+formName+" input").prop("disabled", false);
+  $("#"+formName+" button").prop("disabled", false);
 }
 
 function getBTCPrice() {
