@@ -24,6 +24,7 @@ var CACHE_decodeChancecoinTx = {};
 var CACHE_getBTCPrice = null;
 var CACHE_getCHAPrice = null;
 var CACHE_getBTCBlockHeight = {};
+var CACHE_getBTCBlockHash = null;
 var HOME = "https://chancecoin.github.io";
 var UPDATING = false;
 var BALANCES = null;
@@ -1008,8 +1009,9 @@ function getBTCPrice() {
     var url = "http://www.corsproxy.com/blockchain.info/q/24hrprice";
     var price = 0;
     download(url, true, function(data) {
+      var price = 0;
       if (data) {
-        price = data.price.btc*1;
+        price = data*1;
       }
       CACHE_getBTCPrice = price;
     });
@@ -1024,6 +1026,7 @@ function getCHAPrice() {
     var url = "http://www.corsproxy.com/coinmarketcap.northpole.ro/api/v5/CHA.json";
     var price = 0;
     download(url, true, function(data) {
+      var price = 0;
       if (data) {
         price = data.price.btc*1;
       }
@@ -1039,11 +1042,15 @@ function getCHASupply() {
 
 function getBTCBlockHash() {
   var url = "https://insight.bitpay.com/api/status?q=getLastBlockHash";
-  var blockHash = 0;
-  var data = download(url);
-  if (data) {
-    blockHash = data.lastblockhash;
+  var blockHash = "";
+  if (CACHE_getBTCBlockHash) {
+    blockHash = CACHE_getBTCBlockHash;
   }
+  data = download(url, false, function(data) {
+    if (data) {
+      CACHE_getBTCBlockHash = data.lastblockhash;
+    }
+  });
   return blockHash;
 }
 
@@ -1061,8 +1068,6 @@ function getNewTransactions() {
   var blocks = getBlocks();
   getBalances();
   if (blocks) {
-    blocks = blocks.blocks;
-    blocks.reverse();
     for (i in blocks) {
       var block = blocks[i];
       if (block.height > BALANCES.height && BALANCES.height>0) {
@@ -1094,17 +1099,19 @@ function getNewTransactions() {
 function getBlocks() {
   getBalances();
   var url = "http://www.corsproxy.com/blockchain.info/blocks/?format=json";
-  var blocks = null;
+  var blocks = [];
   download(url, false, function(data) {
     if (data) {
-      blocks = data;
-      for (i in blocks.blocks) {
-        var block = blocks.blocks[i];
+      for (i in data.blocks) {
+        var block = data.blocks[i];
         CACHE_getBTCBlockHeight[block.hash] = block.height;
       }
     }
   });
-  blocks = CACHE_getBTCBlockHeight.map(function(hash) {return {hash: hash, height: CACHE_getBTCBlockHeight[hash]}});
+  for (hash in CACHE_getBTCBlockHeight) {
+    blocks.push({hash: hash, height: CACHE_getBTCBlockHeight[hash]});
+  }
+  blocks.reverse();
   return blocks;
 }
 
@@ -1126,12 +1133,15 @@ function getBTCBlockHeight(hash) {
   } else {
     var url = "https://insight.bitpay.com/api/block/"+hash;
     var blockHeight = 0;
-    download(url, false, function(data) {
-      if (data) {
-        blockHeight = data.height;
-      }
-      CACHE_getBTCBlockHeight[hash] = blockHeight;
-    });
+    if (hash) {
+      download(url, false, function(data) {
+        var blockHeight = 0;
+        if (data) {
+          blockHeight = data.height;
+        }
+        CACHE_getBTCBlockHeight[hash] = blockHeight;
+      });
+    }
     return blockHeight;
   }
 }
@@ -1266,6 +1276,7 @@ function getBalances() {
       }
       BALANCES = balances;
     });
+    BALANCES = balances;
     return balances;
   }
 }
