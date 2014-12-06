@@ -471,7 +471,7 @@ function createTransaction(source, destinations, btcAmounts, fee, data, useUnspe
 				showError("You do not have enough BTC to cover the transaction.");
         return;
 			}
-			var totalChange = totalInput - totalOutput;
+			var totalChange = Math.floor(totalInput - totalOutput);
 
 			if (totalChange>0) {
 				tx.addOutput(source, totalChange);
@@ -480,7 +480,7 @@ function createTransaction(source, destinations, btcAmounts, fee, data, useUnspe
       key = new Bitcoin.ECKey.fromWIF(private_key);
       var pubKeys = inputKeys.map(function(eck) { return eck.pub })
       for (i in tx.ins) {
-        var signature = tx.signInput(i, inputScripts[i], inputKeys[i]);
+        var signature = tx.signInput(i, inputScripts[i], inputKeys[i]); //problem is here?
         if (inputTypes[i] == "multisig") {
           var redeemScriptSig = new Bitcoin.scripts.multisigInput([signature]);
           //var scriptSig = new Bitcoin.scripts.scriptHashInput(redeemScriptSig, inputScripts[i]);
@@ -566,6 +566,9 @@ function getChancecoinTx(txid) {
       chancecoinTx = {"message": message, "messageType": messageType, "tx": tx};
     }
     CACHE_getChancecoinTx[txid] = chancecoinTx;
+    if (!chancecoinTx) {
+      CACHE_getTx[txid] = "ignore";
+    }
     return chancecoinTx;
   }
 }
@@ -780,12 +783,15 @@ function resolveBet(chancecoinTxDecoded) {
   var tx = chancecoinTxDecoded["tx"];
   var blockHash = tx.blockhash;
   var txHash = tx.txid;
-  rollC = (new BigInteger(blockHash,16)).mod(new BigInteger('1000000000')).intValue()/1000000000;
-  if (rollA != null) {
+  if (blockHash) {
+    rollC = (new BigInteger(blockHash,16)).mod(new BigInteger('1000000000')).intValue()/1000000000;
+  }
+  if (rollA != null && blockHash) {
     rollB = (new BigInteger(txHash.substring(10,txHash.length),16)).mod(new BigInteger('1000000000')).intValue()/1000000000;
     roll = ((rollA + rollB + rollC) % 1) * 100;
   }
 
+  tx = getTx(tx.txid, true);
   var foundRoll = false;
   for (i in tx.vout) {
     var vout = tx.vout[i];
@@ -797,9 +803,6 @@ function resolveBet(chancecoinTxDecoded) {
           var rollObject = decodedChancecoinTx["details"];
           foundRoll = true;
           roll = rollObject["roll"]*100;
-          console.log(tx.txid);
-          console.log(spentTxId);
-          console.log(rollObject);
         }
       }
     }
@@ -850,8 +853,6 @@ function resolveBet(chancecoinTxDecoded) {
         betObject["profit"] = -bet;
       }
       if (!tx.blockhash || getBTCBlockHeight(tx.blockhash)>BALANCES.height) {
-        console.log(tx.blockhash+" "+getBTCBlockHeight(tx.blockhash));
-        console.log(BALANCES.height);
         BALANCES.balances[betObject["source"]] += betObject["profit"];
       }
     }
@@ -964,7 +965,7 @@ function eraseCookie(name) {
     createCookie(name,"",-1);
 }
 
-function showError(error) {
+function showError(message) {
     showMessage(message, "error");
     //throw error;
 }
@@ -1065,16 +1066,18 @@ function getNewTransactions() {
       if (block.height > BALANCES.height) {
         var blockHeight = block.height;
         block = getBlock(block.hash);
-        for (i in block.txs) {
-          var tx = block.txs[i];
-          CACHE_getTx[tx.txid] = tx;
-          var chancecoinTx = getChancecoinTx(tx.txid);
-          if (chancecoinTx) {
-            var decodedChancecoinTx = decodeChancecoinTx(chancecoinTx);
-            if (chancecoinTxDecoded != null) {
-              if (chancecoinTxDecoded["type"] == "bet_dice" || chancecoinTxDecoded["type"] == "bet_poker") {
-                if (!chancecoinTxDecoded["details"]["resolved"]) {
-                  chancecoinTxDecoded = resolveBet(chancecoinTxDecoded);
+        if (block) {
+          for (i in block.txs) {
+            var tx = block.txs[i];
+            CACHE_getTx[tx.txid] = tx;
+            var chancecoinTx = getChancecoinTx(tx.txid);
+            if (chancecoinTx) {
+              var chancecoinTxDecoded = decodeChancecoinTx(chancecoinTx);
+              if (chancecoinTxDecoded != null) {
+                if (chancecoinTxDecoded["type"] == "bet_dice" || chancecoinTxDecoded["type"] == "bet_poker") {
+                  if (!chancecoinTxDecoded["details"]["resolved"]) {
+                    resolveBet(chancecoinTxDecoded);
+                  }
                 }
               }
             }
