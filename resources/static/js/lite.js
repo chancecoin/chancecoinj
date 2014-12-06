@@ -136,6 +136,7 @@ function importPrivateKey(privateKeyWIF) {
   } catch (e) {
   }
   update();
+  $("input[name=privatekey]").val("");
   $("#importPrivateKey").modal('hide');
 }
 
