@@ -111,7 +111,6 @@ public class Deck {
 			n = n.remainder(divider);
 			nLeftToDeal = nLeftToDeal.subtract(BigInteger.ONE);
 		}
-
 		return shuffled;
 	}
 	
@@ -211,15 +210,21 @@ public class Deck {
 	}
 
 	public static void main(String[] args) {
-		Deck deal = Deck.ShuffleAndDeal(new Random().nextDouble(), null, 9);
+		Double rollA = new Random().nextDouble();
+		Double rollB = new Random().nextDouble();
+		rollB = 87.7269586434694 / 100.0;
+		Deck deal = Deck.ShuffleAndDeal(rollA, null, 9);
+		deal = new Deck("3H 3D 6C 8C TH ?? ?? 8S KS");
 		deal.cards.set(5, new Card("??"));
 		deal.cards.set(6, new Card("??"));
+		System.out.println(deal.toString());
+		Deck deal2 = Deck.ShuffleAndDeal(rollB, deal.cards, 2);
+		System.out.println(deal2.toString());
 		Deck playerHand = new Deck();
 		playerHand.cards.clear();
 		for (int i = 0; i<5; i++) {
 			playerHand.cards.add(deal.cards.get(i));
 		}
-		System.out.println(deal.toString());
 		Hand playerHandForEval = new Hand(playerHand.toString());
 		System.out.println(playerHandForEval.toString());
 		System.out.println(HandEvaluator.nameHand(playerHandForEval));

@@ -17,7 +17,7 @@ public class DiceRoller {
 			logger.info("Rolling dice");
 			Roll.serviceRollRequests();
 			try {
-				Thread.sleep(1000*3); 
+				Thread.sleep(10000*3); 
 			} catch (InterruptedException e) {
 				logger.error("Error during loop: "+e.toString());
 			}

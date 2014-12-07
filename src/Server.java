@@ -11,7 +11,6 @@ import java.security.CodeSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +31,6 @@ import spark.template.freemarker.FreeMarkerRoute;
 
 import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.Transaction;
-import com.google.common.collect.Lists;
 
 import freemarker.template.Configuration;
 
@@ -88,97 +86,196 @@ public class Server implements Runnable {
 		} catch (Exception e) {
 		}
 		
+		get(new Route("/get_balances") {
+			@Override
+			public Object handle(Request request, Response response) {
+				response.header("Access-Control-Allow-Origin", "*");
+				JSONObject attributes = new JSONObject();
+				Database db = Database.getInstance();
+				ResultSet rs = db.executeQuery("select address,amount as balance from balances where asset='CHA' group by address order by amount desc;");
+				JSONObject balances = new JSONObject();
+				try {
+					while (rs.next()) {
+						JSONObject map = new JSONObject();
+						balances.put(rs.getString("address"), BigInteger.valueOf(rs.getLong("balance")).doubleValue()/Config.unit.doubleValue());
+					}
+				} catch (Exception e) {
+				}
+				try {
+					attributes.put("balances", balances);
+					attributes.put("height", Util.getLastBlock());
+				} catch (Exception e) {
+				}
+
+				return attributes.toString();
+			}
+		});		
+		
 		get(new Route("/get_casino_info") {
 			@Override
 			public Object handle(Request request, Response response) {
 				response.header("Access-Control-Allow-Origin", "*");
-				JSONObject jsonArray = new JSONObject();
-				Map<String, Object> attributes = new HashMap<String, Object>();
+				JSONObject attributes = new JSONObject();
+//				Map<String, Object> attributes = new HashMap<String, Object>();
 				request.session(true);
 				Blocks blocks = Blocks.getInstance();
-				attributes.put("price_BTC", blocks.priceBTC);
-				attributes.put("price_CHA", blocks.priceCHA);
-				attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
-				attributes.put("blocksBTC", blocks.bitcoinBlock);
-				attributes.put("blocksCHA", blocks.chancecoinBlock);
-				attributes.put("version", Config.version);
-				attributes.put("min_version", Util.getMinVersion());
-				attributes.put("min_version_major", Util.getMinMajorVersion());
-				attributes.put("min_version_minor", Util.getMinMinorVersion());
-				attributes.put("version_major", Config.majorVersion);
-				attributes.put("version_minor", Config.minorVersion);
-				Blocks.getInstance().versionCheck();
-				if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
-
-//				String address = Util.getAddresses().get(0);
-//				if (request.session().attributes().contains("address")) {
-//					address = request.session().attribute("address");
-//				}
-//				if (request.queryParams().contains("address")) {
-//					address = request.queryParams("address");
-//					request.session().attribute("address", address);
-//				}
-//				ArrayList<HashMap<String, Object>> addresses = new ArrayList<HashMap<String, Object>>();
-//				for (String addr : Util.getAddresses()) {
-//					HashMap<String,Object> map = new HashMap<String,Object>();	
-//					map.put("address", addr);
-//					map.put("balance_CHA", Util.getBalance(addr, "CHA").floatValue() / Config.unit.floatValue());
-//					addresses.add(map);
-//				}
-//				attributes.put("address", address);				
-//				attributes.put("addresses", addresses);
-//				attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
-//				attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
-				attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
-				attributes.put("max_profit_percentage", Config.maxProfit);
-				attributes.put("house_edge", Config.houseEdge);
-				attributes.put("cards", (new Deck()).cardStrings());
-
-				Database db = Database.getInstance();
-
-				//poker hand
-				List<String> pokerHand = new ArrayList<String>();
-				Deck deal = Deck.ShuffleAndDeal(new Random().nextDouble(), null, 9);
-				deal.cards.set(5, new Card("??"));
-				deal.cards.set(6, new Card("??"));
-				for (Card c : deal.cards) {
-					pokerHand.add(c.toString());
-				}
-				attributes.put("poker_chance", Deck.chanceOfWinning(deal.cards)*100.0);
-				attributes.put("poker_hand", pokerHand);
-
-				//get last 100 bets
-				ResultSet rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,cards,resolved,bets.tx_index as tx_index,block_time,transactions.btc_amount as btc_amount from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 100;");
-				List<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
 				try {
-					while (rs.next()) {
-						HashMap<String,Object> map = new HashMap<String,Object>();
-						map.put("source", rs.getString("source"));
-						map.put("bet", BigInteger.valueOf(rs.getLong("bet")).doubleValue()/Config.unit.doubleValue());
-						map.put("btc_amount", BigInteger.valueOf(rs.getLong("btc_amount")).doubleValue()/Config.unit.doubleValue());
-						map.put("chance", rs.getDouble("chance"));
-						map.put("payout", rs.getDouble("payout"));
-						map.put("tx_hash", rs.getString("tx_hash"));
-						map.put("roll", rs.getDouble("roll"));
-						map.put("cards", rs.getString("cards"));
-						if (rs.getString("cards")!=null && rs.getString("resolved")!=null && rs.getString("resolved").equals("true")) {
-							map.put("cards_result", Deck.result(new Deck(rs.getString("cards")).cards));
-						}
-						map.put("resolved", rs.getString("resolved"));
-						map.put("block_time", Util.timeFormat(rs.getInt("block_time")));
-						map.put("profit", BigInteger.valueOf(rs.getLong("profit")).doubleValue()/Config.unit.doubleValue());
-						bets.add(map);
+					attributes.put("price_BTC", blocks.priceBTC);
+					attributes.put("price_CHA", blocks.priceCHA);
+					attributes.put("supply", Util.chaSupply().floatValue() / Config.unit.floatValue());
+					attributes.put("blocksBTC", blocks.bitcoinBlock);
+					attributes.put("blocksCHA", blocks.chancecoinBlock);
+					attributes.put("version", Config.version);
+					attributes.put("min_version", Util.getMinVersion());
+					attributes.put("min_version_major", Util.getMinMajorVersion());
+					attributes.put("min_version_minor", Util.getMinMinorVersion());
+					attributes.put("version_major", Config.majorVersion);
+					attributes.put("version_minor", Config.minorVersion);
+					Blocks.getInstance().versionCheck();
+					if (Blocks.getInstance().parsing) attributes.put("parsing", Blocks.getInstance().parsingBlock);
+
+//					String address = Util.getAddresses().get(0);
+//					if (request.session().attributes().contains("address")) {
+//						address = request.session().attribute("address");
+//					}
+//					if (request.queryParams().contains("address")) {
+//						address = request.queryParams("address");
+//						request.session().attribute("address", address);
+//					}
+//					ArrayList<HashMap<String, Object>> addresses = new ArrayList<HashMap<String, Object>>();
+//					for (String addr : Util.getAddresses()) {
+//						HashMap<String,Object> map = new HashMap<String,Object>();	
+//						map.put("address", addr);
+//						map.put("balance_CHA", Util.getBalance(addr, "CHA").floatValue() / Config.unit.floatValue());
+//						addresses.add(map);
+//					}
+//					attributes.put("address", address);				
+//					attributes.put("addresses", addresses);
+//					attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+//					attributes.put("balanceBTC", Util.getBalance(address, "BTC").doubleValue() / Config.unit.doubleValue());
+					attributes.put("max_profit", Util.chaSupply().floatValue() / Config.unit.floatValue() * Config.maxProfit);
+					attributes.put("max_profit_percentage", Config.maxProfit);
+					attributes.put("house_edge", Config.houseEdge);
+					attributes.put("cards", (new Deck()).cardStrings());
+
+					Database db = Database.getInstance();
+
+					//poker hand
+					List<String> pokerHand = new ArrayList<String>();
+					Deck deal = Deck.ShuffleAndDeal(new Random().nextDouble(), null, 9);
+					deal.cards.set(5, new Card("??"));
+					deal.cards.set(6, new Card("??"));
+					for (Card c : deal.cards) {
+						pokerHand.add(c.toString());
 					}
-				} catch (SQLException e) {
+					attributes.put("poker_chance", Deck.chanceOfWinning(deal.cards)*100.0);
+					attributes.put("poker_hand", pokerHand);
+
+					//get last 100 bets
+					ResultSet rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,cards,resolved,bets.tx_index as tx_index,block_time,transactions.btc_amount as btc_amount from bets,transactions where bets.validity='valid' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 100;");
+//					List<HashMap<String, Object>> bets = new ArrayList<HashMap<String, Object>>();
+					List<JSONObject> bets = new ArrayList<JSONObject>();
+					try {
+						while (rs.next()) {
+//							HashMap<String,Object> map = new HashMap<String,Object>();
+							JSONObject map = new JSONObject();
+							map.put("source", rs.getString("source"));
+							map.put("bet", BigInteger.valueOf(rs.getLong("bet")).doubleValue()/Config.unit.doubleValue());
+							map.put("btc_amount", BigInteger.valueOf(rs.getLong("btc_amount")).doubleValue()/Config.unit.doubleValue());
+							map.put("chance", rs.getDouble("chance"));
+							map.put("payout", rs.getDouble("payout"));
+							map.put("tx_hash", rs.getString("tx_hash"));
+							map.put("roll", rs.getDouble("roll"));
+							map.put("cards", rs.getString("cards"));
+							if (rs.getString("cards")!=null && rs.getString("resolved")!=null && rs.getString("resolved").equals("true")) {
+								map.put("cards_result", Deck.result(new Deck(rs.getString("cards")).cards));
+							}
+							map.put("resolved", rs.getString("resolved"));
+							map.put("block_time", Util.timeFormat(rs.getInt("block_time")));
+							map.put("profit", BigInteger.valueOf(rs.getLong("profit")).doubleValue()/Config.unit.doubleValue());
+							bets.add(map);
+						}
+					} catch (SQLException e) {
+					}
+					attributes.put("bets", bets);
+					
+					//my bets
+					if (request.queryParams().contains("address") && request.queryParams("address") != null &&
+						request.queryParams().contains("addresses") && request.queryParams("addresses") != null) {
+						JSONArray addressesArray = new JSONArray(request.queryParams("addresses"));
+						ArrayList<JSONObject> addressInfos = new ArrayList<JSONObject>();
+						for (int i = 0; i < addressesArray.length(); i++) {
+							JSONObject addressInfo = new JSONObject();
+							String addressString = addressesArray.getString(i);
+							addressInfo.put("address", addressString);
+							addressInfo.put("balanceCHA", Util.getBalance(addressString, "CHA").doubleValue() / Config.unit.doubleValue());
+							addressInfos.add(addressInfo);
+						}
+						attributes.put("addressInfos", addressInfos);
+						
+						String address = request.queryParams("address");
+						attributes.put("address", address);
+						attributes.put("balanceCHA", Util.getBalance(address, "CHA").doubleValue() / Config.unit.doubleValue());
+					
+						rs = db.executeQuery("select bets.source as source,bet,chance,payout,profit,bets.tx_hash as tx_hash,rolla,rollb,roll,cards,resolved,bets.tx_index as tx_index,block_time,transactions.btc_amount as btc_amount from bets,transactions where bets.validity='valid' and bets.source='"+address+"' and bets.tx_index=transactions.tx_index order by bets.block_index desc, bets.tx_index desc limit 200;");
+						bets = new ArrayList<JSONObject>();
+						try {
+							while (rs.next()) {
+								//HashMap<String,Object> map = new HashMap<String,Object>();
+								JSONObject map = new JSONObject();
+								map.put("source", rs.getString("source"));
+								map.put("bet", BigInteger.valueOf(rs.getLong("bet")).doubleValue()/Config.unit.doubleValue());
+								map.put("btc_amount", BigInteger.valueOf(rs.getLong("btc_amount")).doubleValue()/Config.unit.doubleValue());
+								map.put("chance", rs.getDouble("chance"));
+								map.put("payout", rs.getDouble("payout"));
+								map.put("tx_hash", rs.getString("tx_hash"));
+								map.put("roll", rs.getDouble("roll"));
+								map.put("cards", rs.getString("cards"));
+								if (rs.getString("cards")!=null && rs.getString("resolved")!=null && rs.getString("resolved").equals("true")) {
+									map.put("cards_result", Deck.result(new Deck(rs.getString("cards")).cards));
+								}
+								map.put("resolved", rs.getString("resolved"));	
+								map.put("block_time", Util.timeFormat(rs.getInt("block_time")));
+								map.put("profit", BigInteger.valueOf(rs.getLong("profit")).doubleValue()/Config.unit.doubleValue());
+								bets.add(map);
+							}
+						} catch (SQLException e) {
+						}
+						System.out.println(bets);
+						attributes.put("my_bets", bets);
+					}
+				} catch (JSONException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
 				}
-				attributes.put("bets", bets);
-				return JSONObject.wrap(attributes);
+				return attributes.toString();
 			}
 		});
 		get(new Route("/supply") {
 			@Override
 			public Object handle(Request request, Response response) {
+				response.header("Access-Control-Allow-Origin", "*");
 				return String.format("%.8f", Util.chaSupply().doubleValue() / Config.unit);
+			}
+		});
+		get(new Route("/cha_supply_for_betting") {
+			@Override
+			public Object handle(Request request, Response response) {
+				response.header("Access-Control-Allow-Origin", "*");
+				return String.format("%.8f", Util.chaSupplyForBetting().doubleValue() / Config.unit);
+			}
+		});
+		get(new Route("/get_balance_by_asset") {
+			@Override
+			public Object handle(Request request, Response response) {
+				response.header("Access-Control-Allow-Origin", "*");
+				request.session(true);
+				if (request.queryParams().contains("address") && request.queryParams("address") != null &&
+						request.queryParams().contains("asset") && request.queryParams("asset") != null) {
+					return String.format("%.8f", Util.getBalance(request.queryParams("address"), request.queryParams("asset")).doubleValue() / Config.unit);	
+				} else {
+					return null;
+				}
 			}
 		});
 		get(new Route("/chat_status_update") {
@@ -343,6 +440,7 @@ public class Server implements Runnable {
 					blocks.deleteDatabases();
 					blocks.initialized = false;
 					blocks.init();
+					System.exit(0);
 				}
 
 				attributes.put("price_BTC", blocks.priceBTC);

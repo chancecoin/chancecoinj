@@ -1,0 +1,377 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Chancecoin is a coin for betting on dice in a decentralized casino.">
+
+	<title>Chancecoin - Casino</title>
+	<link rel="stylesheet" href="https://chancecoin.github.io/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://chancecoin.github.io/css/style.css">
+	<link rel="stylesheet" href="https://chancecoin.github.io/css/lite.css">
+	<link rel="stylesheet" href="https://chancecoin.github.io/css/bootstrap-select.min.css">
+	<link rel="stylesheet" href="https://chancecoin.github.io/css/cards.css">
+	<link rel="stylesheet" href="https://chancecoin.github.io/css/cards-ie.css">
+	<link rel="stylesheet" href="https://chancecoin.github.io/css/cards-ie9.css">
+	<link rel="shortcut icon" href="https://chancecoin.github.io/images/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="https://chancecoin.github.io/images/favicon.ico" type="image/x-icon">
+	<script type="text/javascript" src="https://chancecoin.github.io/js/jsapi.js"></script>
+	<script type="text/javascript" src="https://chancecoin.github.io/js/jquery.min.js"></script>
+	<script type="text/javascript" src="https://chancecoin.github.io/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://chancecoin.github.io/js/highcharts.js"></script>
+	<script type="text/javascript" src="https://chancecoin.github.io/js/MathJax/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+	<script type="text/javascript" src="https://chancecoin.github.io/js/exporting.js"></script>
+	<script type="text/javascript" src="https://chancecoin.github.io/js/bootstrap-select.min.js"></script>
+  <script type="text/javascript" src="https://chancecoin.github.io/js/bitcoinjs.js"></script>
+	<script type="text/javascript" src="https://chancecoin.github.io/js/bigi.js"></script>
+	<script type="text/javascript" src="https://chancecoin.github.io/js/jspack.js"></script>
+	<script type="text/javascript" src="https://chancecoin.github.io/js/poker.js"></script>
+	<script type="text/javascript" src="https://chancecoin.github.io/js/xdate.js"></script>
+	<script type="text/javascript" src="https://chancecoin.github.io/js/lite.js"></script>
+</head>
+<body onload="updateAddressFromUrl();">
+	<div id="loadingDiv">
+		<p><img src="https://chancecoin.github.io/images/logo.png" style="width: 100px; margin: 0 auto; display: block;" /></p>
+		<p class="centered">Please wait while Chancecoin loads. <img src="https://chancecoin.github.io/images/ajax-loader.gif" /></p>
+	</div>
+	<div id="bodyDiv" style="display:none">
+
+	<div class="modal fade" id="logModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+					<h4 class="modal-title" id="myModalLabel">Log</h4>
+				</div>
+				<div class="modal-body" id="log">
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal fade" id="importPrivateKey" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+					<h4 class="modal-title" id="myModalLabel">Import private key</h4>
+				</div>
+				<form id="import_private_key_form" method="post" class="form-inline">
+					<div class="modal-body">
+						<input type="hidden" name="form" value="import" />
+						<p>In order to use Chancecoin, you must have a Chancecoin address. Chancecoin addresses are interchangeable with Bitcoin addresses. If you already have one, you can import it now by entering your private key in WIF format. If you don't have one, you can generate a new one.</p>
+						<div class="form-group">
+							<div class="input-group">
+								<span class="input-group-addon">PK</span>
+								<input type="text" placeholder="private key" name="privatekey" />
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" onclick="generatePrivateKey(); return false;">Generate private key</button>
+						<button type="button" class="btn btn-primary" onclick="importPrivateKey(); return false;">Import private key</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div class="playingCards fourColours rotateHand simpleCards">
+	<nav class="navbar navbar-default" role="navigation">
+	  <div class="container-fluid">
+	    <!-- Brand and toggle get grouped for better mobile display -->
+	    <div class="navbar-header">
+	      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-navbar-collapse-1">
+	        <span class="sr-only">Toggle navigation</span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	      </button>
+	      <a class="navbar-brand logo" href="#" data-template="home">Chancecoin</a>
+	    </div>
+
+	    <!-- Collect the nav links, forms, and other content for toggling -->
+	    <div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
+	      <ul class="nav navbar-nav">
+					<li><a href="#" data-template="home">Casino</a></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Exchange <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="https://poloniex.com/exchange/btc_cha">Centralized exchange &mdash; Poloniex</a></li>
+						</ul>
+					</li>
+					<li><a href="#" data-template="about.html">About</a></li>
+					<li><a href="#" data-template="participate.html">Participate</a></li>
+					<li><a href="#" data-template="technical.html">Technical</a></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Resources <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="https://bitcointalk.org/index.php?topic=528023.0">Bitcointalk</a></li>
+							<li><a href="http://twitter.com/chancecoin">Twitter</a></li>
+							<li><a href="http://reddit.com/r/chancecoin">Subreddit</a></li>
+							<li><a href="https://github.com/chancecoin/chancecoinj">GitHub</a></li>
+						</ul>
+					</li>
+	      </ul>
+	      <ul class="nav navbar-nav navbar-right">
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown"><span id="cha_price_dollar"></span><b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="#">CHA Supply <span id="cha_supply" class="badge"></span></a></li>
+							<li><a href="#">BTC price <span id="btc_price" class="badge"></span></a></li>
+							<li><a href="#">CHA price <span id="cha_price" class="badge"></span></a></li>
+							<li><a href="#">Market cap <span id="market_cap" class="badge"></span></a></li>
+						</ul>
+					</li>
+	        <li class="dropdown">
+	          <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="address">Addresses <b class="caret"></b></a>
+	          <ul class="dropdown-menu" id="addresses">
+                <li>
+                    <div style="padding-left: 1em; padding-right: 1em;">
+												<button type="button" class="btn btn-default" data-toggle="modal" data-target="#importPrivateKey">Import private key</button>
+                    </div>
+                </li>
+	          </ul>
+	        </li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown"><span id="cha_over_btc_blocks"></span><b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="#">CHA blocks <span id="cha_blocks" class="badge"></span></a></li>
+							<li><a href="#">BTC blocks <span id="btc_blocks" class="badge"></span></a></li>
+							<li><a href="#">Version <span id="version" class="badge"></span></a></li>
+							<li><a href="#" data-toggle="modal" data-target="#logModal">Log</a></li>
+						</ul>
+					</li>
+	      </ul>
+	    </div>
+	  </div>
+	</nav>
+
+	<div class="container-fluid content" id="content">
+		<div id="ajax_message" class="row section messages" style="display:none">
+			<div id="ajax_info" class="alert alert-info alert-dismissible" style="display:none">
+				<button type="button" class="close" data-hide="#ajax_message"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+				<div id="ajax_info_content"></div>
+			</div>
+			<div id="ajax_error" class="alert alert-danger alert-dismissible" style="display:none">
+				<button type="button" class="close" data-hide="#ajax_message"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+				<div id="ajax_error_content"></div>
+			</div>
+		</div>
+
+		<div class="row section">
+				<ul id="tabs" class="nav nav-tabs" data-tabs="tabs" style="margin-top: 2em;">
+						<li class="active"><a href="#dice" data-toggle="tab">Dice</a></li>
+						<li><a href="#poker" data-toggle="tab">Poker</a></li>
+				</ul>
+
+				<div id="my-tab-content1" class="tab-content">
+						<div class="tab-pane active" id="dice">
+								<form id="dice" action="" class="form-inline" method="post">
+
+										<input type="hidden" name="form" value="bet_dice" />
+
+										<div class="form-group">
+											<img src="https://chancecoin.github.io/images/dice.png" class="casino-icon" />
+										</div>
+
+										<div class="form-group">
+											<div class="input-group">
+												<span class="input-group-addon">#</span>
+												<input type="text" placeholder="bet size" name="bet">
+											</div>
+										</div>
+										<input type="hidden" name="resolution" value="instant" />
+										<!--
+										<div class="form-group">
+											<div class="input-group">
+												<select name="resolution">
+													<option value="instant" selected="selected">Instant</option>
+													<option value="regular">Regular</option>
+												</select>
+											</div>
+										</div>
+										-->
+										<div class="form-group">
+											<div class="input-group">
+												<select name="asset">
+													<!--<option value="BTC">BTC</option>-->
+													<option value="CHA" selected="selected">CHA</option>
+												</select>
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="input-group">
+												<span class="input-group-addon">%</span>
+												<input type="text" placeholder="chance to win" name="chance" onchange="document.getElementsByName('payout')[0].value=100/parseFloat(document.getElementsByName('chance')[0].value)*(0.99);" />
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="input-group">
+												<span class="input-group-addon">X</span>
+												<input type="text" placeholder="payout" name="payout" onchange="document.getElementsByName('chance')[0].value=100/(parseFloat(document.getElementsByName('payout')[0].value)/(0.99));" />
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="input-group">
+												<span class="input-group-btn">
+													<button class="btn btn-default" onclick="processBet('dice'); return false;" >Roll dice</button>
+												</span>
+											</div>
+										</div>
+
+								</form>
+						</div>
+						<div class="tab-pane" id="poker">
+								<form id="poker" action="" class="form-inline" method="post">
+
+										<input type="hidden" name="form" value="bet_poker" />
+
+										<div class="form-group">
+											<img src="https://chancecoin.github.io/images/poker.png" class="casino-icon" />
+										</div>
+
+										<div class="form-group">
+											<div class="input-group">
+												<span class="input-group-addon">#</span>
+												<input type="text" placeholder="bet size" name="bet" />
+											</div>
+										</div>
+										<input type="hidden" name="resolution" value="instant" />
+										<!--
+										<div class="form-group">
+											<div class="input-group">
+												<select name="resolution">
+													<option value="instant" selected="selected">Instant</option>
+													<option value="regular">Regular</option>
+												</select>
+											</div>
+										</div>
+										-->
+										<div class="form-group">
+											<div class="input-group">
+												<select name="asset">
+													<!--<option value="BTC">BTC</option>-->
+													<option value="CHA" selected="selected">CHA</option>
+												</select>
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="input-group">
+												<span class="input-group-btn">
+													<button class="btn btn-default" onclick="processBet('poker'); return false;" >Bet</button>
+												</span>
+											</div>
+										</div>
+
+										<div class="form-group">
+											<div class="input-group">
+												<span class="input-group-btn">
+													<button class="btn btn-default" onclick="getNewPokerCards(); return false;">Fold</button>
+												</span>
+											</div>
+										</div>
+
+										<div class="form-group" style="clear: both; display: block;">
+										</div>
+
+										<div id="poker_cards">
+
+										</div>
+								</form>
+						</div>
+				</div>
+		</div>
+
+		<div class="row section padding-top">
+		    <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
+		        <li class="active"><a href="#recent_bets" data-toggle="tab">Recent bets</a></li>
+						<li><a href="#my_bets" data-toggle="tab">My bets</a></li>
+		    </ul>
+
+		    <div id="my-tab-content" class="tab-content">
+		        <div class="tab-pane active" id="recent_bets">
+								<h2>Recent bets</h2>
+								<div id="recent_bets_content">
+								<table class="table table-striped">
+										<thead>
+												<tr>
+														<th>Source address</th>
+														<th>Time</th>
+														<th>Bet size</th>
+														<th>Chance to win / payout multiplier</th>
+														<th>Result</th>
+														<th>Profit</th>
+												</tr>
+										</thead>
+
+										<!-- <tbody>
+													<tr>
+															<td><a href="?address=1JX7HnzDy2vZ6ytwKdKoZZiVEjaWR5Ykw8">1JX7Hn...</a></td>
+															<td>2014-08-23 12:36:38</td>
+															<td>11 CHA</td>
+															<td>50% / 1.98X</td>
+
+															<td><img src="https://chancecoin.github.io/images/dice.png" style="height: 25px; display: inline;" /> 22.72</td>
+
+															<td>10.78 CHA</td>
+													</tr>
+
+										</tbody> -->
+								</table>
+							</div>
+
+						</div>
+
+		        <div class="tab-pane" id="my_bets">
+								<h2>My bets</h2>
+								<div id="my_bets_content">
+								<table class="table table-striped">
+										<thead>
+												<tr>
+														<th>Source address</th>
+														<th>Time</th>
+														<th>Bet size</th>
+														<th>Chance to win / payout multiplier</th>
+														<th>Result</th>
+														<th>Profit</th>
+												</tr>
+										</thead>
+										<!-- <tbody>
+													<tr>
+															<td><a href="?address=1FAnfga47hhfNkxHJ7Qnh1HxxyVHgP2Hes">1FAnfg...</a></td>
+															<td>2014-08-23 12:36:38</td>
+															<td>0.1 CHA</td>
+															<td>33% / 3X</td>
+
+															<td><img src="https://chancecoin.github.io/images/dice.png" style="height: 25px; display: inline;" /> 74.138</td>
+
+															<td>-0.1 CHA</td>
+													</tr>
+										</tbody> -->
+								</table>
+							</div>
+						</div>
+		    </div>
+		</div>
+
+	</div>
+
+	<div class="container-fluid footer">
+	Chancecoin &copy; 2014. Released under the <a href="http://opensource.org/licenses/mit-license.php">MIT License</a>.
+	</div>
+
+	<script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','http://www.google-analytics.com/analytics.js','ga');
+
+	  ga('create', 'UA-49712885-1', 'chancecoin.com');
+	  ga('send', 'pageview');
+
+	</script>
+
+</div>
+</div>
+</body>
+</html>

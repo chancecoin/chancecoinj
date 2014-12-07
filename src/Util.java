@@ -383,8 +383,10 @@ public class Util {
 			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			PushTxResult pushTxResult = objectMapper.readValue(result, new TypeReference<PushTxResult>() {});
 			if ((pushTxResult.status.equals("200") || pushTxResult.status.equals("201")) && pushTxResult.result.length()>10) {
+				logger.error("RETURNS 200 or 201");
 				return true;				 
 			} else {
+				logger.error("DID NOT RETURN 200 or 201");
 				return false;
 			}
 		} catch (Exception e) {

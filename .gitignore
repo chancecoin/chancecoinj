@@ -6,3 +6,4 @@ wallet
 .settings
 bin
 out
+.classpath
