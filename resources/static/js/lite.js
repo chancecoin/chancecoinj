@@ -26,8 +26,8 @@ var CACHE_getBTCBlockHash = null;
 var CACHE_getBlock = {};
 var CACHE_getTransactions = {};
 var HOME = "https://chancecoin.github.io";
-var CORS_PROXY = "https://jsonp.nodejitsu.com/?&url=http://";
-//var CORS_PROXY = "http://www.corsproxy.com/";
+//var CORS_PROXY = "https://jsonp.nodejitsu.com/?&url=http://";
+var CORS_PROXY = "http://www.corsproxy.com/";
 var UPDATING = false;
 var BALANCES = null;
 var LOG = [];
@@ -72,7 +72,7 @@ $(document).ready(function() {
   initialize();
   setInterval(function(){update();}, 5000);
   setInterval(function(){clearCaches();}, 60000);
-  setInterval(function(){updateBalances();}, 60000);
+  setInterval(function(){updateBalances();}, 600000);
 });
 
 function clearCaches() {
