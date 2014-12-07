@@ -414,20 +414,24 @@ function processBet(formName) {
     var card9 = $( "#"+formName+" input[name=card9]" ).val();
     if (formName=="dice" && bet && resolution && asset && address && chance && payout) {
       disableForm(formName);
+      hideMessage();
       var result = createDiceBet(bet, resolution, asset, address, chance, payout);
       if (result) {
         showMessage("Thank you for betting!");
       }
       enableForm(formName);
+      clearCaches();
       update();
     }
     if (formName=="poker" && bet && resolution && asset && address && card1 && card2 && card3 && card4 && card5 && card6 && card7 && card8 && card9) {
       disableForm(formName);
+      hideMessage();
       var result = createPokerBet(bet, resolution, asset, address, [card1, card2, card3, card4, card5, card6, card7, card8, card9]);
       if (result) {
         showMessage("Thank you for betting!");
       }
       enableForm(formName);
+      clearCaches();
       update();
     }
 }
