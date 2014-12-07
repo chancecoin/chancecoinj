@@ -245,6 +245,7 @@ function getTransactions(address) {
     var txs = [];
     var data = download(url);
     if (data) {
+      var txs = [];
       $.each(data.items, function(i,result){
         txs.push(result);
       });
@@ -422,6 +423,7 @@ function processBet(formName) {
       enableForm(formName);
       clearCaches();
       update();
+      setTimeout(function(){clearCaches(); update();}, 2000);
     }
     if (formName=="poker" && bet && resolution && asset && address && card1 && card2 && card3 && card4 && card5 && card6 && card7 && card8 && card9) {
       disableForm(formName);
@@ -433,6 +435,7 @@ function processBet(formName) {
       enableForm(formName);
       clearCaches();
       update();
+      setTimeout(function(){clearCaches(); update();}, 2000);
     }
 }
 function createTransaction(source, destinations, btcAmounts, fee, data, useUnspentTxHash, useUnspentVout) {
