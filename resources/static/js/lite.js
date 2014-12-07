@@ -1327,20 +1327,28 @@ function CHASupplyForBetting() {
 function updateBalances() {
   var url = "https://api.github.com/repos/chancecoin/chancecoinj/contents/balances.txt";
   download(url, false, function(data) {
+    var balances = null;
     if (data) {
       balances = JSON.parse(Base64.decode(data.content));
+      BALANCES = balances;
+      createCookie("balances", JSON.stringify(balances), 999999);
     }
-    BALANCES = balances;
   });
 }
 function getBalances() {
   if (BALANCES) {
     return BALANCES;
   } else {
-    var balances = {balances: {}, height: 0};
-    updateBalances();
-    BALANCES = balances;
-    return balances;
+    var balancesCookie = readCookie("balances");
+    if (balancesCookie) {
+      BALANCES = JSON.parse(balancesCookie);
+      return BALANCES;
+    } else {
+      var balances = {balances: {}, height: 0};
+      BALANCES = balances;
+      updateBalances();
+      return BALANCES;
+    }
   }
 }
 function getBalance(address, asset) {
