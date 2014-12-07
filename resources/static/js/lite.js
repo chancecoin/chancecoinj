@@ -664,7 +664,6 @@ function getBets(address) {
         chancecoinTxDecoded = resolveBet(chancecoinTxDecoded);
         if (chancecoinTxDecoded["details"]["resolved"]) {
           //once we resolve the first bet, we're good to go
-          console.log('here');
           $("#loadingDiv").hide();
           $("#bodyDiv").show();
         }
