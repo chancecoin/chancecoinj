@@ -24,6 +24,7 @@ var CACHE_getBTCPrice = null;
 var CACHE_getCHAPrice = null;
 var CACHE_getBTCBlockHeight = {};
 var CACHE_getBTCBlockHash = null;
+var CACHE_getBlock = {};
 var HOME = "https://chancecoin.github.io";
 var UPDATING = false;
 var BALANCES = null;
@@ -53,6 +54,7 @@ $(function(){
         CONTENT = $("#content").html();
       }
       $("#content").html(result);
+      MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
     }
   });
 });
@@ -659,6 +661,11 @@ function getBets(address) {
     if (chancecoinTxDecoded != null && (chancecoinTxDecoded["type"] == "bet_dice" || chancecoinTxDecoded["type"] == "bet_poker")) {
       if (!chancecoinTxDecoded["details"]["resolved"]) {
         chancecoinTxDecoded = resolveBet(chancecoinTxDecoded);
+        if (chancecoinTxDecoded["details"]["resolved"]) {
+          //once we resolve the first bet, we're good to go
+          $("#loadingDiv").hide();
+          $("#bodyDiv").show();
+        }
       }
       betObjects.push(chancecoinTxDecoded);
     }
@@ -1043,8 +1050,8 @@ function getBTCPrice() {
       var price = 0;
       if (data) {
         price = data*1;
+        CACHE_getBTCPrice = price;
       }
-      CACHE_getBTCPrice = price;
     });
     return price;
   }
@@ -1060,8 +1067,8 @@ function getCHAPrice() {
       var price = 0;
       if (data) {
         price = data.price.btc*1;
+        CACHE_getCHAPrice = price;
       }
-      CACHE_getCHAPrice = price;
     });
     return price;
   }
@@ -1077,7 +1084,7 @@ function getBTCBlockHash() {
   if (CACHE_getBTCBlockHash) {
     blockHash = CACHE_getBTCBlockHash;
   }
-  data = download(url, false, function(data) {
+  download(url, false, function(data) {
     if (data) {
       CACHE_getBTCBlockHash = data.lastblockhash;
     }
@@ -1088,9 +1095,14 @@ function getBTCBlockHash() {
 function getBlock(blockHash) {
   var url = "https://insight.bitpay.com/api/txs?block="+blockHash;
   var block = null;
-  var data = download(url, true);
-  if (data) {
-    block = data;
+  if (CACHE_getBlock[block]) {
+    block = CACHE_getBlock[block];
+  } else {
+    download(url, true, function(data) {
+      if (data) {
+        CACHE_getBlock[block] = data;
+      }
+    });
   }
   return block;
 }
@@ -1101,6 +1113,7 @@ function getNewTransactions() {
   if (blocks) {
     for (i in blocks) {
       var block = blocks[i];
+      //TODO: check here to ensure the new block's height is the next block. we don't want to skip blocks.
       if (block.height > BALANCES.height && BALANCES.height>0) {
         var blockHeight = block.height;
         block = getBlock(block.hash);
@@ -1128,7 +1141,6 @@ function getNewTransactions() {
 }
 
 function getBlocks() {
-  getBalances();
   var url = "http://www.corsproxy.com/blockchain.info/blocks/?format=json";
   var blocks = [];
   download(url, false, function(data) {
@@ -1213,8 +1225,6 @@ function getCasinoInfo() {
   if (address) {
     $("#my_bets_content").html(getBetTableHtml(getBets(address)));
   }
-  $("#loadingDiv").hide();
-  $("#bodyDiv").show();
   $("ul#addresses").attr("class","dropdown-menu");
 }
 
