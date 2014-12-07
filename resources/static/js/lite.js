@@ -24,7 +24,10 @@ var CACHE_getCHAPrice = null;
 var CACHE_getBTCBlockHeight = {};
 var CACHE_getBTCBlockHash = null;
 var CACHE_getBlock = {};
+var CACHE_getTransactions = {};
 var HOME = "https://chancecoin.github.io";
+var CORS_PROXY = "https://jsonp.nodejitsu.com/?&url=http://";
+//var CORS_PROXY = "http://www.corsproxy.com/";
 var UPDATING = false;
 var BALANCES = null;
 var LOG = [];
@@ -47,7 +50,7 @@ $(function(){
       }
       CONTENT = null;
     } else {
-      var url = "http://www.corsproxy.com/chancecoin.github.io/templates/" + page;
+      var url = CORS_PROXY + "chancecoin.github.io/templates/" + page;
       var result = download(url);
       if (!CONTENT) {
         CONTENT = $("#content").html();
@@ -68,8 +71,13 @@ $(document).ready(function() {
   update();
   initialize();
   setInterval(function(){update();}, 5000);
+  setInterval(function(){clearCaches();}, 60000);
   setInterval(function(){updateBalances();}, 60000);
 });
+
+function clearCaches() {
+  CACHE_getTransactions = {};
+}
 
 function update() {
   if (!UPDATING) {
@@ -210,26 +218,29 @@ function updateAddressDropDown(addressInfos) {
   }
 }
 function pushTx(txHex) {
-    var url = "http://api.bitwatch.co/pushtx/"+txHex;
-    var result = false;
-    var data = download(url);
-    if (data && (data.status == 200 || data.status == 201)) {
-      result = true;
-    }
-    return result;
+  var url = "http://api.bitwatch.co/pushtx/"+txHex;
+  var result = false;
+  var data = download(url);
+  if (data && (data.status == 200 || data.status == 201)) {
+    result = true;
+  }
+  return result;
 }
 function getUnspents(address) {
-    var url = "http://api.bitwatch.co/listunspent/"+address+"?verbose=1&minconf=0";
-    var unspents = [];
-    var data = download(url);
-    if (data) {
-      $.each(data.result, function(i,result){
-        unspents.push(result);
-      });
-    }
-    return unspents;
+  var url = "http://api.bitwatch.co/listunspent/"+address+"?verbose=1&minconf=0";
+  var unspents = [];
+  var data = download(url);
+  if (data) {
+    $.each(data.result, function(i,result){
+      unspents.push(result);
+    });
+  }
+  return unspents;
 }
 function getTransactions(address) {
+  if (CACHE_getTransactions[address]) {
+    return CACHE_getTransactions[address];
+  } else {
     var url = "https://insight.bitpay.com/api/addrs/"+address+"/txs?from=0&to=20";
     var txs = [];
     var data = download(url);
@@ -238,19 +249,21 @@ function getTransactions(address) {
         txs.push(result);
       });
     }
+    CACHE_getTransactions[address] = txs;
     return txs;
+  }
 }
 function toFixed(value, precision) {
-    var precision = precision || 0,
-        power = Math.pow(10, precision),
-        absValue = Math.abs(Math.round(value * power)),
-        result = (value < 0 ? '-' : '') + String(Math.floor(absValue / power));
-    if (precision > 0) {
-        var fraction = String(absValue % power),
-            padding = new Array(Math.max(precision - fraction.length, 0) + 1).join('0');
-        result += '.' + padding + fraction;
-    }
-    return result;
+  var precision = precision || 0,
+    power = Math.pow(10, precision),
+    absValue = Math.abs(Math.round(value * power)),
+    result = (value < 0 ? '-' : '') + String(Math.floor(absValue / power));
+  if (precision > 0) {
+    var fraction = String(absValue % power),
+      padding = new Array(Math.max(precision - fraction.length, 0) + 1).join('0');
+    result += '.' + padding + fraction;
+  }
+  return result;
 }
 
 function createDiceBet(bet, resolution, asset, address, chance, payout) {
@@ -1045,7 +1058,7 @@ function getBTCPrice() {
   if (CACHE_getBTCPrice) {
     return CACHE_getBTCPrice;
   } else {
-    var url = "http://www.corsproxy.com/blockchain.info/q/24hrprice";
+    var url = CORS_PROXY + "blockchain.info/q/24hrprice";
     var price = 0;
     download(url, true, function(data) {
       var price = 0;
@@ -1062,7 +1075,7 @@ function getCHAPrice() {
   if (CACHE_getCHAPrice) {
     return CACHE_getCHAPrice;
   } else {
-    var url = "http://www.corsproxy.com/coinmarketcap.northpole.ro/api/v5/CHA.json";
+    var url = CORS_PROXY + "coinmarketcap.northpole.ro/api/v5/CHA.json";
     var price = 0;
     download(url, true, function(data) {
       var price = 0;
@@ -1142,7 +1155,7 @@ function getNewTransactions() {
 }
 
 function getBlocks() {
-  var url = "http://www.corsproxy.com/blockchain.info/blocks/?format=json";
+  var url = CORS_PROXY + "blockchain.info/blocks/?format=json";
   var blocks = [];
   download(url, false, function(data) {
     if (data) {
