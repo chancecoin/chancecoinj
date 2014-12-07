@@ -1190,6 +1190,7 @@ function getBTCBlockHeight(hash) {
   } else {
     var url = "https://insight.bitpay.com/api/block/"+hash;
     var blockHeight = 0;
+    CACHE_getBTCBlockHeight[hash] = blockHeight;
     if (hash) {
       download(url, false, function(data) {
         var blockHeight = 0;
@@ -1199,7 +1200,6 @@ function getBTCBlockHeight(hash) {
         CACHE_getBTCBlockHeight[hash] = blockHeight;
       });
     }
-    CACHE_getBTCBlockHeight[hash] = blockHeight;
     return blockHeight;
   }
 }
