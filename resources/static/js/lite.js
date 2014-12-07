@@ -1,5 +1,4 @@
 //TODO: make balances update when send txs happen
-//TODO: make chancecoin.com load from github
 
 //CONFIG
 var FEE_ADDRESS = "1CHACHAGuuxTr8Yo9b9SQmUGLg9X5iSeKX";
@@ -69,6 +68,7 @@ $(document).ready(function() {
   update();
   initialize();
   setInterval(function(){update();}, 5000);
+  setInterval(function(){updateBalances();}, 60000);
 });
 
 function update() {
@@ -1308,18 +1308,21 @@ function CHASupplyForBetting() {
   }
   return supply;
 }
+function updateBalances() {
+  var url = "https://api.github.com/repos/chancecoin/chancecoinj/contents/balances.txt";
+  download(url, false, function(data) {
+    if (data) {
+      balances = JSON.parse(Base64.decode(data.content));
+    }
+    BALANCES = balances;
+  });
+}
 function getBalances() {
   if (BALANCES) {
     return BALANCES;
   } else {
     var balances = {balances: {}, height: 0};
-    var url = "https://api.github.com/repos/chancecoin/chancecoinj/contents/balances.txt";
-    download(url, false, function(data) {
-      if (data) {
-        balances = JSON.parse(Base64.decode(data.content));
-      }
-      BALANCES = balances;
-    });
+    updateBalances();
     BALANCES = balances;
     return balances;
   }
