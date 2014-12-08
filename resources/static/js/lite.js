@@ -654,16 +654,20 @@ function decodeChancecoinTx(chancecoinTx) {
       var bet = a[0]/UNIT;
       var chance = a[1];
       var payout = a[2];
-      chancecoinTxDecoded["type"] = "bet_dice";
-      chancecoinTxDecoded["details"] = {"source": source, "block_time": blockTime, "bet": bet, "chance": chance, "payout": payout, "resolved": false, "roll": null, "profit": 0};
+      if (bet < getBalance(source, "CHA")) {
+        chancecoinTxDecoded["type"] = "bet_dice";
+        chancecoinTxDecoded["details"] = {"source": source, "block_time": blockTime, "bet": bet, "chance": chance, "payout": payout, "resolved": false, "roll": null, "profit": 0};
+      }
     } else if (messageType==ID_POKER && message.length==LENGTH_POKER) {
       var a = jsp.Unpack(">Q9h4x", message);
       var bet = a[0]/UNIT;
       var cards = a.slice(1,10).map(function(x) { return getCard(x); }).join(" ");
       var chance = chanceOfWinning(cards)*100;
       var payout = 100/chance*(1-HOUSE_EDGE);
-      chancecoinTxDecoded["type"] = "bet_poker";
-      chancecoinTxDecoded["details"] = {"source": source, "block_time": blockTime, "bet": bet, "chance": chance, "payout": payout, "resolved": false, "roll": null, "profit": 0, "cards": cards, "cards_result": false};
+      if (bet < getBalance(source, "CHA")) {
+        chancecoinTxDecoded["type"] = "bet_poker";
+        chancecoinTxDecoded["details"] = {"source": source, "block_time": blockTime, "bet": bet, "chance": chance, "payout": payout, "resolved": false, "roll": null, "profit": 0, "cards": cards, "cards_result": false};
+      }
     }
     CACHE_decodeChancecoinTx[txid] = chancecoinTxDecoded;
     return chancecoinTxDecoded;
