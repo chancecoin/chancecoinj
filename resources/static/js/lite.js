@@ -127,30 +127,30 @@ function importPrivateKey(privateKeyWIF) {
     privateKey = $( "input[name=privatekey]" ).val();
   }
   try {
-      var key = new Bitcoin.ECKey.fromWIF(privateKey);
-      var address = key.pub.getAddress().toString();
-      var addresses = JSON.parse(readCookie("addresses"));
-      var privateKeys = JSON.parse(readCookie("private_keys"));
-      if (addresses == null) {
-        addresses = [];
-      }
-      if (addresses.indexOf(address) < 0) {
-        addresses.push(address);
-      }
-      if (privateKeys == null) {
-        privateKeys = [];
-      }
-      if (privateKeys.indexOf(privateKey) < 0) {
-        privateKeys.push(privateKey);
-      }
-      eraseCookie("address");
-      eraseCookie("addresses");
-      eraseCookie("private_key");
-      eraseCookie("private_keys");
-      createCookie("address", address, 999999);
-      createCookie("addresses", JSON.stringify(addresses), 999999);
-      createCookie("private_key", privateKey, 999999);
-      createCookie("private_keys", JSON.stringify(privateKeys), 999999);
+    var key = new Bitcoin.ECKey.fromWIF(privateKey);
+    var address = key.pub.getAddress().toString();
+    var addresses = JSON.parse(readCookie("addresses"));
+    var privateKeys = JSON.parse(readCookie("private_keys"));
+    if (addresses == null) {
+      addresses = [];
+    }
+    if (addresses.indexOf(address) < 0) {
+      addresses.push(address);
+    }
+    if (privateKeys == null) {
+      privateKeys = [];
+    }
+    if (privateKeys.indexOf(privateKey) < 0) {
+      privateKeys.push(privateKey);
+    }
+    eraseCookie("address");
+    eraseCookie("addresses");
+    eraseCookie("private_key");
+    eraseCookie("private_keys");
+    createCookie("address", address, 999999);
+    createCookie("addresses", JSON.stringify(addresses), 999999);
+    createCookie("private_key", privateKey, 999999);
+    createCookie("private_keys", JSON.stringify(privateKeys), 999999);
   } catch (e) {
   }
   update();
@@ -166,14 +166,12 @@ function updateAddress(newAddress) {
   }
   var addresses = JSON.parse(readCookie("addresses"));
   var addressIndex = addresses.indexOf(newAddress);
-  if (addressIndex >= 0) {
-    var privateKeys = JSON.parse(readCookie("private_keys"));
-    var newPrivateKey = privateKeys[addressIndex];
-    eraseCookie("address");
-    eraseCookie("private_key");
-    createCookie("address", newAddress, 999999);
-    createCookie("private_key", newPrivateKey, 999999);
-  }
+  var privateKeys = JSON.parse(readCookie("private_keys"));
+  var newPrivateKey = addressIndex >= 0 ? privateKeys[addressIndex] : "";
+  eraseCookie("address");
+  eraseCookie("private_key");
+  createCookie("address", newAddress, 999999);
+  createCookie("private_key", newPrivateKey, 999999);
 }
 
 //update the page using the address from URL
@@ -184,10 +182,10 @@ function updateAddressFromUrl() {
   }
 }
 function getParameterByName(name) {
-    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-        results = regex.exec(location.search);
-    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+  name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+  var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+    results = regex.exec(location.search);
+  return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 function updateAddressDropDown(addressInfos) {
   var addressSelected = readCookie("address");
@@ -442,6 +440,13 @@ function createTransaction(source, destinations, btcAmounts, fee, data, useUnspe
   tx = new Bitcoin.Transaction();
   var address = readCookie("address");
   var private_key = readCookie("private_key");
+  var ecKey = null;
+  try {
+    ecKey = new Bitcoin.ECKey.fromWIF(private_key);
+  } catch (e) {
+    showError("You do not have a valid private key for this address.");
+    return;
+  }
   if (destinations.length>0 && btcAmounts.length==destinations.length) {
     var destination = destinations[0];
     var btcAmount = btcAmounts[0];
@@ -464,7 +469,7 @@ function createTransaction(source, destinations, btcAmounts, fee, data, useUnspe
         }
         var keys = [];
         if (source == address) {
-          keys.push(Bitcoin.ECKey.fromWIF(private_key));
+          keys.push(ecKey);
         }
         var pubKeys = keys.map(function(x) { return x.pub });
         var pubKeyBuffers = keys.map(function(x) { return x.pub.toBuffer() });
@@ -493,7 +498,7 @@ function createTransaction(source, destinations, btcAmounts, fee, data, useUnspe
               totalInput = totalInput + unspent.amount*UNIT;
               tx.addInput(unspent.txid, unspent.vout);
               inputScripts.push(Bitcoin.Script.fromHex(unspent.scriptPubKey.hex));
-              inputKeys.push(Bitcoin.ECKey.fromWIF(private_key));
+              inputKeys.push(ecKey);
               inputTypes.push(unspent.type);
             }
           }
@@ -515,7 +520,7 @@ function createTransaction(source, destinations, btcAmounts, fee, data, useUnspe
 				tx.addOutput(source, totalChange);
 			}
 
-      key = new Bitcoin.ECKey.fromWIF(private_key);
+      key = ecKey;
       var pubKeys = inputKeys.map(function(eck) { return eck.pub })
       for (i in tx.ins) {
         var signature = tx.signInput(i, inputScripts[i], inputKeys[i]); //problem is here?
@@ -1230,6 +1235,12 @@ function getCasinoInfo() {
 
   var addressInfos = [];
   var addresses = JSON.parse(readCookie("addresses"));
+
+  var i = addresses.indexOf(address);
+  if (i>=0) {
+    addresses.splice(i, 1);
+  }
+  addressInfos.push({address: address, balanceCHA: getBalance(address, "CHA")});
   for (i in addresses) {
     addressInfos.push({address: addresses[i], balanceCHA: getBalance(addresses[i], "CHA")});
   }
@@ -1347,15 +1358,14 @@ function getBalances() {
     return BALANCES;
   } else {
     var balancesCookie = readCookie("balances");
+    //var balancesCookie = null;
     if (balancesCookie) {
       BALANCES = JSON.parse(balancesCookie);
-      return BALANCES;
     } else {
-      var balances = {balances: {}, height: 0};
-      BALANCES = balances;
-      updateBalances();
-      return BALANCES;
+      BALANCES = {balances: {}, height: 0};
     }
+    updateBalances();
+    return BALANCES;
   }
 }
 function getBalance(address, asset) {
