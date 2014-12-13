@@ -1241,6 +1241,23 @@ function getCasinoInfo() {
   var chaPrice = getCHAPrice();
   var btcPrice = getBTCPrice();
 
+  $("#cha_price_dollar").html("1 CHA = $" + (btcPrice * chaPrice).toFixed(2));
+  $("#cha_supply").html(chaSupply.toLocaleString());
+  $("#cha_price").html(chaPrice.toFixed(5) + " BTC");
+  $("#btc_price").html("$"+btcPrice.toFixed(2));
+  $("#market_cap").html("$"+(chaSupply * btcPrice * chaPrice).toLocaleString());
+
+  $("#cha_over_btc_blocks").html(blockHeightCHA.toLocaleString() + " / " + blockHeightBTC.toLocaleString());
+  $("#cha_blocks").html(blockHeightCHA.toLocaleString());
+  $("#btc_blocks").html(blockHeightBTC.toLocaleString());
+  $("#version").html(version);
+
+  $("#recent_bets_content").html(getBetTableHtml(getBets("")));
+  if (address) {
+    $("#my_bets_content").html(getBetTableHtml(getBets(address)));
+  }
+  $("ul#addresses").attr("class","dropdown-menu");
+
   var addressInfos = [];
   var addresses = JSON.parse(readCookie("addresses"));
 
@@ -1258,23 +1275,6 @@ function getCasinoInfo() {
     addressInfos.push({address: addresses[i], balanceCHA: getBalance(addresses[i], "CHA")});
   }
   updateAddressDropDown(addressInfos);
-
-  $("#cha_price_dollar").html("1 CHA = $" + (btcPrice * chaPrice).toFixed(2));
-  $("#cha_supply").html(chaSupply.toLocaleString());
-  $("#cha_price").html(chaPrice.toFixed(5) + " BTC");
-  $("#btc_price").html("$"+btcPrice.toFixed(2));
-  $("#market_cap").html("$"+(chaSupply * btcPrice * chaPrice).toLocaleString());
-
-  $("#cha_over_btc_blocks").html(blockHeightCHA.toLocaleString() + " / " + blockHeightBTC.toLocaleString());
-  $("#cha_blocks").html(blockHeightCHA.toLocaleString());
-  $("#btc_blocks").html(blockHeightBTC.toLocaleString());
-  $("#version").html(version);
-
-  $("#recent_bets_content").html(getBetTableHtml(getBets("")));
-  if (address) {
-    $("#my_bets_content").html(getBetTableHtml(getBets(address)));
-  }
-  $("ul#addresses").attr("class","dropdown-menu");
 }
 
 function getBetTableHtml(decodedChancecoinTxs) {
@@ -1361,7 +1361,12 @@ function updateBalances() {
     var balances = null;
     if (data) {
       balances = JSON.parse(Base64.decode(data.content));
-      BALANCES = balances;
+      BALANCES.height = balances.height;
+      for (address in balances.balances) {
+        if (!BALANCES.balances[address]) {
+          BALANCES.balances[address] = balances.balances[address];
+        }
+      }
       createCookie("balances", JSON.stringify(balances), 999999);
     }
   });
