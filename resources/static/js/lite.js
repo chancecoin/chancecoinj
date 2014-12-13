@@ -32,6 +32,8 @@ var UPDATING = false;
 var BALANCES = null;
 var LOG = [];
 var CONTENT = null;
+var ADDRESS = null;
+var PRIVATE_KEY = null;
 
 var Base64={_keyStr:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",encode:function(e){var t="";var n,r,i,s,o,u,a;var f=0;e=Base64._utf8_encode(e);while(f<e.length){n=e.charCodeAt(f++);r=e.charCodeAt(f++);i=e.charCodeAt(f++);s=n>>2;o=(n&3)<<4|r>>4;u=(r&15)<<2|i>>6;a=i&63;if(isNaN(r)){u=a=64}else if(isNaN(i)){a=64}t=t+this._keyStr.charAt(s)+this._keyStr.charAt(o)+this._keyStr.charAt(u)+this._keyStr.charAt(a)}return t},decode:function(e){var t="";var n,r,i;var s,o,u,a;var f=0;e=e.replace(/[^A-Za-z0-9\+\/\=]/g,"");while(f<e.length){s=this._keyStr.indexOf(e.charAt(f++));o=this._keyStr.indexOf(e.charAt(f++));u=this._keyStr.indexOf(e.charAt(f++));a=this._keyStr.indexOf(e.charAt(f++));n=s<<2|o>>4;r=(o&15)<<4|u>>2;i=(u&3)<<6|a;t=t+String.fromCharCode(n);if(u!=64){t=t+String.fromCharCode(r)}if(a!=64){t=t+String.fromCharCode(i)}}t=Base64._utf8_decode(t);return t},_utf8_encode:function(e){e=e.replace(/\r\n/g,"\n");var t="";for(var n=0;n<e.length;n++){var r=e.charCodeAt(n);if(r<128){t+=String.fromCharCode(r)}else if(r>127&&r<2048){t+=String.fromCharCode(r>>6|192);t+=String.fromCharCode(r&63|128)}else{t+=String.fromCharCode(r>>12|224);t+=String.fromCharCode(r>>6&63|128);t+=String.fromCharCode(r&63|128)}}return t},_utf8_decode:function(e){var t="";var n=0;var r=c1=c2=0;while(n<e.length){r=e.charCodeAt(n);if(r<128){t+=String.fromCharCode(r);n++}else if(r>191&&r<224){c2=e.charCodeAt(n+1);t+=String.fromCharCode((r&31)<<6|c2&63);n+=2}else{c2=e.charCodeAt(n+1);c3=e.charCodeAt(n+2);t+=String.fromCharCode((r&15)<<12|(c2&63)<<6|c3&63);n+=3}}return t}}
 
@@ -68,8 +70,8 @@ $(document).ready(function() {
   $(document.body).on("click", "a[data-toggle]", function(event) {
     location.hash = this.getAttribute("href");
   });
-  update();
   initialize();
+  update();
   setInterval(function(){update();}, 5000);
   setInterval(function(){clearCaches();}, 60000);
   setInterval(function(){updateBalances();}, 600000);
@@ -89,7 +91,11 @@ function update() {
 }
 
 function initialize() {
-  if (!readCookie("address")) {
+  updateAddressFromUrl();
+  if (!ADDRESS) {
+    ADDRESS = readCookie("address");
+  }
+  if (!ADDRESS) {
     $("#importPrivateKey").modal('show');
   }
   getNewPokerCards();
@@ -143,6 +149,8 @@ function importPrivateKey(privateKeyWIF) {
     if (privateKeys.indexOf(privateKey) < 0) {
       privateKeys.push(privateKey);
     }
+    ADDRESS = address;
+    PRIVATE_KEY = privateKey;
     eraseCookie("address");
     eraseCookie("addresses");
     eraseCookie("private_key");
@@ -160,18 +168,15 @@ function importPrivateKey(privateKeyWIF) {
 
 //update the page using the address passed in
 function updateAddress(newAddress) {
-  var currentAddress = readCookie("address");
-  if (currentAddress == null || currentAddress == newAddress) {
-    return;
-  }
   var addresses = JSON.parse(readCookie("addresses"));
-  var addressIndex = addresses.indexOf(newAddress);
   var privateKeys = JSON.parse(readCookie("private_keys"));
-  var newPrivateKey = addressIndex >= 0 ? privateKeys[addressIndex] : "";
-  eraseCookie("address");
-  eraseCookie("private_key");
-  createCookie("address", newAddress, 999999);
-  createCookie("private_key", newPrivateKey, 999999);
+  var newPrivateKey = "";
+  if (addresses && privateKeys) {
+    var addressIndex = addresses.indexOf(newAddress);
+    newPrivateKey = addressIndex >= 0 ? privateKeys[addressIndex] : "";
+  }
+  ADDRESS = newAddress;
+  PRIVATE_KEY = newPrivateKey;
 }
 
 //update the page using the address from URL
@@ -188,7 +193,7 @@ function getParameterByName(name) {
   return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 function updateAddressDropDown(addressInfos) {
-  var addressSelected = readCookie("address");
+  var addressSelected = ADDRESS;
   if (addressSelected) {
     $("#address").html(addressSelected.substring(0,6)+'... <b class="caret"></b>');
   }
@@ -239,7 +244,7 @@ function getTransactions(address) {
   if (CACHE_getTransactions[address]) {
     return CACHE_getTransactions[address];
   } else {
-    var url = "https://insight.bitpay.com/api/addrs/"+address+"/txs?from=0&to=20";
+    var url = "https://insight.bitpay.com/api/addrs/"+address+"/txs?from=0&to=75";
     var txs = [];
     var data = download(url);
     if (data) {
@@ -396,7 +401,7 @@ function createPokerBet(bet, resolution, asset, address, cards) {
 }
 
 function processBet(formName) {
-    var address = readCookie("address");
+    var address = ADDRESS;
     var bet = $( "#"+formName+" input[name=bet]" ).val();
     var resolution = $( "#"+formName+" input[name=resolution]" ).val();
     var asset = $( "#"+formName+" select[name=asset]" ).val();
@@ -438,8 +443,8 @@ function processBet(formName) {
 }
 function createTransaction(source, destinations, btcAmounts, fee, data, useUnspentTxHash, useUnspentVout) {
   tx = new Bitcoin.Transaction();
-  var address = readCookie("address");
-  var private_key = readCookie("private_key");
+  var address = ADDRESS;
+  var private_key = PRIVATE_KEY;
   var ecKey = null;
   try {
     ecKey = new Bitcoin.ECKey.fromWIF(private_key);
@@ -1225,7 +1230,7 @@ function getVersion() {
 }
 
 function getCasinoInfo() {
-  var address = readCookie("address");
+  var address = ADDRESS;
   var chaSupply = getCHASupply();
   var blockHeightBTC = getBTCBlockHeight();
   var blockHeightCHA = getCHABlockHeight();
@@ -1236,11 +1241,15 @@ function getCasinoInfo() {
   var addressInfos = [];
   var addresses = JSON.parse(readCookie("addresses"));
 
-  var i = addresses.indexOf(address);
-  if (i>=0) {
-    addresses.splice(i, 1);
+  if (addresses) {
+    var i = addresses.indexOf(address);
+    if (i>=0) { //delete the selected address so we can bring it to the top
+      addresses.splice(i, 1);
+    }
   }
-  addressInfos.push({address: address, balanceCHA: getBalance(address, "CHA")});
+  if (address) {
+    addressInfos.push({address: address, balanceCHA: getBalance(address, "CHA")});
+  }
   for (i in addresses) {
     addressInfos.push({address: addresses[i], balanceCHA: getBalance(addresses[i], "CHA")});
   }
