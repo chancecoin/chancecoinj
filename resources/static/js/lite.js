@@ -168,15 +168,17 @@ function importPrivateKey(privateKeyWIF) {
 
 //update the page using the address passed in
 function updateAddress(newAddress) {
-  var addresses = JSON.parse(readCookie("addresses"));
-  var privateKeys = JSON.parse(readCookie("private_keys"));
-  var newPrivateKey = "";
-  if (addresses && privateKeys) {
-    var addressIndex = addresses.indexOf(newAddress);
-    newPrivateKey = addressIndex >= 0 ? privateKeys[addressIndex] : "";
+  if (newAddress) {
+    var addresses = JSON.parse(readCookie("addresses"));
+    var privateKeys = JSON.parse(readCookie("private_keys"));
+    var newPrivateKey = "";
+    if (addresses && privateKeys) {
+      var addressIndex = addresses.indexOf(newAddress);
+      newPrivateKey = addressIndex >= 0 ? privateKeys[addressIndex] : "";
+    }
+    ADDRESS = newAddress;
+    PRIVATE_KEY = newPrivateKey;
   }
-  ADDRESS = newAddress;
-  PRIVATE_KEY = newPrivateKey;
 }
 
 //update the page using the address from URL
@@ -1047,6 +1049,7 @@ function showError(message) {
 function showMessage(message, type) {
   $("#ajax_info").hide();
   $("#ajax_error").hide();
+  console.log(message);
   if (!type || (type && type == "info")) {
     $("#ajax_info_content").html(message);
     $("#ajax_info").show();
@@ -1250,6 +1253,7 @@ function getCasinoInfo() {
   if (address) {
     addressInfos.push({address: address, balanceCHA: getBalance(address, "CHA")});
   }
+
   for (i in addresses) {
     addressInfos.push({address: addresses[i], balanceCHA: getBalance(addresses[i], "CHA")});
   }
